@@ -1,0 +1,22 @@
+{
+  "name": "swap",
+  "version": "0.1.0",
+  "description": "Server side apps that feel client side.",
+  "repository": "git://github.com/shanebo/swap.git",
+  "main": "./index",
+  "scripts": {
+    "test": "mocha -w"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "mocha": "5.2.0",
+    "chai": "4.2.0"
+  },
+  "author": "Shane Thacker <shane@steadymade.com>",
+  "license": "MIT",
+  "keywords": [
+    "query string",
+    "parser"
+  ]
+}
