@@ -1,17 +1,21 @@
-const addEvent = (when, pattern, handle) => {
-  swap.events[when].push(buildRoute(location.origin + pattern, handle));
+const addRoute = (when, pattern, handle) => {
+  if (pattern === '*') pattern = '.*';
+  swap._routes[when].push(buildRoute(location.origin + pattern, handle));
   return swap;
 }
 
 const swap = {};
-swap.events = { before: [], on: [] };
-swap.on = addEvent.bind(null, 'on');
-swap.before = addEvent.bind(null, 'before');
+swap._events = [];
+swap._routes = { before: [], on: [] };
+swap.on = addRoute.bind(null, 'on');
+swap.before = addRoute.bind(null, 'before');
 
 swap.with = (href, selectors = []) => {
   fetch(href)
     .then(res => res.text())
     .then(html => {
+      swap.teardown();
+
       swap.to(html, selectors);
       window.history.pushState({ html, selectors }, '', href);
       if (!selectors.length) window.scrollTo(0, 0);
@@ -52,7 +56,7 @@ swap.fire = (when, url) => {
   const pathname = link.origin + link.pathname;
   const query = parseQuery(link.search);
 
-  swap.events[when].forEach((route) => {
+  swap._routes[when].forEach((route) => {
     if (route.pattern === pathname) {
       return route.handle({ params: {}, query });
     }
@@ -71,6 +75,32 @@ swap.fire = (when, url) => {
   });
   return swap;
 }
+
+swap.teardown = () => {
+  swap._events.forEach(e => e.target.removeEventListener(e.name, e.fn));
+  swap._events = [];
+  return swap;
+}
+
+swap.event = function (name, delegate, fn) {
+  const e = {
+    name,
+    target: window,
+    fn: arguments.length !== 3
+      ? arguments[1]
+      : function (e) {
+          if (e.target.matches(delegate))
+            return fn.apply(e.target, arguments);
+        }
+  };
+
+  swap._events.push(e);
+  window.addEventListener(e.name, e.fn);
+  return swap;
+}
+
+
+
 
 const buildRoute = (pattern, handle) => {
   const regex = patternRegex(pattern);
@@ -104,15 +134,7 @@ const parseQuery = (search) => decodeURIComponent(search).substr(1)
       return params;
     }, {});
 
-const EventDelegator = function(target, name, delegate, fn) {
-  return arguments.length !== 4
-    ? target.addEventListener(name, arguments[2])
-    : target.addEventListener(name, function(e) {
-        if (e.target.matches(delegate)) {
-          return fn.apply(e.target, arguments);
-        }
-      });
-}
+
 
 // HANDLES
 let metaKeyOn = false;
@@ -150,9 +172,54 @@ const click = (e) => {
 }
 
 // SETUP
+
+// const EventDelegator = function(target, name, delegate, fn) {
+//   return arguments.length !== 4
+//     ? target.addEventListener(name, arguments[2])
+//     : target.addEventListener(name, function(e) {
+//         if (e.target.matches(delegate)) {
+//           return fn.apply(e.target, arguments);
+//         }
+//       });
+// }
+
+// const EventDelegator = function(target, name, delegate, fn) {
+//   return arguments.length !== 4
+//     ? target.addEventListener(name, arguments[2])
+//     : target.addEventListener(name, function(e) {
+//         if (e.target.matches(delegate)) {
+//           return fn.apply(e.target, arguments);
+//         }
+//       });
+// }
+
+
+
+
+
+
+
+
+
+// swap.event = EventDelegator;
+// swap.event = delegator;
+
+
+// swap.event(window, 'popstate', popstate);
+// swap.event(window, 'keydown', keyDownUp);
+// swap.event(window, 'keyup', keyDownUp);
+// // swap.event('DOMContentLoaded', loaded);
+// swap.event(window, 'click', 'a:not([target=_blank]):not([data-swap="false"])', click);
+
+swap.event('DOMContentLoaded', loaded);
+
+swap.on('*', (e) => {
+  swap.event('DOMContentLoaded', loaded);
+  swap.event('popstate', popstate);
+  swap.event('keydown', keyDownUp);
+  swap.event('keyup', keyDownUp);
+  swap.event('click', 'a:not([target=_blank]):not([data-swap="false"])', click);
+});
+
 window.swap = swap;
-document.addEventListener('DOMContentLoaded', loaded);
-window.addEventListener('popstate', popstate);
-window.addEventListener('keydown', keyDownUp);
-window.addEventListener('keyup', keyDownUp);
-EventDelegator(document, 'click', 'a:not([target=_blank]):not([data-swap="false"])', click);
+
