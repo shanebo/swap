@@ -1,21 +1,72 @@
-const addRoute = (when, pattern, handle) => {
-  if (pattern === '*') pattern = '.*';
-  swap._routes[when].push(buildRoute(location.origin + pattern, handle));
-  return swap;
+class Router {
+  constructor() {
+    this.stack = [];
+    ['before', 'on'].forEach(method => {
+      this[method] = this.create.bind(this, method);
+    });
+  }
+
+  create(method, pattern, handle) {
+    if (pattern === '*') pattern = '.*';
+    this.stack.push(buildRoute(method, location.origin + pattern, handle));
+    return this;
+  }
+
+  find(req, route) {
+    if (route.method !== req.method) return false;
+    if (route.pattern === req.pathname) return route.handle;
+
+    const matches = req.pathname.match(route.regex);
+
+    if (matches) {
+      matches.shift();
+      let i = 0;
+      req.params = {};
+      for (; i < route.params.length; i++) {
+        req.params[route.params[i]] = matches[i];
+      }
+      return route.handle;
+    }
+
+    return false;
+  }
 }
 
+const buildRoute = (method, pattern, handle) => {
+  const regex = patternRegex(pattern);
+  const params = getParams(pattern, regex);
+  return { method, pattern, regex, params, handle };
+}
+
+const patternRegex = (pattern) =>
+  new RegExp(`^${pattern.replace(/:[^\/\(\):.-]+/g, '([^/]+)')}$`);
+
+const getParams = (pattern, regex) => {
+  const regexChars = /\?|\(|\)/g;
+  const matches = pattern.replace(regexChars, '').match(regex);
+  if (matches) {
+    matches.shift();
+    return matches.map(item => item.replace(':', ''));
+  }
+  return [];
+}
+
+const router = new Router();
 const swap = {};
 swap._events = [];
-swap._routes = { before: [], on: [] };
-swap.on = addRoute.bind(null, 'on');
-swap.before = addRoute.bind(null, 'before');
+swap._elements = [];
+swap.on = router.on.bind(router);
+swap.before = router.before.bind(router);
+
+swap.has = (selector, handle) => {
+  swap._elements.push({ selector, handle });
+}
 
 swap.with = (href, selectors = []) => {
   fetch(href)
     .then(res => res.text())
     .then(html => {
       swap.teardown();
-
       swap.to(html, selectors);
       window.history.pushState({ html, selectors }, '', href);
       if (!selectors.length) window.scrollTo(0, 0);
@@ -50,28 +101,19 @@ swap.to = (html, selectors) => {
   return swap;
 }
 
-swap.fire = (when, url) => {
-  const link = document.createElement('a');
-  link.setAttribute('href', url);
-  const pathname = link.origin + link.pathname;
-  const query = parseQuery(link.search);
-
-  swap._routes[when].forEach((route) => {
-    if (route.pattern === pathname) {
-      return route.handle({ params: {}, query });
-    }
-
-    const matches = pathname.match(route.regex);
-
-    if (matches) {
-      matches.shift();
-      const e = { params: {}, query };
-      let i = 0;
-      for (; i < route.params.length; i++) {
-        e.params[route.params[i]] = matches[i];
+swap.fire = (method, url) => {
+  if (method === 'on') {
+    swap._elements.forEach(el => {
+      if (document.querySelector(el.selector)) {
+        el.handle();
       }
-      route.handle(e);
-    }
+    });
+  }
+
+  const req = buildRequest(method, url);
+  router.stack.forEach((route) => {
+    const handle = router.find(req, route);
+    if (handle) return handle(req);
   });
   return swap;
 }
@@ -99,31 +141,14 @@ swap.event = function (name, delegate, fn) {
   return swap;
 }
 
-
-
-
-const buildRoute = (pattern, handle) => {
-  const regex = patternRegex(pattern);
-  const params = getParams(pattern, regex);
+const buildRequest = (method, url) => {
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
   return {
-    pattern,
-    regex,
-    params,
-    handle
-  }
-}
-
-const patternRegex = (pattern) =>
-  new RegExp(`^${pattern.replace(/:[^\/\(\):.-]+/g, '([^/]+)')}$`);
-
-const getParams = (pattern, regex) => {
-  const regexChars = /\?|\(|\)/g;
-  const matches = pattern.replace(regexChars, '').match(regex);
-  if (matches) {
-    matches.shift();
-    return matches.map(item => item.replace(':', ''));
-  }
-  return [];
+    method,
+    pathname: link.origin + link.pathname,
+    query: parseQuery(link.search)
+  };
 }
 
 const parseQuery = (search) => decodeURIComponent(search).substr(1)
@@ -134,17 +159,16 @@ const parseQuery = (search) => decodeURIComponent(search).substr(1)
       return params;
     }, {});
 
-
-
-// HANDLES
 let metaKeyOn = false;
 
 const loaded = (e) => swap.fire('on', location.href);
 
 const popstate = (e) => {
   const { html, selectors } = e.state;
+  // const { html, selectors } = e.state;
+  swap.teardown();
   swap.to(html, selectors);
-  window.history.replaceState({ html, selectors }, '', location.href);
+  window.history.replaceState(e.state, '', location.href);
   swap.fire('on', location.href);
 }
 
@@ -171,46 +195,6 @@ const click = (e) => {
   }
 }
 
-// SETUP
-
-// const EventDelegator = function(target, name, delegate, fn) {
-//   return arguments.length !== 4
-//     ? target.addEventListener(name, arguments[2])
-//     : target.addEventListener(name, function(e) {
-//         if (e.target.matches(delegate)) {
-//           return fn.apply(e.target, arguments);
-//         }
-//       });
-// }
-
-// const EventDelegator = function(target, name, delegate, fn) {
-//   return arguments.length !== 4
-//     ? target.addEventListener(name, arguments[2])
-//     : target.addEventListener(name, function(e) {
-//         if (e.target.matches(delegate)) {
-//           return fn.apply(e.target, arguments);
-//         }
-//       });
-// }
-
-
-
-
-
-
-
-
-
-// swap.event = EventDelegator;
-// swap.event = delegator;
-
-
-// swap.event(window, 'popstate', popstate);
-// swap.event(window, 'keydown', keyDownUp);
-// swap.event(window, 'keyup', keyDownUp);
-// // swap.event('DOMContentLoaded', loaded);
-// swap.event(window, 'click', 'a:not([target=_blank]):not([data-swap="false"])', click);
-
 swap.event('DOMContentLoaded', loaded);
 
 swap.on('*', (e) => {
@@ -222,4 +206,3 @@ swap.on('*', (e) => {
 });
 
 window.swap = swap;
-
