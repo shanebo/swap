@@ -51,6 +51,12 @@ const getParams = (pattern, regex) => {
   return [];
 }
 
+
+
+
+
+
+
 const router = new Router();
 const swap = {};
 swap._events = [];
@@ -59,6 +65,7 @@ swap.on = router.on.bind(router);
 swap.before = router.before.bind(router);
 
 swap.has = (selector, handle) => {
+  // THESE NEED TO BE CHECKED BEFORE PUSHING ONTO ARRAY
   swap._elements.push({ selector, handle });
 }
 
@@ -66,7 +73,7 @@ swap.with = (href, selectors = []) => {
   fetch(href)
     .then(res => res.text())
     .then(html => {
-      swap.teardown();
+      // swap.teardown();
       swap.to(html, selectors);
       window.history.pushState({ html, selectors }, '', href);
       if (!selectors.length) window.scrollTo(0, 0);
@@ -86,20 +93,62 @@ swap.to = (html, selectors) => {
       const selector = selectors[i];
       const oldEl = document.querySelector(selector);
       if (!oldEl) {
+        swap.teardown();
         document.body = dom.body;
         break;
       }
       const newEl = dom.querySelector(selector);
       oldEl.parentNode.replaceChild(newEl, oldEl);
     }
+
+    let indexesToDelete = [];
+    swap._events.forEach((e, i) => {
+      if (e.delegate && !dom.querySelector(e.delegate)) {
+        e.target.removeEventListener(e.name, e.fn);
+        indexesToDelete.push(i);
+      }
+    });
+    // console.log('\n\n\n');
+    // console.log({ indexesToDelete });
+    // console.log('swap._events before', swap._events);
+    indexesToDelete.reverse().forEach(i => swap._events.splice(i, 1));
+    // console.log('swap._events after', swap._events);
+
   } else {
+    swap.teardown();
     document.body = dom.body;
   }
+
 
   document.head = dom.head;
   document.title = dom.head.querySelector('title').innerText;
   return swap;
 }
+
+// swap.to = (html, selectors) => {
+//   const dom = new DOMParser().parseFromString(html, 'text/html');
+
+//   if (selectors.length) {
+//     // accounts for back/forward buttons where selectors no longer exist
+//     // in which cases we replace the entire page
+//     for (i = 0; i < selectors.length; i++) {
+//       const selector = selectors[i];
+//       const oldEl = document.querySelector(selector);
+//       if (!oldEl) {
+//         document.body = dom.body;
+//         break;
+//       }
+//       const newEl = dom.querySelector(selector);
+//       oldEl.parentNode.replaceChild(newEl, oldEl);
+//     }
+//   } else {
+//     document.body = dom.body;
+//   }
+
+//   document.head = dom.head;
+//   document.title = dom.head.querySelector('title').innerText;
+//   return swap;
+// }
 
 swap.fire = (method, url) => {
   if (method === 'on') {
@@ -125,9 +174,15 @@ swap.teardown = () => {
 }
 
 swap.event = function (name, delegate, fn) {
+  // console.log('\n\n\n');
+  // console.log(swap._events);
+
+
   const e = {
     name,
+    delegate,
     target: window,
+    origFn: (arguments.length !== 3 ? arguments[1] : fn).toString(),
     fn: arguments.length !== 3
       ? arguments[1]
       : function (e) {
@@ -136,10 +191,44 @@ swap.event = function (name, delegate, fn) {
         }
   };
 
-  swap._events.push(e);
-  window.addEventListener(e.name, e.fn);
+  if (typeof delegate !== 'string') e.delegate = false;
+
+  const exists = swap._events.some(ev => {
+    // console.log('\n\n\n');
+    // console.log(ev.name, e.name);
+    // console.log(ev.delegate, e.delegate);
+    // console.log(ev.origFn, e.origFn);
+    // console.log('origFn equality', ev.origFn === e.origFn);
+    return ev.name === e.name && ev.delegate === e.delegate && ev.origFn === e.origFn;
+  });
+
+  if (!exists) {
+    console.log(e.delegate);
+    swap._events.push(e);
+    window.addEventListener(e.name, e.fn);
+  }
+
   return swap;
 }
+
+
+// swap.event = function (name, delegate, fn) {
+//   const e = {
+//     name,
+//     delegate,
+//     target: window,
+//     fn: arguments.length !== 3
+//       ? arguments[1]
+//       : function (e) {
+//           if (e.target.matches(delegate))
+//             return fn.apply(e.target, arguments);
+//         }
+//   };
+
+//   swap._events.push(e);
+//   window.addEventListener(e.name, e.fn);
+//   return swap;
+// }
 
 const buildRequest = (method, url) => {
   const link = document.createElement('a');
@@ -195,14 +284,19 @@ const click = (e) => {
   }
 }
 
+
+// MAKES THESE OUTSIDE OF SWAP SO THEY NEVER GET TORN DOWN
 swap.event('DOMContentLoaded', loaded);
 
 swap.on('*', (e) => {
-  swap.event('DOMContentLoaded', loaded);
+  // swap.event('DOMContentLoaded', loaded);
   swap.event('popstate', popstate);
   swap.event('keydown', keyDownUp);
   swap.event('keyup', keyDownUp);
   swap.event('click', 'a:not([target=_blank]):not([data-swap="false"])', click);
 });
 
+
 window.swap = swap;
+
+
