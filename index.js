@@ -66,6 +66,7 @@ swap.before = router.before.bind(router);
 
 swap.has = (selector, handle) => {
   // THESE NEED TO BE CHECKED BEFORE PUSHING ONTO ARRAY
+  // on second thought I don't think this is needed
   swap._elements.push({ selector, handle });
 }
 
@@ -84,6 +85,7 @@ swap.with = (href, selectors = []) => {
 }
 
 swap.to = (html, selectors) => {
+  // refactor this
   const dom = new DOMParser().parseFromString(html, 'text/html');
 
   if (selectors.length) {
@@ -108,49 +110,23 @@ swap.to = (html, selectors) => {
         indexesToDelete.push(i);
       }
     });
+    indexesToDelete.reverse().forEach(i => swap._events.splice(i, 1));
     // console.log('\n\n\n');
     // console.log({ indexesToDelete });
     // console.log('swap._events before', swap._events);
-    indexesToDelete.reverse().forEach(i => swap._events.splice(i, 1));
     // console.log('swap._events after', swap._events);
-
   } else {
     swap.teardown();
     document.body = dom.body;
   }
-
 
   document.head = dom.head;
   document.title = dom.head.querySelector('title').innerText;
   return swap;
 }
 
-// swap.to = (html, selectors) => {
-//   const dom = new DOMParser().parseFromString(html, 'text/html');
-
-//   if (selectors.length) {
-//     // accounts for back/forward buttons where selectors no longer exist
-//     // in which cases we replace the entire page
-//     for (i = 0; i < selectors.length; i++) {
-//       const selector = selectors[i];
-//       const oldEl = document.querySelector(selector);
-//       if (!oldEl) {
-//         document.body = dom.body;
-//         break;
-//       }
-//       const newEl = dom.querySelector(selector);
-//       oldEl.parentNode.replaceChild(newEl, oldEl);
-//     }
-//   } else {
-//     document.body = dom.body;
-//   }
-
-//   document.head = dom.head;
-//   document.title = dom.head.querySelector('title').innerText;
-//   return swap;
-// }
-
 swap.fire = (method, url) => {
+  // should this be here?
   if (method === 'on') {
     swap._elements.forEach(el => {
       if (document.querySelector(el.selector)) {
@@ -174,10 +150,6 @@ swap.teardown = () => {
 }
 
 swap.event = function (name, delegate, fn) {
-  // console.log('\n\n\n');
-  // console.log(swap._events);
-
-
   const e = {
     name,
     delegate,
@@ -185,22 +157,15 @@ swap.event = function (name, delegate, fn) {
     origFn: (arguments.length !== 3 ? arguments[1] : fn).toString(),
     fn: arguments.length !== 3
       ? arguments[1]
-      : function (e) {
-          if (e.target.matches(delegate))
-            return fn.apply(e.target, arguments);
-        }
+      : delegateHandle(delegate, fn)
   };
 
   if (typeof delegate !== 'string') e.delegate = false;
 
-  const exists = swap._events.some(ev => {
-    // console.log('\n\n\n');
-    // console.log(ev.name, e.name);
-    // console.log(ev.delegate, e.delegate);
-    // console.log(ev.origFn, e.origFn);
-    // console.log('origFn equality', ev.origFn === e.origFn);
-    return ev.name === e.name && ev.delegate === e.delegate && ev.origFn === e.origFn;
-  });
+  const exists = swap._events.some(ev =>
+      ev.name === e.name
+      && ev.delegate === e.delegate
+      && ev.origFn === e.origFn);
 
   if (!exists) {
     console.log(e.delegate);
@@ -210,25 +175,6 @@ swap.event = function (name, delegate, fn) {
 
   return swap;
 }
-
-
-// swap.event = function (name, delegate, fn) {
-//   const e = {
-//     name,
-//     delegate,
-//     target: window,
-//     fn: arguments.length !== 3
-//       ? arguments[1]
-//       : function (e) {
-//           if (e.target.matches(delegate))
-//             return fn.apply(e.target, arguments);
-//         }
-//   };
-
-//   swap._events.push(e);
-//   window.addEventListener(e.name, e.fn);
-//   return swap;
-// }
 
 const buildRequest = (method, url) => {
   const link = document.createElement('a');
@@ -254,7 +200,6 @@ const loaded = (e) => swap.fire('on', location.href);
 
 const popstate = (e) => {
   const { html, selectors } = e.state;
-  // const { html, selectors } = e.state;
   swap.teardown();
   swap.to(html, selectors);
   window.history.replaceState(e.state, '', location.href);
@@ -284,19 +229,81 @@ const click = (e) => {
   }
 }
 
+const delegateHandle = function(delegate, fn) {
+  return function(e) {
+    if (e.target.matches(delegate))
+      return fn.apply(e.target, arguments);
+  }
+}
 
-// MAKES THESE OUTSIDE OF SWAP SO THEY NEVER GET TORN DOWN
-swap.event('DOMContentLoaded', loaded);
-
-swap.on('*', (e) => {
-  // swap.event('DOMContentLoaded', loaded);
-  swap.event('popstate', popstate);
-  swap.event('keydown', keyDownUp);
-  swap.event('keyup', keyDownUp);
-  swap.event('click', 'a:not([target=_blank]):not([data-swap="false"])', click);
-});
-
+window.addEventListener('DOMContentLoaded', loaded);
+window.addEventListener('popstate', popstate);
+window.addEventListener('keydown', keyDownUp);
+window.addEventListener('keyup', keyDownUp);
+window.addEventListener('click', delegateHandle('a:not([target=_blank]):not([data-swap="false"])', click));
 
 window.swap = swap;
 
 
+
+
+
+
+
+// app.event('resize', fn);
+// app.event('click', '.btn', fn);
+
+
+// swap.on('*', () => {
+//   let timeout = 0;
+//   swap.event('input', '.ApjSearchInput', (e) => {
+//     clearTimeout(timeout);
+//     timeout = setTimeout(() => {
+//       const value = e.target.value;
+//       const url = `${location.origin + location.pathname}?q=${value}`;
+//       swap.with(url, ['.ApjResources']);
+//     }, 10);
+//   });
+// });
+
+
+// app.globalEvent('input', '.ApjSearchInput', (e) => {
+
+// });
+
+
+// swap.has('.ApjSearchInput', () => {
+//   let timeout = 0;
+//   swap.event('input', '.ApjSearchInput', (e) => {
+//     clearTimeout(timeout);
+//     timeout = setTimeout(() => {
+//       const value = e.target.value;
+//       const url = `${location.origin + location.pathname}?q=${value}`;
+//       swap.with(url, ['.ApjResources']);
+//     }, 10);
+//   });
+// });
+
+// const scroll = (e) => 'doin something';
+
+// app.has('.btn', (e) => {
+//   btn.addEventListener('scroll', scroll);
+// });
+
+// app.not('.btn', (e) => {
+//   btn.removeEventListener('scroll', scroll);
+// });
+
+// app.on('/foo', (e) => {
+//   btn.addEventListener('scroll', scroll);
+//   window.addEventListener('resize', resize);
+// });
+
+// app.off('/foo', (e) => {
+//   btn.removeEventListener('scroll', scroll);
+// });
+
+// app.on('/foo', (e) => {
+//   btn.addEventListener('scroll', scroll);
+//   app.event('resize', resize);
+// });
