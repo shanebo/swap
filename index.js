@@ -1,7 +1,7 @@
 class Router {
   constructor() {
     this.stack = [];
-    ['before', 'on'].forEach(method => {
+    ['before', 'off', 'on'].forEach(method => {
       this[method] = this.create.bind(this, method);
     });
   }
@@ -59,22 +59,26 @@ const getParams = (pattern, regex) => {
 
 const router = new Router();
 const swap = {};
-swap._events = [];
-swap._elements = [];
-swap.on = router.on.bind(router);
+swap._elements = { has: [], not: [] };
 swap.before = router.before.bind(router);
+swap.off = router.off.bind(router);
+swap.on = router.on.bind(router);
 
 swap.has = (selector, handle) => {
-  // THESE NEED TO BE CHECKED BEFORE PUSHING ONTO ARRAY
-  // on second thought I don't think this is needed
-  swap._elements.push({ selector, handle });
+  swap._elements.has.push({ selector, handle });
+  return swap;
+}
+
+swap.not = (selector, handle) => {
+  swap._elements.not.push({ selector, handle });
+  return swap;
 }
 
 swap.with = (href, selectors = []) => {
   fetch(href)
     .then(res => res.text())
     .then(html => {
-      // swap.teardown();
+      swap.fire('off', location.href);
       swap.to(html, selectors);
       window.history.pushState({ html, selectors }, '', href);
       if (!selectors.length) window.scrollTo(0, 0);
@@ -84,40 +88,24 @@ swap.with = (href, selectors = []) => {
   return swap;
 }
 
+
 swap.to = (html, selectors) => {
-  // refactor this
   const dom = new DOMParser().parseFromString(html, 'text/html');
+  const oldEls = selectors.map(sel => document.querySelector(sel)).filter(el => el);
+  const fullSwap = (selectors.length === 0 || oldEls.length !== selectors.length);
 
-  if (selectors.length) {
-    // accounts for back/forward buttons where selectors no longer exist
-    // in which cases we replace the entire page
-    for (i = 0; i < selectors.length; i++) {
-      const selector = selectors[i];
-      const oldEl = document.querySelector(selector);
-      if (!oldEl) {
-        swap.teardown();
-        document.body = dom.body;
-        break;
-      }
-      const newEl = dom.querySelector(selector);
-      oldEl.parentNode.replaceChild(newEl, oldEl);
-    }
+  swap._elements.not.forEach(el => {
+    if (document.querySelector(el.selector)) el.handle();
+  });
 
-    let indexesToDelete = [];
-    swap._events.forEach((e, i) => {
-      if (e.delegate && !dom.querySelector(e.delegate)) {
-        e.target.removeEventListener(e.name, e.fn);
-        indexesToDelete.push(i);
-      }
-    });
-    indexesToDelete.reverse().forEach(i => swap._events.splice(i, 1));
-    // console.log('\n\n\n');
-    // console.log({ indexesToDelete });
-    // console.log('swap._events before', swap._events);
-    // console.log('swap._events after', swap._events);
-  } else {
-    swap.teardown();
+  if (fullSwap) {
     document.body = dom.body;
+  } else {
+    selectors.forEach((sel, s) => {
+      const oldEl = oldEls[s];
+      const newEl = dom.querySelector(sel);
+      oldEl.parentNode.replaceChild(newEl, oldEl);
+    });
   }
 
   document.head = dom.head;
@@ -126,13 +114,18 @@ swap.to = (html, selectors) => {
 }
 
 swap.fire = (method, url) => {
-  // should this be here?
   if (method === 'on') {
-    swap._elements.forEach(el => {
+    swap._elements.has.forEach(el => {
       if (document.querySelector(el.selector)) {
         el.handle();
       }
     });
+  } else if (method === 'off') {
+    // swap._elements.not.forEach(el => {
+    //   if (!document.querySelector(el.selector)) {
+    //     el.handle();
+    //   }
+    // });
   }
 
   const req = buildRequest(method, url);
@@ -143,36 +136,16 @@ swap.fire = (method, url) => {
   return swap;
 }
 
-swap.teardown = () => {
-  swap._events.forEach(e => e.target.removeEventListener(e.name, e.fn));
-  swap._events = [];
-  return swap;
-}
-
 swap.event = function (name, delegate, fn) {
   const e = {
     name,
-    delegate,
     target: window,
-    origFn: (arguments.length !== 3 ? arguments[1] : fn).toString(),
     fn: arguments.length !== 3
       ? arguments[1]
       : delegateHandle(delegate, fn)
   };
 
-  if (typeof delegate !== 'string') e.delegate = false;
-
-  const exists = swap._events.some(ev =>
-      ev.name === e.name
-      && ev.delegate === e.delegate
-      && ev.origFn === e.origFn);
-
-  if (!exists) {
-    console.log(e.delegate);
-    swap._events.push(e);
-    window.addEventListener(e.name, e.fn);
-  }
-
+  window.addEventListener(e.name, e.fn);
   return swap;
 }
 
@@ -199,11 +172,12 @@ let metaKeyOn = false;
 const loaded = (e) => swap.fire('on', location.href);
 
 const popstate = (e) => {
+  const { href } = location;
   const { html, selectors } = e.state;
-  swap.teardown();
+  swap.fire('off', href);
   swap.to(html, selectors);
-  window.history.replaceState(e.state, '', location.href);
-  swap.fire('on', location.href);
+  window.history.replaceState(e.state, '', href);
+  swap.fire('on', href);
 }
 
 const keyDownUp = (e) => {
@@ -245,6 +219,16 @@ window.addEventListener('click', delegateHandle('a:not([target=_blank]):not([dat
 window.swap = swap;
 
 
+
+
+
+// routes
+// - every route fires when it matches
+// - every route fires off when page state change
+
+// components
+// - has checks run on every page transition
+// - not fires if it was on previous page
 
 
 
