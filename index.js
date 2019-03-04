@@ -1,78 +1,29 @@
-class Router {
-  constructor() {
-    this.stack = [];
-    ['before', 'off', 'on'].forEach(method => {
-      this[method] = this.create.bind(this, method);
-    });
+const swap = {
+  routes: [],
+  elements: {
+    before: [],
+    on: [],
+    off: []
   }
+};
 
-  create(method, pattern, handle) {
+swap.listener = function(method, pattern, handle) {
+  if (pattern.startsWith('/')) {
     if (pattern === '*') pattern = '.*';
-    this.stack.push(buildRoute(method, location.origin + pattern, handle));
-    return this;
+    swap.routes.push(buildRoute(method, location.origin + pattern, handle));
+  } else {
+    swap.elements[method].push({ selector: pattern, handle });
   }
-
-  find(req, route) {
-    if (route.method !== req.method) return false;
-    if (route.pattern === req.pathname) return route.handle;
-
-    const matches = req.pathname.match(route.regex);
-
-    if (matches) {
-      matches.shift();
-      let i = 0;
-      req.params = {};
-      for (; i < route.params.length; i++) {
-        req.params[route.params[i]] = matches[i];
-      }
-      return route.handle;
-    }
-
-    return false;
-  }
-}
-
-const buildRoute = (method, pattern, handle) => {
-  const regex = patternRegex(pattern);
-  const params = getParams(pattern, regex);
-  return { method, pattern, regex, params, handle };
-}
-
-const patternRegex = (pattern) =>
-  new RegExp(`^${pattern.replace(/:[^\/\(\):.-]+/g, '([^/]+)')}$`);
-
-const getParams = (pattern, regex) => {
-  const regexChars = /\?|\(|\)/g;
-  const matches = pattern.replace(regexChars, '').match(regex);
-  if (matches) {
-    matches.shift();
-    return matches.map(item => item.replace(':', ''));
-  }
-  return [];
-}
-
-
-
-
-
-
-
-const router = new Router();
-const swap = {};
-swap._elements = { has: [], not: [] };
-swap.before = router.before.bind(router);
-swap.off = router.off.bind(router);
-swap.on = router.on.bind(router);
-
-swap.has = (selector, handle) => {
-  swap._elements.has.push({ selector, handle });
   return swap;
 }
 
-swap.not = (selector, handle) => {
-  swap._elements.not.push({ selector, handle });
-  return swap;
-}
+// ['before', 'off', 'on'].forEach(method => {
+//   swap[method] = swap.listener.bind(swap, method);
+// });
+
+swap.before = swap.listener.bind(swap, 'before');
+swap.on = swap.listener.bind(swap, 'on');
+swap.off = swap.listener.bind(swap, 'off');
 
 swap.with = (href, selectors = []) => {
   fetch(href)
@@ -88,13 +39,12 @@ swap.with = (href, selectors = []) => {
   return swap;
 }
 
-
 swap.to = (html, selectors) => {
   const dom = new DOMParser().parseFromString(html, 'text/html');
   const oldEls = selectors.map(sel => document.querySelector(sel)).filter(el => el);
   const fullSwap = (selectors.length === 0 || oldEls.length !== selectors.length);
 
-  swap._elements.not.forEach(el => {
+  swap.elements.off.forEach(el => {
     if (document.querySelector(el.selector)) el.handle();
   });
 
@@ -114,29 +64,23 @@ swap.to = (html, selectors) => {
 }
 
 swap.fire = (method, url) => {
-  if (method === 'on') {
-    swap._elements.has.forEach(el => {
+  if (method === 'before' || method === 'on') {
+    swap.elements[method].forEach(el => {
       if (document.querySelector(el.selector)) {
         el.handle();
       }
     });
-  } else if (method === 'off') {
-    // swap._elements.not.forEach(el => {
-    //   if (!document.querySelector(el.selector)) {
-    //     el.handle();
-    //   }
-    // });
   }
 
   const req = buildRequest(method, url);
-  router.stack.forEach((route) => {
-    const handle = router.find(req, route);
+  swap.routes.forEach((route) => {
+    const handle = findRoute(req, route);
     if (handle) return handle(req);
   });
   return swap;
 }
 
-swap.event = function (name, delegate, fn) {
+swap.event = function(name, delegate, fn) {
   const e = {
     name,
     target: window,
@@ -147,6 +91,46 @@ swap.event = function (name, delegate, fn) {
 
   window.addEventListener(e.name, e.fn);
   return swap;
+}
+
+
+
+const findRoute = (req, route) => {
+  if (route.method !== req.method) return false;
+  if (route.pattern === req.pathname) return route.handle;
+
+  const matches = req.pathname.match(route.regex);
+
+  if (matches) {
+    matches.shift();
+    let i = 0;
+    req.params = {};
+    for (; i < route.params.length; i++) {
+      req.params[route.params[i]] = matches[i];
+    }
+    return route.handle;
+  }
+
+  return false;
+}
+
+const buildRoute = (method, pattern, handle) => {
+  const regex = patternRegex(pattern);
+  const params = getParams(pattern, regex);
+  return { method, pattern, regex, params, handle };
+}
+
+const patternRegex = (pattern) =>
+  new RegExp(`^${pattern.replace(/:[^\/\(\):.-]+/g, '([^/]+)')}$`);
+
+const getParams = (pattern, regex) => {
+  const regexChars = /\?|\(|\)/g;
+  const matches = pattern.replace(regexChars, '').match(regex);
+  if (matches) {
+    matches.shift();
+    return matches.map(item => item.replace(':', ''));
+  }
+  return [];
 }
 
 const buildRequest = (method, url) => {
@@ -186,16 +170,17 @@ const keyDownUp = (e) => {
   }
 }
 
-const click = (e) => {
-  if (e.target.hostname !== location.hostname
-    || e.target.protocol !== location.protocol) {
+const click = function(e) {
+  const link = this;
+  if (link.hostname !== location.hostname
+    || link.protocol !== location.protocol) {
     return;
   }
 
   if (!metaKeyOn) {
     e.preventDefault();
-    const href = e.target.href;
-    const selectors = (e.target.dataset.swap || '')
+    const href = link.href;
+    const selectors = (link.dataset.swap || '')
       .split(',')
       .filter(selector => selector.trim());
     swap.fire('before', href);
@@ -205,8 +190,15 @@ const click = (e) => {
 
 const delegateHandle = function(delegate, fn) {
   return function(e) {
-    if (e.target.matches(delegate))
+    if (e.target.matches(delegate)) {
       return fn.apply(e.target, arguments);
+    }
+
+    const parent = e.target.closest(delegate);
+
+    if (parent) {
+      return fn.apply(parent, arguments);
+    }
   }
 }
 
@@ -214,7 +206,7 @@ window.addEventListener('DOMContentLoaded', loaded);
 window.addEventListener('popstate', popstate);
 window.addEventListener('keydown', keyDownUp);
 window.addEventListener('keyup', keyDownUp);
-window.addEventListener('click', delegateHandle('a:not([target=_blank]):not([data-swap="false"])', click));
+window.addEventListener('click', delegateHandle('a:not([target="_blank"]):not([data-swap="false"])', click));
 
 window.swap = swap;
 
@@ -270,11 +262,11 @@ window.swap = swap;
 
 // const scroll = (e) => 'doin something';
 
-// app.has('.btn', (e) => {
+// app.on('.btn', (e) => {
 //   btn.addEventListener('scroll', scroll);
 // });
 
-// app.not('.btn', (e) => {
+// app.off('.btn', (e) => {
 //   btn.removeEventListener('scroll', scroll);
 // });
 
