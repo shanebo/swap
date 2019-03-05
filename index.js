@@ -177,6 +177,10 @@ const click = function(e) {
     return;
   }
 
+  if ((link.pathname === location.pathname) && link.hash) {
+    return;
+  }
+
   if (!metaKeyOn) {
     e.preventDefault();
     const href = link.href;
