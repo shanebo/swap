@@ -5,13 +5,25 @@
   "repository": "git://github.com/shanebo/swap.git",
   "main": "./index",
   "scripts": {
-    "test": "mocha -w"
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
+    "build": "npm run clean; parcel build cypress/app/parcel.html --no-minify --no-source-maps --out-dir cypress/app/dist --public-url /dist",
+    "start": "npm run build; node cypress/app/app.js",
+    "dev": "nodemon --ignore cypress/app/dist --ignore cypress/integration -e js,html --exec \"npm start\"",
+    "test": "npm run build; node cypress/app/app.js & npm run cypress:run; kill $!",
+    "test:dev": "npm run dev & npm run cypress:open",
+    "clean": "rm -r cypress/app/dist/*"
   },
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
+    "dylan": "github:dylanjs/dylan#0.2.0",
+    "@dylan/static": "github:dylanjs/static#0.1.0",
+    "@dylan/parser": "github:dylanjs/parser#0.1.0",
+    "parcel-bundler": "1.12.4",
     "mocha": "5.2.0",
-    "chai": "4.2.0"
+    "chai": "4.2.0",
+    "nodemon": "2.0.2",
+    "cypress": "~4.0.1"
   },
   "author": "Shane Thacker <shane@steadymade.com>",
   "license": "MIT",
