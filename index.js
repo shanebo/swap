@@ -1,5 +1,13 @@
+const talk = require('./talk');
+const { findRoute, buildRoute, buildEvent, buildUrl, shouldSwap, getUrl, delegateHandle, getSelectors } = require('./utils');
+
+
 const swap = {
-  routes: [],
+  routes: {
+    before: [],
+    on: [],
+    off: []
+  },
   elements: {
     before: [],
     on: [],
@@ -7,47 +15,32 @@ const swap = {
   }
 };
 
-swap.listener = function(method, pattern, handle) {
-  if (pattern.startsWith('/')) {
-    if (pattern === '*') pattern = '.*';
-    swap.routes.push(buildRoute(method, location.origin + pattern, handle));
+
+swap.listener = function(when, pattern, handle) {
+  if (typeof pattern === 'string') {
+    if (pattern.startsWith('/') || pattern === '*') {
+      if (pattern === '*') pattern = '.*';
+      swap.routes[when].push(buildRoute(when, 'get', pattern, handle));
+    } else {
+      swap.elements[when].push({ selector: pattern, handle });
+    }
   } else {
-    swap.elements[method].push({ selector: pattern, handle });
+    swap.routes[when].push(buildRoute(when, pattern.method, pattern.route, handle));
   }
+
   return swap;
 }
 
-// ['before', 'off', 'on'].forEach(method => {
-//   swap[method] = swap.listener.bind(swap, method);
-// });
 
 swap.before = swap.listener.bind(swap, 'before');
 swap.on = swap.listener.bind(swap, 'on');
 swap.off = swap.listener.bind(swap, 'off');
 
-swap.with = (href, selectors = []) => {
-  fetch(href)
-    .then(res => res.text())
-    .then(html => {
-      swap.fire('off', location.href);
-      swap.to(html, selectors);
-      window.history.pushState({ html, selectors }, '', href);
-      if (!selectors.length) window.scrollTo(0, 0);
-      swap.fire('on', href);
-    })
-    .catch(console.log);
-  return swap;
-}
 
 swap.to = (html, selectors) => {
   const dom = new DOMParser().parseFromString(html, 'text/html');
   const oldEls = selectors.map(sel => document.querySelector(sel)).filter(el => el);
   const fullSwap = (selectors.length === 0 || oldEls.length !== selectors.length);
-
-  swap.elements.off.forEach(el => {
-    const target = document.querySelector(el.selector);
-    if (target) el.handle({ target });
-  });
 
   if (fullSwap) {
     document.body = dom.body;
@@ -64,25 +57,55 @@ swap.to = (html, selectors) => {
   return swap;
 }
 
-swap.fire = (method, url) => {
-  const req = buildRequest(method, url);
 
-  if (method === 'before' || method === 'on') {
-    swap.elements[method].forEach(el => {
+swap.with = (options, selectors = []) => {
+  const opts = typeof options === 'string'
+    ? { url: options, method: 'get' }
+    : options;
+
+  const { url, method } = opts;
+
+  swap.fire('before', url, method); // before is the only when where method matters
+
+  talk(opts, (xhr, res, html) => {
+    const wasRedirected = url !== xhr.responseURL;
+    const finalUrl = wasRedirected ? xhr.responseURL : url;
+    const finalMethod = wasRedirected ? 'get' : method;
+
+    swap.fire('off', url, method); // confusing but accurate because url is the toUrl
+    swap.to(html, selectors);
+    history.pushState({ html, selectors, method: finalMethod }, '', finalUrl);
+    if (!selectors.length) window.scrollTo(0, 0);
+    swap.fire('on', finalUrl, finalMethod);
+  });
+
+  return swap;
+}
+
+
+swap.fire = (when, url, method = 'get') => {
+  const event = buildEvent(when, url, method);
+
+  if (when !== 'before') {
+    // we can never know before an element exists
+    swap.elements[when].forEach((el) => {
       const target = document.querySelector(el.selector);
       if (target) {
-        req.target = target;
-        el.handle(req);
+        el.handle({...event, ...{ target }});
       }
     });
   }
 
-  swap.routes.forEach((route) => {
-    const handle = findRoute(req, route);
-    if (handle) return handle(req);
+  swap.routes[when].forEach((route) => {
+    const found = findRoute(event, route);
+    if (found) {
+      route.handle({...event, ...{ route }});
+    }
   });
+
   return swap;
 }
+
 
 swap.event = function(name, delegate, fn) {
   const e = {
@@ -98,77 +121,53 @@ swap.event = function(name, delegate, fn) {
 }
 
 
+swap.click = function(e, selectors) {
+  const link = e.target;
 
-const findRoute = (req, route) => {
-  req.params = {};
+  if (!shouldSwap(buildUrl(link))) return;
 
-  if (route.method !== req.method) return false;
-  if (route.pattern === req.pathname) return route.handle;
-
-  const matches = req.pathname.match(route.regex);
-
-  if (matches) {
-    matches.shift();
-    let i = 0;
-    for (; i < route.params.length; i++) {
-      req.params[route.params[i]] = matches[i];
-    }
-    return route.handle;
+  if (!metaKeyOn) {
+    e.preventDefault();
+    swap.with(link.href, selectors || getSelectors(link));
   }
-
-  return false;
 }
 
-const buildRoute = (method, pattern, handle) => {
-  const regex = patternRegex(pattern);
-  const params = getParams(pattern, regex);
-  return { method, pattern, regex, params, handle };
-}
 
-const patternRegex = (pattern) =>
-  new RegExp(`^${pattern.replace(/:[^\/\(\):.-]+/g, '([^/]+)')}$`);
+swap.submit = function(e, selectors) {
+  const form = e.target;
+  const { action: url, method } = form;
 
-const getParams = (pattern, regex) => {
-  const regexChars = /\?|\(|\)/g;
-  const matches = pattern.replace(regexChars, '').match(regex);
-  if (matches) {
-    matches.shift();
-    return matches.map(item => item.replace(':', ''));
-  }
-  return [];
-}
+  if (!shouldSwap(getUrl(url))) return;
 
-const buildRequest = (method, url) => {
-  const link = document.createElement('a');
-  link.setAttribute('href', url);
-  return {
+  e.preventDefault();
+
+  swap.with({
+    url,
     method,
-    pathname: link.origin + link.pathname,
-    query: parseQuery(link.search)
-  };
+    body: new URLSearchParams(new FormData(form)).toString(),
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
+  }, selectors || getSelectors(form));
 }
 
-const parseQuery = (search) => decodeURIComponent(search).substr(1)
-  .split('&')
-  .reduce((params, keyval) => {
-      const [ key, val ] = keyval.split('=');
-      params[key] = val;
-      return params;
-    }, {});
-
-let metaKeyOn = false;
 
 const loaded = (e) => swap.fire('on', location.href);
 
 const popstate = (e) => {
-  if (!e.state) return;
+  // use headers to determine whether back/forward popstate causes a ajax request change or just uses what's cached
+  // if back was a POST request do we use a confirm popup like normal browser behavior and then submit
+  // if back was a POST we don't do anything, or we use the cache
   const { href } = location;
   const { html, selectors } = e.state;
+
   swap.fire('off', href);
   swap.to(html, selectors);
-  window.history.replaceState(e.state, '', href);
+  history.replaceState(e.state, '', href);
   swap.fire('on', href);
 }
+
+let metaKeyOn = false;
 
 const keyDownUp = (e) => {
   if (e.metaKey || e.ctrlKey) {
@@ -176,186 +175,14 @@ const keyDownUp = (e) => {
   }
 }
 
-const click = function(e) {
-  const link = this;
-  if (link.hostname !== location.hostname
-    || link.protocol !== location.protocol) {
-    return;
-  }
-
-  if ((link.pathname === location.pathname) && (link.hash || link.hash === '')) {
-    return;
-  }
-
-  if (!metaKeyOn) {
-    e.preventDefault();
-    const href = link.href;
-    const selectors = (link.dataset.swap || '')
-      .split(',')
-      .filter(selector => selector.trim());
-    swap.fire('before', href);
-    swap.with(href, selectors);
-  }
-}
-
-const delegateHandle = function(delegate, fn) {
-  return function(e) {
-    if (e.target.matches(delegate)) {
-      return fn.apply(e.target, arguments);
-    }
-
-    const parent = e.target.closest(delegate);
-
-    if (parent) {
-      return fn.apply(parent, arguments);
-    }
-  }
-}
 
 window.addEventListener('DOMContentLoaded', loaded);
 window.addEventListener('popstate', popstate);
 window.addEventListener('keydown', keyDownUp);
 window.addEventListener('keyup', keyDownUp);
-window.addEventListener('click', delegateHandle('a:not([target="_blank"]):not([data-swap="false"])', click));
+window.addEventListener('click', delegateHandle('a:not([target="_blank"]):not([data-swap="false"])', swap.click));
+window.addEventListener('submit', delegateHandle('form:not([data-swap="false"])', swap.submit));
+
 
 window.swap = swap;
-
 window.app = swap;
-
-
-
-
-// routes
-// - every route fires when it matches
-// - every route fires off when page state change
-
-// components
-// - has checks run on every page transition
-// - not fires if it was on previous page
-
-
-
-// app.before(route, fn);
-// app.on(route, fn);
-// app.off(route, fn);
-
-// app.before(selector, fn);
-// app.on(selector, fn);
-// app.off(selector, fn);
-
-// app.event(name, selector, fn);
-// // app.off(name, selector, fn);
-
-
-
-// app.on(name, selector, fn);
-// app.off(name, selector, fn);
-// app.emit(name, selector, fn);
-
-// app.before(route, fn);
-// app.on(route, fn);
-// app.off(route, fn);
-// app.emit(route);
-
-// app.before(selector, fn);
-// app.on(selector, fn);
-// app.off(selector, fn);
-
-
-// app.get('/foo', middleware);
-// app.use('/foo', middleware);
-// app.use(handle);
-// app.use('/foo', handle, handle);
-// app.get('/foo', handle, handle);
-// app.use('/foo', handle, handle);
-// app.use('*', handle, handle);
-// app.all('/foo', handle, handle);
-// app.use(handle, handle);
-// app.get('/foo', handle);
-
-
-
-
-
-
-
-// app.click('.ApjNav a', fn);
-
-
-// app.on('click', '.ApjNav a', fn);
-// app.on('.ApjNav', fn);
-
-// app.on('/ask-pastor-john', fn);
-// app.on('.ApjNav', fn);
-
-// app.on('route', '/ask-pastor-john', fn);
-// app.on('route', '.ApjNav', fn);
-
-// app.on(name, selector, fn);
-// app.off(name, selector, fn);
-
-// app.before('route', route, fn);
-// app.on('route', route, fn);
-// app.off('route', route, fn);
-
-// app.before('element', selector, fn);
-// app.on('element', selector, fn);
-// app.off('element', selector, fn);
-
-// app.event('resize', fn);
-// app.event('click', '.btn', fn);
-
-
-// swap.on('*', () => {
-//   let timeout = 0;
-//   swap.event('input', '.ApjSearchInput', (e) => {
-//     clearTimeout(timeout);
-//     timeout = setTimeout(() => {
-//       const value = e.target.value;
-//       const url = `${location.origin + location.pathname}?q=${value}`;
-//       swap.with(url, ['.ApjResources']);
-//     }, 10);
-//   });
-// });
-
-
-// app.globalEvent('input', '.ApjSearchInput', (e) => {
-
-// });
-
-
-// swap.has('.ApjSearchInput', () => {
-//   let timeout = 0;
-//   swap.event('input', '.ApjSearchInput', (e) => {
-//     clearTimeout(timeout);
-//     timeout = setTimeout(() => {
-//       const value = e.target.value;
-//       const url = `${location.origin + location.pathname}?q=${value}`;
-//       swap.with(url, ['.ApjResources']);
-//     }, 10);
-//   });
-// });
-
-// const scroll = (e) => 'doin something';
-
-// app.on('.btn', (e) => {
-//   btn.addEventListener('scroll', scroll);
-// });
-
-// app.off('.btn', (e) => {
-//   btn.removeEventListener('scroll', scroll);
-// });
-
-// app.on('/foo', (e) => {
-//   btn.addEventListener('scroll', scroll);
-//   window.addEventListener('resize', resize);
-// });
-
-// app.off('/foo', (e) => {
-//   btn.removeEventListener('scroll', scroll);
-// });
-
-// app.on('/foo', (e) => {
-//   btn.addEventListener('scroll', scroll);
-//   app.event('resize', resize);
-// });
