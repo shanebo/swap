@@ -20,20 +20,23 @@ const talk = (opts, callback) => {
   }
 
   xhr.onloadstart = function(e) {
-    doc.style.setProperty('--progress', '0%');
+    doc.style.setProperty('--swap-progress', '0%');
     doc.classList.add('swap-progressing');
   }
 
   xhr.onprogress = function(e) {
     if (e.lengthComputable) {
       const percent = (e.loaded / e.total) * 10;
-      doc.style.setProperty('--progress', `${percent}%`);
+      doc.style.setProperty('--swap-progress', `${percent}%`);
     }
   }
 
   xhr.onloadend = function(e) {
-    doc.style.setProperty('--progress', '100%');
+    doc.style.setProperty('--swap-progress', '100%');
     doc.classList.remove('swap-progressing');
+    setTimeout(() => {
+      doc.style.setProperty('--swap-progress', '0%');
+    }, 1000);
   }
 
   xhr.onerror = console.log; // handle non-HTTP error (e.g. network down)

@@ -43,11 +43,16 @@ const getParams = (pattern, regex) => {
 }
 
 
-const buildEvent = (when, toUrl, method) => {
-  // const link = document.createElement('a');
-  // link.setAttribute('href', toUrl);
-  //   const to = buildUrl(link);
-  const to = buildUrl(new URL(toUrl));
+const getUrl = (url) => {
+  // new URL(url) we could do this
+  const source = document.createElement('a');
+  source.setAttribute('href', url);
+  return buildUrl(source);
+}
+
+
+const buildEvent = (when, url, method) => {
+  const to = getUrl(url);
   const from = buildUrl(location);
 
   return {
@@ -62,6 +67,10 @@ const buildEvent = (when, toUrl, method) => {
 const shouldSwap = (destination) => {
   if (destination.hostname !== location.hostname
     || destination.protocol !== location.protocol) {
+      console.log('hostname protocol failed');
+      console.log(destination);
+      console.log(location);
+      alert('hostname protocol failed');
     return false;
   }
 
@@ -70,12 +79,6 @@ const shouldSwap = (destination) => {
   }
 
   return true;
-}
-
-const getUrl = (url) => {
-  const source = document.createElement('a');
-  source.setAttribute('href', url);
-  return buildUrl(source);
 }
 
 
@@ -91,12 +94,19 @@ const parseQuery = (search) => decodeURIComponent(search).substr(1)
 const delegateHandle = function(delegate, fn) {
   return function(e) {
     if (e.target.matches(delegate)) {
+      console.log('in element');
+
       return fn.apply(e.target, arguments);
     }
 
     const parent = e.target.closest(delegate);
 
     if (parent) {
+      console.log('in parent delegator');
+      console.log(typeof parent);
+      console.log(parent);
+      console.log(parent.href);
+      // debugger;
       return fn.apply(parent, arguments);
     }
   }
@@ -127,6 +137,16 @@ const buildUrl = (source) => {
 const getSelectors = (el) => (el.dataset.swap || '').split(',').map(selector => selector.trim()).filter(selector => selector);
 
 
+const getHeaders = (str) => {
+  return str.trim().split('\n').map(line => {
+    const splat = line.split(':');
+    return {
+      [splat[0].trim()]: splat[1].trim()
+    };
+  }).reduce(((r, c) => Object.assign(r, c)), {});
+}
+
+
 export {
   findRoute,
   buildRoute,
@@ -136,5 +156,6 @@ export {
   buildUrl,
   getUrl,
   shouldSwap,
-  delegateHandle
+  delegateHandle,
+  getHeaders
 };

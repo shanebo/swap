@@ -1,5 +1,16 @@
 const talk = require('./talk');
-const { findRoute, buildRoute, buildEvent, buildUrl, shouldSwap, getUrl, delegateHandle, getSelectors } = require('./utils');
+
+const {
+  findRoute,
+  buildRoute,
+  buildEvent,
+  buildUrl,
+  shouldSwap,
+  getUrl,
+  delegateHandle,
+  getSelectors,
+  getHeaders
+} = require('./utils');
 
 
 const swap = {
@@ -71,10 +82,11 @@ swap.with = (options, selectors = []) => {
     const wasRedirected = url !== xhr.responseURL;
     const finalUrl = wasRedirected ? xhr.responseURL : url;
     const finalMethod = wasRedirected ? 'get' : method;
+    const headers = getHeaders(xhr.getAllResponseHeaders());
 
     swap.fire('off', url, method); // confusing but accurate because url is the toUrl
     swap.to(html, selectors);
-    history.pushState({ html, selectors, method: finalMethod }, '', finalUrl);
+    history.pushState({ html, selectors, headers, method: finalMethod }, '', finalUrl);
     if (!selectors.length) window.scrollTo(0, 0);
     swap.fire('on', finalUrl, finalMethod);
   });
@@ -122,7 +134,7 @@ swap.event = function(name, delegate, fn) {
 
 
 swap.click = function(e, selectors) {
-  const link = e.target;
+  const link = this;
 
   if (!shouldSwap(buildUrl(link))) return;
 
@@ -134,7 +146,7 @@ swap.click = function(e, selectors) {
 
 
 swap.submit = function(e, selectors) {
-  const form = e.target;
+  const form = this;
   const { action: url, method } = form;
 
   if (!shouldSwap(getUrl(url))) return;
@@ -155,9 +167,18 @@ swap.submit = function(e, selectors) {
 const loaded = (e) => swap.fire('on', location.href);
 
 const popstate = (e) => {
-  // use headers to determine whether back/forward popstate causes a ajax request change or just uses what's cached
-  // if back was a POST request do we use a confirm popup like normal browser behavior and then submit
-  // if back was a POST we don't do anything, or we use the cache
+  /*
+    - check to if headers determine it should be cached or not
+    - if not cached then ajax request
+    - if cached then return state
+    - check headers on whether to cache or not
+  */
+
+  if (location.hash) return;
+
+  console.log(e.state.headers);
+
+
   const { href } = location;
   const { html, selectors } = e.state;
 
@@ -186,3 +207,10 @@ window.addEventListener('submit', delegateHandle('form:not([data-swap="false"])'
 
 window.swap = swap;
 window.app = swap;
+
+
+const loader = require('./loader');
+
+module.exports = function (opts = {}) {
+  loader(opts);
+}
