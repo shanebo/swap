@@ -161,6 +161,7 @@ let metaKeyOn = false;
 const loaded = (e) => swap.fire('on', location.href);
 
 const popstate = (e) => {
+  if (!e.state) return;
   const { href } = location;
   const { html, selectors } = e.state;
   swap.fire('off', href);
@@ -182,7 +183,7 @@ const click = function(e) {
     return;
   }
 
-  if ((link.pathname === location.pathname) && link.hash) {
+  if ((link.pathname === location.pathname) && (link.hash || link.hash === '')) {
     return;
   }
 
