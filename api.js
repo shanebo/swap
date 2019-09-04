@@ -1,3 +1,25 @@
+/*
+TRIGGERS
+- click
+- submit
+
+AJAX
+this runs ajax from the options the user either manually calls, or that the click or submit methods build
+- with
+
+with could call
+- off
+- before
+- on
+
+
+EVENTS (for elements and routes)
+- off
+- before
+- on
+*/
+
+
 before
 {
   to: the first url
