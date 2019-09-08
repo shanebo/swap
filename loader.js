@@ -1,5 +1,5 @@
 const css = (opts) => (`
-    :root {
+    html {
       --swap-progress: 0px;
       --swap-progress-color: ${opts.color || '#5BDF8F'};
     }
