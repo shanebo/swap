@@ -2,6 +2,9 @@ const talk = (opts, callback) => {
   const doc = document.documentElement;
   const xhr = new XMLHttpRequest();
 
+  doc.style.setProperty('--swap-progress', '0%');
+  doc.classList.add('swap-progressing');
+
   xhr.open(opts.method, opts.url, true);
 
   // xhr.setRequestHeader('cache-control', 'no-cache, must-revalidate, post-check=0, pre-check=0');
