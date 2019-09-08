@@ -2,7 +2,6 @@ const talk = (opts, callback) => {
   const doc = document.documentElement;
   const xhr = new XMLHttpRequest();
 
-  doc.style.setProperty('--swap-progress', '0%');
   doc.classList.add('swap-progressing');
 
   xhr.open(opts.method, opts.url, true);
@@ -14,32 +13,14 @@ const talk = (opts, callback) => {
   // xhr.setRequestHeader('pragma', 'no-cache');
 
   xhr.onload = () => {
+    doc.classList.remove('swap-progressing');
+
     if (xhr.status !== 200) {
       console.log( 'Error: ' + xhr.status);
       return;
     }
 
     callback(xhr, xhr.response, xhr.responseText);
-  }
-
-  xhr.onloadstart = function(e) {
-    doc.style.setProperty('--swap-progress', '0%');
-    doc.classList.add('swap-progressing');
-  }
-
-  xhr.onprogress = function(e) {
-    if (e.lengthComputable) {
-      const percent = (e.loaded / e.total) * 10;
-      doc.style.setProperty('--swap-progress', `${percent}%`);
-    }
-  }
-
-  xhr.onloadend = function(e) {
-    doc.style.setProperty('--swap-progress', '100%');
-    doc.classList.remove('swap-progressing');
-    setTimeout(() => {
-      doc.style.setProperty('--swap-progress', '0%');
-    }, 1000);
   }
 
   xhr.onerror = console.log; // handle non-HTTP error (e.g. network down)
