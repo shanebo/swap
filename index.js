@@ -48,17 +48,19 @@ swap.on = swap.listener.bind(swap, 'on');
 swap.off = swap.listener.bind(swap, 'off');
 
 
-swap.to = (html, selectors) => {
+swap.to = (html, sels) => {
+  const selectors = sels.map(sel => sel.split(/\s*->\s*/));
   const dom = new DOMParser().parseFromString(html, 'text/html');
-  const oldEls = selectors.map(sel => document.querySelector(sel)).filter(el => el);
-  const fullSwap = (selectors.length === 0 || oldEls.length !== selectors.length);
+  const oldEls = selectors.map(sel => document.querySelector(sel[0])).filter(el => el);
+  const newEls = selectors.map(sel => dom.querySelector(sel[1] || sel[0])).filter(el => el);
+  const fullSwap = (selectors.length === 0 || oldEls.length !== selectors.length || newEls.length !== selectors.length);
 
   if (fullSwap) {
     document.body = dom.body;
   } else {
     selectors.forEach((sel, s) => {
       const oldEl = oldEls[s];
-      const newEl = dom.querySelector(sel);
+      const newEl = newEls[s];
       oldEl.parentNode.replaceChild(newEl, oldEl);
     });
   }
@@ -67,6 +69,26 @@ swap.to = (html, selectors) => {
   document.title = dom.head.querySelector('title').innerText;
   return swap;
 }
+
+// swap.to = (html, selectors) => {
+//   const dom = new DOMParser().parseFromString(html, 'text/html');
+//   const oldEls = selectors.map(sel => document.querySelector(sel)).filter(el => el);
+//   const fullSwap = (selectors.length === 0 || oldEls.length !== selectors.length);
+
+//   if (fullSwap) {
+//     document.body = dom.body;
+//   } else {
+//     selectors.forEach((sel, s) => {
+//       const oldEl = oldEls[s];
+//       const newEl = dom.querySelector(sel);
+//       oldEl.parentNode.replaceChild(newEl, oldEl);
+//     });
+//   }
+
+//   document.head = dom.head;
+//   document.title = dom.head.querySelector('title').innerText;
+//   return swap;
+// }
 
 
 swap.with = (options, selectors = []) => {
@@ -87,7 +109,10 @@ swap.with = (options, selectors = []) => {
     swap.fire('off', url, method); // confusing but accurate because url is the toUrl
     swap.to(html, selectors);
     history.pushState({ html, selectors, headers, method: finalMethod }, '', finalUrl);
+
+    // make this smarter where it only scrolls to top on different urls?
     if (!selectors.length) window.scrollTo(0, 0);
+
     swap.fire('on', finalUrl, finalMethod);
   });
 
@@ -144,23 +169,37 @@ swap.click = function(e, selectors) {
   }
 }
 
+/*
+.Main -> .PaneContent
+*/
+
+
+
 
 swap.submit = function(e, selectors) {
-  const form = this;
+  const form = e.target;
   const { action: url, method } = form;
 
   if (!shouldSwap(getUrl(url))) return;
 
+  if (!swap.formValidator(e)) return;
+
   e.preventDefault();
 
-  swap.with({
-    url,
-    method,
-    body: new URLSearchParams(new FormData(form)).toString(),
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    }
-  }, selectors || getSelectors(form));
+  if (method.toLowerCase() === 'get') {
+    const urlWithParams = `${url}?${new URLSearchParams(new FormData(form)).toString()}`;
+    console.log({ urlWithParams });
+    swap.with(urlWithParams, selectors || getSelectors(form));
+  } else {
+    swap.with({
+      url,
+      method,
+      body: new URLSearchParams(new FormData(form)).toString(),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    }, selectors || getSelectors(form));
+  }
 }
 
 
@@ -197,13 +236,6 @@ const keyDownUp = (e) => {
 }
 
 
-window.addEventListener('DOMContentLoaded', loaded);
-window.addEventListener('popstate', popstate);
-window.addEventListener('keydown', keyDownUp);
-window.addEventListener('keyup', keyDownUp);
-window.addEventListener('click', delegateHandle('a:not([target="_blank"]):not([data-swap="false"])', swap.click));
-window.addEventListener('submit', delegateHandle('form:not([data-swap="false"])', swap.submit));
-
 
 window.swap = swap;
 window.app = swap;
@@ -213,4 +245,18 @@ const loader = require('./loader');
 
 module.exports = function (opts = {}) {
   loader(opts);
+
+  swap.formValidator = opts.formValidator || ((e) => true);
+
+  const clickSelector = opts.clickSelector || 'a:not([target="_blank"]):not([data-swap="false"])';
+  const formSelector = opts.formSelector || 'form:not([data-swap="false"])';
+
+  window.addEventListener('DOMContentLoaded', loaded);
+  window.addEventListener('popstate', popstate);
+  window.addEventListener('keydown', keyDownUp);
+  window.addEventListener('keyup', keyDownUp);
+  window.addEventListener('click', delegateHandle(clickSelector, swap.click));
+  window.addEventListener('submit', delegateHandle(formSelector, swap.submit));
 }
+
+
