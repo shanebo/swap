@@ -9,7 +9,8 @@ const {
   getUrl,
   delegateHandle,
   getSelectors,
-  getHeaders
+  getHeaders,
+  removeEmptyProps
 } = require('./utils');
 
 
@@ -100,6 +101,9 @@ swap.with = (options, selectors = []) => {
 
   swap.fire('before', url, method); // before is the only when where method matters
 
+  // console.log({ selectors });
+
+
   talk(opts, (xhr, res, html) => {
     const wasRedirected = url !== xhr.responseURL;
     const finalUrl = wasRedirected ? xhr.responseURL : url;
@@ -187,7 +191,18 @@ swap.submit = function(e, selectors) {
   e.preventDefault();
 
   if (method.toLowerCase() === 'get') {
-    const urlWithParams = `${url}?${new URLSearchParams(new FormData(form)).toString()}`;
+    // const obj = removeEmptyProps(new FormData(form));
+    // const query = new URLSearchParams(obj).toString();
+    // const search = query ? '?' + query : query;
+    // const urlWithParams = `${url}${search}`;
+
+    const query = new URLSearchParams(new FormData(form)).toString();
+    // const cleanQuery = query.replace(/[^=&]+=(&|$)/g, '').replace(/&$/, '');
+    const cleanQuery = decodeURIComponent(query).replace(/[^=&]+=(&|$)/g, '').replace(/&$/, '');
+    const search = cleanQuery ? '?' + encodeURI(cleanQuery) : cleanQuery;
+    const urlWithParams = `${url}${search}`;
+
+
     console.log({ urlWithParams });
     swap.with(urlWithParams, selectors || getSelectors(form));
   } else {
