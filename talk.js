@@ -6,6 +6,11 @@ const talk = (opts, callback) => {
 
   xhr.open(opts.method, opts.url, true);
 
+  if (opts.headers) {
+    Object.keys(opts.headers).forEach((header) => {
+      xhr.setRequestHeader(header, opts.headers[header]);
+    });
+  }
   // xhr.setRequestHeader('cache-control', 'no-cache, must-revalidate, post-check=0, pre-check=0');
   // xhr.setRequestHeader('cache-control', 'max-age=0');
   // xhr.setRequestHeader('expires', '0');
