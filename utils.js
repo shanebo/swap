@@ -47,7 +47,6 @@ const getParams = (pattern, regex) => {
 
 
 const getUrl = (url) => {
-  // new URL(url) we could do this
   const source = document.createElement('a');
   source.setAttribute('href', url);
   return buildUrl(source);
@@ -70,10 +69,7 @@ const buildEvent = (when, url, method) => {
 const shouldSwap = (destination) => {
   if (destination.hostname !== location.hostname
     || destination.protocol !== location.protocol) {
-      console.log('hostname protocol failed');
-      console.log(destination);
-      console.log(location);
-      alert('hostname protocol failed');
+      alert('hostname protocol failed so hard refresh');
     return false;
   }
 
@@ -97,19 +93,12 @@ const parseQuery = (search) => decodeURIComponent(search).substr(1)
 const delegateHandle = function(delegate, fn) {
   return function(e) {
     if (e.target.matches(delegate)) {
-      console.log('in element');
-
       return fn.apply(e.target, arguments);
     }
 
     const parent = e.target.closest(delegate);
 
     if (parent) {
-      console.log('in parent delegator');
-      console.log(typeof parent);
-      console.log(parent);
-      console.log(parent.href);
-      // debugger;
       return fn.apply(parent, arguments);
     }
   }
@@ -137,7 +126,8 @@ const buildUrl = (source) => {
 }
 
 
-const getSelectors = (el) => (el.dataset.swap || '').split(',').map(selector => selector.trim()).filter(selector => selector);
+const getSelectors = (el) => (el.dataset.swap || el.dataset.swapPane || '').split(',').map(selector => selector.trim()).filter(selector => selector);
+// const getSelectors = (el) => (el.dataset.swap || '').split(',').map(selector => selector.trim()).filter(selector => selector);
 
 
 const getHeaders = (str) => {
@@ -154,8 +144,15 @@ const removeEmptyProps = (obj) =>
   Object.fromEntries(
     Object.entries(obj)
       .filter(([k, v]) => v != null)
-      .map(([k, v]) => (typeof v === "object" ? [k, removeEmptyProps(v)] : [k, v]))
+      .map(([k, v]) => (typeof v === 'object' ? [k, removeEmptyProps(v)] : [k, v]))
   );
+
+
+const hashParams = (hash) => hash.substr(1).split('&').reduce((result, item) => {
+  const [param, value] = item.split('=');
+  result[param] = value;
+  return result;
+}, {});
 
 
 export {
@@ -170,5 +167,6 @@ export {
   shouldSwap,
   delegateHandle,
   removeEmptyProps,
-  getHeaders
+  getHeaders,
+  hashParams
 };

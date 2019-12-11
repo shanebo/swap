@@ -9,8 +9,12 @@ const {
   delegateHandle,
   getSelectors,
   getHeaders,
-  removeEmptyProps
+  hashParams
 } = require('./utils');
+
+let paneUrl;
+let isFormSubmit;
+let paneHistory = [];
 
 
 const swap = {
@@ -20,7 +24,6 @@ const swap = {
     off: []
   },
   elements: {
-    before: [],
     on: [],
     off: []
   }
@@ -48,99 +51,97 @@ swap.on = swap.listener.bind(swap, 'on');
 swap.off = swap.listener.bind(swap, 'off');
 
 
-swap.to = (html, sels) => {
-  const selectors = sels.map(sel => sel.split(/\s*->\s*/));
+const innerHtmlRender = (oldEl, newEl) => {
+  oldEl.innerHTML = newEl.innerHTML;
+}
+
+const replaceRender = (oldEl, newEl) => {
+  oldEl.parentNode.replaceChild(newEl, oldEl);
+}
+
+
+swap.to = (html, sels, inline) => {
+  fireElements('off');
+
   const dom = new DOMParser().parseFromString(html, 'text/html');
-  const oldEls = selectors.map(sel => document.querySelector(sel[0])).filter(el => el);
-  const newEls = selectors.map(sel => dom.querySelector(sel[1] || sel[0])).filter(el => el);
-  const fullSwap = (selectors.length === 0 || oldEls.length !== selectors.length || newEls.length !== selectors.length);
+  const selectors = sels.map(sel => sel.split(/\s*->\s*/));
+
+  const changes = selectors.map(sel => {
+    if (sel[1]) {
+      // arrow use case
+      const oldEl = document.querySelector(sel[1]);
+      const newEl = dom.querySelector(sel[0]);
+      return !oldEl || !newEl
+        ? null
+        : innerHtmlRender.bind(null, oldEl, newEl);
+    } else {
+      const oldEl = document.querySelector(sel[0]);
+      const newEl = dom.querySelector(sel[0]);
+      return !oldEl || !newEl
+        ? null
+        : replaceRender.bind(null, oldEl, newEl);
+    }
+  }).filter(el => el);
+
+  const fullSwap = (!selectors.length || (changes.length !== selectors.length));
 
   if (fullSwap) {
     document.body = dom.body;
   } else {
-    selectors.forEach((sel, s) => {
-      const oldEl = oldEls[s];
-      const newEl = newEls[s];
-      oldEl.parentNode.replaceChild(newEl, oldEl);
-    });
+    changes.forEach(render => render());
   }
 
-  document.head = dom.head;
-  document.title = dom.head.querySelector('title').innerText;
+  if (!inline) {
+    document.head = dom.head;
+    document.title = dom.head.querySelector('title').innerText;
+  }
+
+  if (!selectors.length) {
+    // make this smarter where it only scrolls to top on different urls?
+    console.log('no selectors so scroll to top');
+    window.scrollTo(0, 0);
+  }
+
+  fireElements('on');
+
   return swap;
 }
 
-// swap.to = (html, selectors) => {
-//   const dom = new DOMParser().parseFromString(html, 'text/html');
-//   const oldEls = selectors.map(sel => document.querySelector(sel)).filter(el => el);
-//   const fullSwap = (selectors.length === 0 || oldEls.length !== selectors.length);
 
-//   if (fullSwap) {
-//     document.body = dom.body;
-//   } else {
-//     selectors.forEach((sel, s) => {
-//       const oldEl = oldEls[s];
-//       const newEl = dom.querySelector(sel);
-//       oldEl.parentNode.replaceChild(newEl, oldEl);
-//     });
-//   }
-
-//   document.head = dom.head;
-//   document.title = dom.head.querySelector('title').innerText;
-//   return swap;
-// }
-
-
-swap.with = (options, selectors = []) => {
+swap.with = (options, selectors = [], inline) => {
   const opts = typeof options === 'string'
     ? { url: options, method: 'get' }
     : options;
 
   const { url, method } = opts;
 
-  swap.fire('before', url, method); // before is the only when where method matters
+  fireRoutes('before', url, method);
 
-  // console.log({ selectors });
-
+  if (inline) {
+    opts.headers = {
+      'x-requested-with': 'xmlhttprequest',
+      'pane-url': paneUrl
+    }
+  }
 
   talk(opts, (xhr, res, html) => {
     const wasRedirected = url !== xhr.responseURL;
     const finalUrl = wasRedirected ? xhr.responseURL : url;
     const finalMethod = wasRedirected ? 'get' : method;
-    const headers = getHeaders(xhr.getAllResponseHeaders());
 
-    swap.fire('off', url, method); // confusing but accurate because url is the toUrl
-    swap.to(html, selectors);
-    history.pushState({ html, selectors, headers, method: finalMethod }, '', finalUrl);
+    if (inline || (isFormSubmit && document.documentElement.getAttribute('swap-pane-is-active'))) {
+      swap.openPane(html, finalUrl);
+    } else {
+      document.documentElement.removeAttribute('swap-pane-is-active');
 
-    // make this smarter where it only scrolls to top on different urls?
-    if (!selectors.length) window.scrollTo(0, 0);
-
-    swap.fire('on', finalUrl, finalMethod);
-  });
-
-  return swap;
-}
-
-
-swap.fire = (when, url, method = 'get') => {
-  const event = buildEvent(when, url, method);
-
-  if (when !== 'before') {
-    // we can never know before an element exists
-    swap.elements[when].forEach((el) => {
-      const target = document.querySelector(el.selector);
-      if (target) {
-        el.handle({...event, ...{ target }});
-      }
-    });
-  }
-
-  swap.routes[when].forEach((route) => {
-    const found = findRoute(event, route);
-    if (found) {
-      route.handle({...event, ...{ route }});
+      const headers = getHeaders(xhr.getAllResponseHeaders());
+      fireRoutes('off', url, method); // confusing but accurate because url is the toUrl
+      swap.to(html, selectors);
+      history.pushState({ html, selectors, headers, method: finalMethod }, '', finalUrl);
+      fireRoutes('on', finalUrl, finalMethod);
     }
+
+    isFormSubmit = false;
   });
 
   return swap;
@@ -168,20 +169,22 @@ swap.click = function(e, selectors) {
 
   if (!metaKeyOn) {
     e.preventDefault();
-    swap.with(link.href, selectors || getSelectors(link));
+    const sels = selectors || getSelectors(link);
+
+    if (link.dataset.swapPane) {
+      swap.with(link.pathname, sels, true);
+    } else {
+      swap.with(link.href, sels);
+    }
   }
 }
-
-/*
-.Main -> .PaneContent
-*/
-
-
 
 
 swap.submit = function(e, selectors) {
   const form = e.target;
   const { action: url, method } = form;
+
+  console.log('submit fired');
 
   if (!shouldSwap(getUrl(url))) return;
 
@@ -189,20 +192,13 @@ swap.submit = function(e, selectors) {
 
   e.preventDefault();
 
-  if (method.toLowerCase() === 'get') {
-    // const obj = removeEmptyProps(new FormData(form));
-    // const query = new URLSearchParams(obj).toString();
-    // const search = query ? '?' + query : query;
-    // const urlWithParams = `${url}${search}`;
+  isFormSubmit = true;
 
+  if (method.toLowerCase() === 'get') {
     const query = new URLSearchParams(new FormData(form)).toString();
-    // const cleanQuery = query.replace(/[^=&]+=(&|$)/g, '').replace(/&$/, '');
     const cleanQuery = decodeURIComponent(query).replace(/[^=&]+=(&|$)/g, '').replace(/&$/, '');
     const search = cleanQuery ? '?' + encodeURI(cleanQuery) : cleanQuery;
     const urlWithParams = `${url}${search}`;
-
-
-    console.log({ urlWithParams });
     swap.with(urlWithParams, selectors || getSelectors(form));
   } else {
     swap.with({
@@ -210,14 +206,26 @@ swap.submit = function(e, selectors) {
       method,
       body: new URLSearchParams(new FormData(form)).toString(),
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
+        'Content-Type': 'application/x-www-form-urlencoded',
+        ...paneUrl && { 'pane-url': paneUrl }
       }
     }, selectors || getSelectors(form));
   }
 }
 
 
-const loaded = (e) => swap.fire('on', location.href);
+const loaded = (e) => {
+  if (location.hash) {
+    const params = hashParams(location.hash);
+    if (params.pane) {
+      swap.with(params.pane, swap.pane.selectors, true);
+    }
+  } else {
+    fireElements('on');
+    fireRoutes('on', location.href);
+  }
+}
+
 
 const popstate = (e) => {
   /*
@@ -229,19 +237,18 @@ const popstate = (e) => {
 
   if (location.hash) return;
 
-  console.log(e.state.headers);
-
-
   const { href } = location;
   const { html, selectors } = e.state;
 
-  swap.fire('off', href);
+  fireRoutes('off', href);
   swap.to(html, selectors);
   history.replaceState(e.state, '', href);
-  swap.fire('on', href);
+  fireRoutes('on', href);
 }
 
+
 let metaKeyOn = false;
+
 
 const keyDownUp = (e) => {
   if (e.metaKey || e.ctrlKey) {
@@ -250,6 +257,27 @@ const keyDownUp = (e) => {
 }
 
 
+const fireElements = (when) => {
+  swap.elements[when].forEach((el) => {
+    const target = document.querySelector(el.selector);
+    if (target) {
+      el.handle({ target });
+    }
+  });
+}
+
+
+const fireRoutes = (when, url, method = 'get') => {
+  const event = buildEvent(when, url, method);
+
+  swap.routes[when].forEach((route) => {
+    const found = findRoute(event, route);
+    if (found) {
+      route.handle({...event, ...{ route }});
+    }
+  });
+}
+
 
 window.swap = swap;
 window.app = swap;
@@ -257,10 +285,64 @@ window.app = swap;
 
 const loader = require('./loader');
 
+
+
+
+const compressArr = (arr = []) => arr.reduce((list, next) => list.slice(-1)[0] === next ? list : [...list, next], []);
+
+
+
 module.exports = function (opts = {}) {
   loader(opts);
 
   swap.formValidator = opts.formValidator || ((e) => true);
+
+  swap.pane = opts.pane || {
+    selector: '.Pane',
+    selectors: ['.Main -> .PaneContent', '.PaneHeader'],
+    closeButton: '.PaneCloseBtn',
+    backButton: '.PaneBackBtn',
+    open: () => {
+    },
+    back: (url) => {
+      swap.with(url, '.Main -> .PaneContent', true);
+    },
+    close: () => {
+      console.log('close pane');
+    }
+  };
+
+  swap.openPane = (html, url) => {
+    document.documentElement.setAttribute('swap-pane-is-active', 'true');
+    const shouldScroll = !isFormSubmit;
+    const pathname = getUrl(url).pathname;
+    paneUrl = url; // should this be pathname?
+    location.hash = `#pane=${pathname}`;
+    paneHistory.push(location.hash.replace('#pane=', ''));
+    paneHistory = compressArr(paneHistory);
+
+    swap.to(html, swap.pane.selectors, true);
+    swap.pane.open(shouldScroll);
+    if (shouldScroll) {
+      document.querySelector('.PaneContent').scrollTop = 0;
+      // document.querySelector(swap.pane.selector).scrollTop = 0;
+    }
+    document.querySelector(swap.pane.backButton).style.display = paneHistory.length > 1 ? 'inline' : 'none';
+  }
+
+  swap.backPane = () => {
+    paneHistory.pop();
+    const url = paneHistory.pop();
+    swap.pane.back(url);
+  }
+
+  swap.closePane = () => {
+    document.documentElement.removeAttribute('swap-pane-is-active');
+    const noHashURL = location.href.replace(/#.*$/, '');
+    window.history.replaceState('', document.title, noHashURL);
+    paneHistory = [];
+    swap.pane.close();
+  }
 
   const clickSelector = opts.clickSelector || 'a:not([target="_blank"]):not([data-swap="false"])';
   const formSelector = opts.formSelector || 'form:not([data-swap="false"])';
@@ -271,6 +353,12 @@ module.exports = function (opts = {}) {
   window.addEventListener('keyup', keyDownUp);
   window.addEventListener('click', delegateHandle(clickSelector, swap.click));
   window.addEventListener('submit', delegateHandle(formSelector, swap.submit));
+
+  swap.event('click', swap.pane.backButton, swap.backPane);
+  swap.event('click', swap.pane.closeButton, swap.closePane);
+  swap.event('click', '[swap-pane-is-active]', (e) => {
+    if (!e.target.closest(swap.pane.selector)) {
+      swap.closePane();
+    }
+  });
 }
-
-
