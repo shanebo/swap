@@ -66,6 +66,7 @@ swap.to = (html, sels) => {
     });
   }
 
+  // this should only run if it's not the pane scenario
   document.head = dom.head;
   document.title = dom.head.querySelector('title').innerText;
   return swap;
@@ -104,7 +105,19 @@ swap.with = (options, selectors = []) => {
   // console.log({ selectors });
 
 
+  // if (pane) -> pane();
+  // if (normal) -> normal();
+
+
   talk(opts, (xhr, res, html) => {
+    // this is putting links inside pane that aren't pane links
+    if (document.documentElement.classList.contains('ix-pane')) {
+      updatePane(html, '.Main -> .PaneContent', method);
+      swap.fire('on', url, method);
+      return;
+    }
+
+
     const wasRedirected = url !== xhr.responseURL;
     const finalUrl = wasRedirected ? xhr.responseURL : url;
     const finalMethod = wasRedirected ? 'get' : method;
@@ -115,7 +128,13 @@ swap.with = (options, selectors = []) => {
     history.pushState({ html, selectors, headers, method: finalMethod }, '', finalUrl);
 
     // make this smarter where it only scrolls to top on different urls?
-    if (!selectors.length) window.scrollTo(0, 0);
+    console.log({ selectors });
+    console.log('!selectors.length', !selectors.length);
+    // window.scrollTo(0, 0);
+    if (!selectors.length) {
+      console.log('no selectors so scroll to top');
+      window.scrollTo(0, 0);
+    }
 
     swap.fire('on', finalUrl, finalMethod);
   });
@@ -125,7 +144,8 @@ swap.with = (options, selectors = []) => {
 
 
 swap.fire = (when, url, method = 'get') => {
-  const event = buildEvent(when, url, method);
+  const event = url ? buildEvent(when, url, method) : {};
+  // const event = buildEvent(when, url, method);
 
   if (when !== 'before') {
     // we can never know before an element exists
@@ -137,12 +157,14 @@ swap.fire = (when, url, method = 'get') => {
     });
   }
 
-  swap.routes[when].forEach((route) => {
-    const found = findRoute(event, route);
-    if (found) {
-      route.handle({...event, ...{ route }});
-    }
-  });
+  if (url) {
+    swap.routes[when].forEach((route) => {
+      const found = findRoute(event, route);
+      if (found) {
+        route.handle({...event, ...{ route }});
+      }
+    });
+  }
 
   return swap;
 }
@@ -169,13 +191,16 @@ swap.click = function(e, selectors) {
 
   if (!metaKeyOn) {
     e.preventDefault();
-    swap.with(link.href, selectors || getSelectors(link));
+
+    if (link.dataset.swapPane) {
+      swap.pane(link.pathname, link.dataset.swapPane);
+      // swap.pane(link.href, link.dataset.swapPane);
+    } else {
+      swap.with(link.href, selectors || getSelectors(link));
+    }
   }
 }
 
-/*
-.Main -> .PaneContent
-*/
 
 
 
@@ -211,7 +236,8 @@ swap.submit = function(e, selectors) {
       method,
       body: new URLSearchParams(new FormData(form)).toString(),
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
+        'Content-Type': 'application/x-www-form-urlencoded',
+        ...paneUrl && { 'pane-url': paneUrl }
       }
     }, selectors || getSelectors(form));
   }
@@ -275,3 +301,129 @@ module.exports = function (opts = {}) {
 }
 
 
+
+
+
+// link has a pane flag
+// swap ajax requests url in href
+// swap puts element that matches selector from pane flag in pane element
+// url/state/history/etc doesn't changes
+
+let paneUrl;
+
+swap.pane = (url, selector) => {
+  // PANE SELECTORS SHOULD BE ABLE TO HANDLE MULTIPLE SELECTORS
+  //
+
+  const opts = {
+    url,
+    method: 'get',
+    headers: {
+      'x-requested-with': 'xmlhttprequest',
+      'pane-url': paneUrl
+    }
+  };
+
+  console.log({ url });
+
+
+  // const pathname = getUrl(url).pathname;
+  // const pathname = new URL(url, location.href.replac url).pathname;
+  const pathname = new URL(url, location.href.replace(url, '')).pathname;
+
+  console.log({ pathname });
+
+  paneUrl = url;
+
+  location.hash = `#pane=${pathname}`;
+
+  talk(opts, (xhr, res, html) => {
+    updatePane(html, selector, opts.method);
+    swap.fire('on', paneUrl, opts.method);
+    // const selectors = selector.split(/\s*->\s*/);
+    // const dom = new DOMParser().parseFromString(html, 'text/html');
+    // document.querySelector(selectors[1]).innerHTML = dom.querySelector(selectors[0]).innerHTML;
+
+    // const oldPaneHeader = document.querySelector('.PaneHeader');
+    // oldPaneHeader.parentNode.replaceChild(dom.querySelector('.PaneHeader'), oldPaneHeader);
+
+    // document.documentElement.classList.add('ix-pane');
+  });
+
+  return swap;
+}
+
+
+
+const updatePane = (html, selector = '.Main -> .PaneContent', method) => {
+  const selectors = selector.split(/\s*->\s*/);
+  const dom = new DOMParser().parseFromString(html, 'text/html');
+  document.querySelector(selectors[1]).innerHTML = dom.querySelector(selectors[0]).innerHTML;
+  const oldPaneHeader = document.querySelector('.PaneHeader');
+  oldPaneHeader.parentNode.replaceChild(dom.querySelector('.PaneHeader'), oldPaneHeader);
+
+  if (method === 'get') {
+    document.querySelector('.Pane').scrollTop = 0;
+  }
+
+  document.documentElement.classList.add('ix-pane');
+}
+
+
+
+const hashParams = (hash) => hash.substr(1).split('&').reduce(function (result, item) {
+    var parts = item.split('=');
+    result[parts[0]] = parts[1];
+    return result;
+}, {});
+
+
+document.addEventListener('DOMContentLoaded', function() {
+  if (location.hash) {
+    const params = hashParams(location.hash);
+    if (params.pane) {
+      console.log('params.pane', params.pane);
+      swap.pane(params.pane, '.Main -> .PaneContent');
+    }
+  }
+});
+
+
+
+
+
+
+
+
+
+swap.using = (html, selectors = []) => {
+  console.log('swap.using');
+  // swap.fire('before');
+  swap.fire('off');
+  swap.to(html, selectors);
+  // make this smarter where it only scrolls to top on different urls?
+  if (!selectors.length) window.scrollTo(0, 0);
+  swap.fire('on');
+  return swap;
+}
+
+
+// before = the event that fires before the ajax request is sent
+// ajax = gets new state in html
+// off = after the new html is in hand but before the swap happens
+// on is after the swapping has updated the page to the latest state
+// fire (off/on/before) should only fire route things when ajax is used
+// elements should fire (off/on/before) when ajax or render is used
+// pane use case = all the ajax workflow but a different swapping function (which handles popstate and swapping differently)
+
+
+
+
+
+// swap.click -> with / pane
+// swap.submit -> with
+
+// swap.with(opts, selectors); // ajax
+// swap.pane(url, selectors); // ajax
+// swap.to(html, selectors);
+// swap.using(html, selectors);
