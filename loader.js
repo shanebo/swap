@@ -9,9 +9,9 @@ const css = (opts) => (`
     top: 0;
     left: 0;
     width: 100%;
-    height: 4px;
-    z-index: 1000;
-    transform: translateX(-100%) translateY(-100%);
+    height: 2px;
+    z-index: 10000;
+    transform: translateX(-100%);
     background-color: var(--swap-loader-color);
   }
 
@@ -24,13 +24,13 @@ const css = (opts) => (`
 
   @keyframes swapLoader {
     0% {
-      transform: translateX(-100%) translateY(-100%);
+      transform: translateX(-100%);
     }
     50% {
-      transform: translateX(0%) translateY(0%);
+      transform: translateX(0%);
     }
     100% {
-      transform: translateX(100%) translateY(-100%);
+      transform: translateX(100%);
     }
   }
 `);
