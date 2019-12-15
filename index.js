@@ -332,7 +332,7 @@ module.exports = function (opts = {}) {
   swap.openPane = (html, url) => {
     document.documentElement.setAttribute('swap-pane-is-active', 'true');
     const shouldScroll = !isFormSubmit;
-    const pathname = new URL(url, location.href.replace(url, '')).pathname;
+    const pathname = getUrl(url).pathname;
     paneUrl = url; // should this be pathname?
     location.hash = `#pane=${pathname}`;
     paneHistory.push(location.hash.replace('#pane=', ''));
