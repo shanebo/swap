@@ -1,6 +1,5 @@
-const talk = require('./talk');
-
 const {
+  talk,
   findRoute,
   buildRoute,
   buildEvent,
@@ -10,48 +9,46 @@ const {
   delegateHandle,
   getSelectors,
   getHeaders,
-  removeEmptyProps,
   hashParams
 } = require('./utils');
-
 
 let paneUrl;
 let isFormSubmit;
 let paneHistory = [];
 
+const swap = {};
 
-const swap = {
-  routes: {
-    before: [],
-    on: [],
-    off: []
-  },
-  elements: {
-    on: [],
-    off: []
-  }
+const routes = {
+  before: [],
+  on: [],
+  off: []
+};
+
+const elements = {
+  on: [],
+  off: []
 };
 
 
-swap.listener = function(when, pattern, handle) {
+const listener = function(when, pattern, handle) {
   if (typeof pattern === 'string') {
     if (pattern.startsWith('/') || pattern === '*') {
       if (pattern === '*') pattern = '.*';
-      swap.routes[when].push(buildRoute(when, 'get', pattern, handle));
+      routes[when].push(buildRoute(when, 'get', pattern, handle));
     } else {
-      swap.elements[when].push({ selector: pattern, handle });
+      elements[when].push({ selector: pattern, handle });
     }
   } else {
-    swap.routes[when].push(buildRoute(when, pattern.method, pattern.route, handle));
+    routes[when].push(buildRoute(when, pattern.method, pattern.route, handle));
   }
 
   return swap;
 }
 
 
-swap.before = swap.listener.bind(swap, 'before');
-swap.on = swap.listener.bind(swap, 'on');
-swap.off = swap.listener.bind(swap, 'off');
+swap.before = listener.bind(swap, 'before');
+swap.on = listener.bind(swap, 'on');
+swap.off = listener.bind(swap, 'off');
 
 
 const innerHtmlRender = (oldEl, newEl) => {
@@ -165,7 +162,7 @@ swap.event = function(name, delegate, fn) {
 }
 
 
-swap.click = function(e, selectors) {
+const click = function(e, selectors) {
   const link = this;
 
   if (!shouldSwap(buildUrl(link))) return;
@@ -183,7 +180,7 @@ swap.click = function(e, selectors) {
 }
 
 
-swap.submit = function(e, selectors) {
+const submit = function(e, selectors) {
   const form = e.target;
   const { action: url, method } = form;
 
@@ -198,17 +195,10 @@ swap.submit = function(e, selectors) {
   isFormSubmit = true;
 
   if (method.toLowerCase() === 'get') {
-    // const obj = removeEmptyProps(new FormData(form));
-    // const query = new URLSearchParams(obj).toString();
-    // const search = query ? '?' + query : query;
-    // const urlWithParams = `${url}${search}`;
-
     const query = new URLSearchParams(new FormData(form)).toString();
-    // const cleanQuery = query.replace(/[^=&]+=(&|$)/g, '').replace(/&$/, '');
     const cleanQuery = decodeURIComponent(query).replace(/[^=&]+=(&|$)/g, '').replace(/&$/, '');
     const search = cleanQuery ? '?' + encodeURI(cleanQuery) : cleanQuery;
     const urlWithParams = `${url}${search}`;
-    console.log({ urlWithParams });
     swap.with(urlWithParams, selectors || getSelectors(form));
   } else {
     swap.with({
@@ -268,7 +258,7 @@ const keyDownUp = (e) => {
 
 
 const fireElements = (when) => {
-  swap.elements[when].forEach((el) => {
+  elements[when].forEach((el) => {
     const target = document.querySelector(el.selector);
     if (target) {
       el.handle({ target });
@@ -280,7 +270,7 @@ const fireElements = (when) => {
 const fireRoutes = (when, url, method = 'get') => {
   const event = buildEvent(when, url, method);
 
-  swap.routes[when].forEach((route) => {
+  routes[when].forEach((route) => {
     const found = findRoute(event, route);
     if (found) {
       route.handle({...event, ...{ route }});
@@ -312,20 +302,13 @@ module.exports = function (opts = {}) {
     selectors: ['.Main -> .PaneContent', '.PaneHeader'],
     closeButton: '.PaneCloseBtn',
     backButton: '.PaneBackBtn',
-    open: (shouldScroll) => {
-      if (shouldScroll) {
-        document.querySelector(swap.pane.selector).scrollTop = 0;
-      }
+    open: () => {
     },
     back: (url) => {
       swap.with(url, '.Main -> .PaneContent', true);
     },
     close: () => {
       console.log('close pane');
-      // document.documentElement.removeAttribute('swap-pane-is-active');
-      // const noHashURL = location.href.replace(/#.*$/, '');
-      // window.history.replaceState('', document.title, noHashURL);
-      // paneHistory = [];
     }
   };
 
@@ -340,6 +323,9 @@ module.exports = function (opts = {}) {
 
     swap.to(html, swap.pane.selectors, true);
     swap.pane.open(shouldScroll);
+    if (shouldScroll) {
+      document.querySelector(swap.pane.selector).scrollTop = 0;
+    }
     document.querySelector(swap.pane.backButton).style.display = paneHistory.length > 1 ? 'inline' : 'none';
   }
 
@@ -364,8 +350,8 @@ module.exports = function (opts = {}) {
   window.addEventListener('popstate', popstate);
   window.addEventListener('keydown', keyDownUp);
   window.addEventListener('keyup', keyDownUp);
-  window.addEventListener('click', delegateHandle(clickSelector, swap.click));
-  window.addEventListener('submit', delegateHandle(formSelector, swap.submit));
+  window.addEventListener('click', delegateHandle(clickSelector, click));
+  window.addEventListener('submit', delegateHandle(formSelector, submit));
 
   swap.event('click', swap.pane.backButton, swap.backPane);
   swap.event('click', swap.pane.closeButton, swap.closePane);
@@ -375,23 +361,3 @@ module.exports = function (opts = {}) {
     }
   });
 }
-
-
-// link has a pane flag
-// swap ajax requests url in href
-// swap puts element that matches selector from pane flag in pane element
-// url/state/history/etc doesn't changes
-
-// before = the event that fires before the ajax request is sent
-// ajax = gets new state in html
-// off = after the new html is in hand but before the swap happens
-// on is after the swapping has updated the page to the latest state
-// fire (off/on/before) should only fire route things when ajax is used
-// elements should fire (off/on/before) when ajax or render is used
-// pane use case = all the ajax workflow but a different swapping function (which handles popstate and swapping differently)
-
-// swap.click -> with / pane
-// swap.submit -> with
-// swap.with(opts, selectors); // ajax
-// swap.to(html, selectors);
-// swap.to = calling off, swapping, on;

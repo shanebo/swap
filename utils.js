@@ -1,3 +1,6 @@
+const talk = require('./talk');
+
+
 const findRoute = (req, route) => {
   req.params = {}; // this needs to get returned somehow !!!!!!!!!!!!!!!!!!!
 
@@ -44,7 +47,6 @@ const getParams = (pattern, regex) => {
 
 
 const getUrl = (url) => {
-  // new URL(url) we could do this
   const source = document.createElement('a');
   source.setAttribute('href', url);
   return buildUrl(source);
@@ -67,9 +69,7 @@ const buildEvent = (when, url, method) => {
 const shouldSwap = (destination) => {
   if (destination.hostname !== location.hostname
     || destination.protocol !== location.protocol) {
-      console.log('hostname protocol failed');
-      console.log(destination);
-      console.log(location);
+      console.log('hostname protocol failed', destination, location);
       alert('hostname protocol failed');
     return false;
   }
@@ -100,11 +100,6 @@ const delegateHandle = function(delegate, fn) {
     const parent = e.target.closest(delegate);
 
     if (parent) {
-      // console.log('in parent delegator');
-      // console.log(typeof parent);
-      // console.log(parent);
-      // console.log(parent.href);
-      // debugger;
       return fn.apply(parent, arguments);
     }
   }
@@ -162,6 +157,7 @@ const hashParams = (hash) => hash.substr(1).split('&').reduce((result, item) => 
 
 
 export {
+  talk,
   findRoute,
   buildRoute,
   buildEvent,
