@@ -324,7 +324,8 @@ module.exports = function (opts = {}) {
     swap.to(html, swap.pane.selectors, true);
     swap.pane.open(shouldScroll);
     if (shouldScroll) {
-      document.querySelector(swap.pane.selector).scrollTop = 0;
+      document.querySelector('.PaneContent').scrollTop = 0;
+      // document.querySelector(swap.pane.selector).scrollTop = 0;
     }
     document.querySelector(swap.pane.backButton).style.display = paneHistory.length > 1 ? 'inline' : 'none';
   }
