@@ -156,6 +156,9 @@ const hashParams = (hash) => hash.substr(1).split('&').reduce((result, item) => 
 }, {});
 
 
+const bypassKeyPressed = (key) => ['Alt', 'Control', 'Meta'].includes(key);
+
+
 export {
   talk,
   findRoute,
@@ -169,5 +172,6 @@ export {
   delegateHandle,
   removeEmptyProps,
   getHeaders,
-  hashParams
+  hashParams,
+  bypassKeyPressed
 };
