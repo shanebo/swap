@@ -9,14 +9,17 @@ const {
   delegateHandle,
   getSelectors,
   getHeaders,
-  hashParams
+  hashParams,
+  bypassKeyPressed
 } = require('./utils');
 
 let paneUrl;
 let isFormSubmit;
 let paneHistory = [];
 
-const swap = {};
+const swap = {
+  metaKeyOn: false
+};
 
 const routes = {
   before: [],
@@ -167,7 +170,7 @@ const click = function(e, selectors) {
 
   if (!link.href || !shouldSwap(buildUrl(link))) return;
 
-  if (!metaKeyOn) {
+  if (!swap.metaKeyOn) {
     e.preventDefault();
     const sels = selectors || getSelectors(link);
 
@@ -244,16 +247,6 @@ const popstate = (e) => {
   swap.to(html, selectors);
   history.replaceState(e.state, '', href);
   fireRoutes('on', href);
-}
-
-
-let metaKeyOn = false;
-
-
-const keyDownUp = (e) => {
-  if (e.metaKey || e.ctrlKey) {
-    metaKeyOn = !metaKeyOn;
-  }
 }
 
 
@@ -349,8 +342,19 @@ module.exports = function (opts = {}) {
 
   window.addEventListener('DOMContentLoaded', loaded);
   window.addEventListener('popstate', popstate);
-  window.addEventListener('keydown', keyDownUp);
-  window.addEventListener('keyup', keyDownUp);
+
+  window.addEventListener('keydown', (e) => {
+    if (bypassKeyPressed(e.key)) {
+      swap.metaKeyOn = true;
+    }
+  });
+
+  window.addEventListener('keyup', (e) => {
+    if (bypassKeyPressed(e.key)) {
+      swap.metaKeyOn = false;
+    }
+  });
+
   window.addEventListener('click', delegateHandle(clickSelector, click));
   window.addEventListener('submit', delegateHandle(formSelector, submit));
 
