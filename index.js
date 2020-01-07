@@ -90,6 +90,35 @@ swap.to = (html, sels, inline) => {
 
   if (fullSwap) {
     document.body = dom.body;
+
+
+            // CLEAN THIS UP. THIS ALLOWS INLINE SCRIPTS TO RUN
+            // get a list of all <script> tags in the new page
+            var tmpScripts = document.getElementsByTagName('script');
+
+            if (tmpScripts.length > 0) {
+              // push all of the document's script tags into an array
+              // (to prevent dom manipulation while iterating over dom nodes)
+              var scripts = [];
+              for (var i = 0; i < tmpScripts.length; i++) {
+                  scripts.push(tmpScripts[i]);
+              }
+
+              // iterate over all script tags and create a duplicate tags for each
+              for (var i = 0; i < scripts.length; i++) {
+                var s = document.createElement('script');
+                s.innerHTML = scripts[i].innerHTML;
+
+                // add the new node to the page
+                scripts[i].parentNode.appendChild(s);
+
+                // remove the original (non-executing) node from the page
+                scripts[i].parentNode.removeChild(scripts[i]);
+              }
+            }
+
+
+
   } else {
     changes.forEach(render => render());
   }
@@ -151,6 +180,49 @@ swap.with = (options, selectors = [], inline) => {
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+swap.inline = (options, selectors = []) => {
+  const opts = typeof options === 'string'
+    ? { url: options, method: 'get' }
+    : options;
+
+  talk(opts, (xhr, res, html) => {
+    swap.to(html, selectors, true);
+  });
+
+  return swap;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 swap.event = function(name, delegate, fn) {
   const e = {
     name,
@@ -165,7 +237,7 @@ swap.event = function(name, delegate, fn) {
 }
 
 
-const click = function(e, selectors) {
+swap.click = function(e, selectors) {
   const link = this;
 
   if (!link.href || !shouldSwap(buildUrl(link))) return;
@@ -175,7 +247,9 @@ const click = function(e, selectors) {
     const sels = selectors || getSelectors(link);
 
     if (link.dataset.swapPane) {
-      swap.with(link.pathname, sels, true);
+      swap.with(link.pathname, sels, true); // we probably need to handle query string use case here
+    } else if (link.dataset.swapInline) {
+      swap.inline(link.href, sels);
     } else {
       swap.with(link.href, sels);
     }
@@ -183,36 +257,61 @@ const click = function(e, selectors) {
 }
 
 
-const submit = function(e, selectors) {
+swap.submit = function(e, selectors) {
   const form = e.target;
   const { action: url, method } = form;
 
-  console.log('submit fired');
+
+  const inline = form.dataset.swapInline;
+  console.log({ inline });
+
 
   if (!shouldSwap(getUrl(url))) return;
-
   if (!swap.formValidator(e)) return;
 
   e.preventDefault();
 
   isFormSubmit = true;
 
+
+  const sels = selectors || getSelectors(form);
+  console.log({ sels });
+
+
+
   if (method.toLowerCase() === 'get') {
     const query = new URLSearchParams(new FormData(form)).toString();
     const cleanQuery = decodeURIComponent(query).replace(/[^=&]+=(&|$)/g, '').replace(/&$/, '');
     const search = cleanQuery ? '?' + encodeURI(cleanQuery) : cleanQuery;
     const urlWithParams = `${url}${search}`;
-    swap.with(urlWithParams, selectors || getSelectors(form));
+
+    if (inline) {
+      swap.inline(urlWithParams, sels);
+    } else {
+      swap.with(urlWithParams, sels);
+    }
   } else {
-    swap.with({
-      url,
-      method,
-      body: new URLSearchParams(new FormData(form)).toString(),
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        ...paneUrl && { 'pane-url': paneUrl }
-      }
-    }, selectors || getSelectors(form));
+    if (inline) {
+      swap.inline({
+        url,
+        method,
+        body: new URLSearchParams(new FormData(form)).toString(),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }, sels);
+
+    } else {
+      swap.with({
+        url,
+        method,
+        body: new URLSearchParams(new FormData(form)).toString(),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          ...paneUrl && { 'pane-url': paneUrl }
+        }
+      }, sels);
+    }
   }
 }
 
@@ -355,8 +454,8 @@ module.exports = function (opts = {}) {
     }
   });
 
-  window.addEventListener('click', delegateHandle(clickSelector, click));
-  window.addEventListener('submit', delegateHandle(formSelector, submit));
+  window.addEventListener('click', delegateHandle(clickSelector, swap.click));
+  window.addEventListener('submit', delegateHandle(formSelector, swap.submit));
 
   swap.event('click', swap.pane.backButton, swap.backPane);
   swap.event('click', swap.pane.closeButton, swap.closePane);
