@@ -151,6 +151,49 @@ swap.with = (options, selectors = [], inline) => {
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+swap.inline = (options, selectors = []) => {
+  const opts = typeof options === 'string'
+    ? { url: options, method: 'get' }
+    : options;
+
+  talk(opts, (xhr, res, html) => {
+    swap.to(html, selectors, true);
+  });
+
+  return swap;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 swap.event = function(name, delegate, fn) {
   const e = {
     name,
@@ -165,7 +208,7 @@ swap.event = function(name, delegate, fn) {
 }
 
 
-const click = function(e, selectors) {
+swap.click = function(e, selectors) {
   const link = this;
 
   if (!shouldSwap(buildUrl(link))) return;
@@ -183,36 +226,61 @@ const click = function(e, selectors) {
 }
 
 
-const submit = function(e, selectors) {
+swap.submit = function(e, selectors) {
   const form = e.target;
   const { action: url, method } = form;
 
-  console.log('submit fired');
+
+  const inline = form.dataset.swapInline;
+  console.log({ inline });
+
 
   if (!shouldSwap(getUrl(url))) return;
-
   if (!swap.formValidator(e)) return;
 
   e.preventDefault();
 
   isFormSubmit = true;
 
+
+  const sels = selectors || getSelectors(form);
+  console.log({ sels });
+
+
+
   if (method.toLowerCase() === 'get') {
     const query = new URLSearchParams(new FormData(form)).toString();
     const cleanQuery = decodeURIComponent(query).replace(/[^=&]+=(&|$)/g, '').replace(/&$/, '');
     const search = cleanQuery ? '?' + encodeURI(cleanQuery) : cleanQuery;
     const urlWithParams = `${url}${search}`;
-    swap.with(urlWithParams, selectors || getSelectors(form));
+
+    if (inline) {
+      swap.inline(urlWithParams, sels);
+    } else {
+      swap.with(urlWithParams, sels);
+    }
   } else {
-    swap.with({
-      url,
-      method,
-      body: new URLSearchParams(new FormData(form)).toString(),
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        ...paneUrl && { 'pane-url': paneUrl }
-      }
-    }, selectors || getSelectors(form));
+    if (inline) {
+      swap.inline({
+        url,
+        method,
+        body: new URLSearchParams(new FormData(form)).toString(),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }, sels);
+
+    } else {
+      swap.with({
+        url,
+        method,
+        body: new URLSearchParams(new FormData(form)).toString(),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          ...paneUrl && { 'pane-url': paneUrl }
+        }
+      }, sels);
+    }
   }
 }
 
@@ -355,8 +423,8 @@ module.exports = function (opts = {}) {
     }
   });
 
-  window.addEventListener('click', delegateHandle(clickSelector, click));
-  window.addEventListener('submit', delegateHandle(formSelector, submit));
+  window.addEventListener('click', delegateHandle(clickSelector, swap.click));
+  window.addEventListener('submit', delegateHandle(formSelector, swap.submit));
 
   swap.event('click', swap.pane.backButton, swap.backPane);
   swap.event('click', swap.pane.closeButton, swap.closePane);
