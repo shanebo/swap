@@ -16,6 +16,7 @@
   "devDependencies": {
     "dylan": "github:dylanjs/dylan#0.2.0",
     "@dylan/static": "github:dylanjs/static#0.1.0",
+    "parcel-bundler": "1.12.4",
     "mocha": "5.2.0",
     "chai": "4.2.0",
     "nodemon": "2.0.2",
