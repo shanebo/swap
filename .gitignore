@@ -1,1 +1,4 @@
 node_modules
+.cache
+test/app/.cache
+test/app/dist
