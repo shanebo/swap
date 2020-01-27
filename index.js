@@ -240,7 +240,7 @@ swap.event = function(name, delegate, fn) {
 swap.click = function(e, selectors) {
   const link = this;
 
-  if (!shouldSwap(buildUrl(link))) return;
+  if (!link.href || !shouldSwap(buildUrl(link))) return;
 
   if (!swap.metaKeyOn) {
     e.preventDefault();
@@ -335,7 +335,7 @@ const popstate = (e) => {
     - check headers on whether to cache or not
   */
 
-  if (location.hash) return;
+  if (!e.state || location.hash) return;
 
   const { href } = location;
   const { html, selectors } = e.state;
