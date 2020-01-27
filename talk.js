@@ -1,6 +1,16 @@
+let activeRequest;
+
+
+
 const talk = (opts, callback) => {
   const doc = document.documentElement;
   const xhr = new XMLHttpRequest();
+
+  if (activeRequest) {
+    console.log('abort request');
+    activeRequest.abort();
+  }
+  activeRequest = xhr;
 
   doc.classList.add('swap-progressing');
 
@@ -26,9 +36,13 @@ const talk = (opts, callback) => {
     }
 
     callback(xhr, xhr.response, xhr.responseText);
+    activeRequest = false;
   }
 
-  xhr.onerror = console.log; // handle non-HTTP error (e.g. network down)
+  xhr.onerror = (e) => {
+    console.log(e); // handle non-HTTP error (e.g. network down)
+    activeRequest = false;
+  }
 
   xhr.send(opts.body || null);
 }
