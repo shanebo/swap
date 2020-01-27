@@ -6,11 +6,11 @@
   "main": "./index",
   "scripts": {
     "cypress:open": "cypress open",
-    "build": "npm run clean; parcel build test/app/parcel.html --no-source-maps --out-dir test/app/dist --public-url /dist",
-    "app": "npm run build; node test/app/app.js;",
-    "dev": "nodemon --ignore test/app/dist --ignore cypress/integration -e js,html --exec \"npm run app\"",
+    "build": "npm run clean; parcel build cypress/app/parcel.html --no-source-maps --out-dir cypress/app/dist --public-url /dist",
+    "app": "npm run build; node cypress/app/app.js;",
+    "dev": "nodemon --ignore cypress/app/dist --ignore cypress/integration -e js,html --exec \"npm run app\"",
     "test": "npm run app; mocha -w",
-    "clean": "rm -r test/app/dist/*"
+    "clean": "rm -r cypress/app/dist/*"
   },
   "dependencies": {},
   "devDependencies": {

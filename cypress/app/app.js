@@ -2,11 +2,11 @@ const fs = require('fs');
 const dylan = require('dylan');
 const static = require('@dylan/static');
 const app = dylan();
-const files = fs.readdirSync('test/app/dist');
+const files = fs.readdirSync('cypress/app/dist');
 const frontendFile = files.find(file => /^frontend\..+\.js$/);
 
 
-app.use(static('test/app/dist'));
+app.use(static('cypress/app/dist'));
 
 
 app.get('/', (req, res) => res.send(`
