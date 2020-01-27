@@ -90,6 +90,35 @@ swap.to = (html, sels, inline) => {
 
   if (fullSwap) {
     document.body = dom.body;
+
+
+            // CLEAN THIS UP. THIS ALLOWS INLINE SCRIPTS TO RUN
+            // get a list of all <script> tags in the new page
+            var tmpScripts = document.getElementsByTagName('script');
+
+            if (tmpScripts.length > 0) {
+              // push all of the document's script tags into an array
+              // (to prevent dom manipulation while iterating over dom nodes)
+              var scripts = [];
+              for (var i = 0; i < tmpScripts.length; i++) {
+                  scripts.push(tmpScripts[i]);
+              }
+
+              // iterate over all script tags and create a duplicate tags for each
+              for (var i = 0; i < scripts.length; i++) {
+                var s = document.createElement('script');
+                s.innerHTML = scripts[i].innerHTML;
+
+                // add the new node to the page
+                scripts[i].parentNode.appendChild(s);
+
+                // remove the original (non-executing) node from the page
+                scripts[i].parentNode.removeChild(scripts[i]);
+              }
+            }
+
+
+
   } else {
     changes.forEach(render => render());
   }
