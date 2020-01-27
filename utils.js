@@ -69,8 +69,7 @@ const buildEvent = (when, url, method) => {
 const shouldSwap = (destination) => {
   if (destination.hostname !== location.hostname
     || destination.protocol !== location.protocol) {
-      console.log('hostname protocol failed', destination, location);
-      alert('hostname protocol failed');
+      alert('hostname protocol failed so hard refresh');
     return false;
   }
 
