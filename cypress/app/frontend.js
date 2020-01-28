@@ -7,12 +7,14 @@ swapConfig({
 });
 
 
-swap.on('body', (e) => {
-  console.log('fire this on every swap that happens');
+swap.on('.arrive', (e) => {
+  alert('Arrived');
 });
 
+swap.off('.leave', (e) => {
+  alert('Left');
+});
 
-// // swap.on('')
-
-
-console.log('hi joe');
+swap.on('/route', (e) => {
+  alert('Arrived at route');
+});

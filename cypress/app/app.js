@@ -17,6 +17,8 @@ app.get('/', (req, res) => res.send(`
     </head>
     <body>
       <a href="/about">About Link</a>
+      <a href="/arrive">Arrive Link</a>
+      <a href="/route">Route Link</a>
       <a href="/about" data-swap="h1">About Header</a>
       <a href="/about" data-swap="div, h1, h2">About Elements</a>
       <a href="/about" data-swap=".content">About Body</a>
@@ -47,30 +49,41 @@ app.get('/about', (req, res) => res.send(`
 `));
 
 
-app.get('/dos', (req, res) => res.send(`
+app.get('/arrive', (req, res) => res.send(`
   <html>
     <head>
-      <title>Hi</title>
+      <title>Elements</title>
       <script src="/${frontendFile}" type="application/javascript"></script>
     </head>
     <body>
-      <a href="/foo" data-swap="h1">Swap h1 with /foo h1</a>
-      <h1>Dos</h1>
-      <p>should not be on /</p>
+      <div class="arrive">Arrive</div>
     </body>
   </html>
 `));
 
 
-app.get('/foo', (req, res) => res.send(`
+app.get('/leave', (req, res) => res.send(`
   <html>
     <head>
-      <title>Hi</title>
+      <title>Elements</title>
       <script src="/${frontendFile}" type="application/javascript"></script>
     </head>
     <body>
-      <a href="/" data-swap="h1">Swap h1 with / h1</a>
-      <h1>Foo</h1>
+      <div class="leave">Leave/div>
+      <a href="/about">About</a>
+    </body>
+  </html>
+`));
+
+
+app.get('/route', (req, res) => res.send(`
+  <html>
+    <head>
+      <title>On</title>
+      <script src="/${frontendFile}" type="application/javascript"></script>
+    </head>
+    <body>
+      <div>On route</div>
     </body>
   </html>
 `));
