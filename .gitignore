@@ -1,4 +1,4 @@
 node_modules
 .cache
-test/app/.cache
-test/app/dist
+cypress/app/.cache
+cypress/app/dist

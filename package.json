@@ -6,16 +6,19 @@
   "main": "./index",
   "scripts": {
     "cypress:open": "cypress open",
-    "build": "npm run clean; parcel build test/app/parcel.html --no-source-maps --out-dir test/app/dist --public-url /dist",
-    "app": "npm run build; node test/app/app.js;",
-    "dev": "nodemon --ignore test/app/dist -e js,html --exec \"npm run app\"",
-    "test": "npm run app; mocha -w",
-    "clean": "rm -r test/app/dist/*"
+    "cypress:run": "cypress run",
+    "build": "npm run clean; parcel build cypress/app/parcel.html --no-source-maps --out-dir cypress/app/dist --public-url /dist",
+    "start": "npm run build; node cypress/app/app.js",
+    "dev": "nodemon --ignore cypress/app/dist --ignore cypress/integration -e js,html --exec \"npm start\"",
+    "test": "npm run build; node cypress/app/app.js & npm run cypress:run; kill $!",
+    "test:dev": "npm run dev & npm run cypress:open",
+    "clean": "rm -r cypress/app/dist/*"
   },
   "dependencies": {},
   "devDependencies": {
     "dylan": "github:dylanjs/dylan#0.2.0",
     "@dylan/static": "github:dylanjs/static#0.1.0",
+    "parcel-bundler": "1.12.4",
     "mocha": "5.2.0",
     "chai": "4.2.0",
     "nodemon": "2.0.2",

@@ -2,22 +2,46 @@ const fs = require('fs');
 const dylan = require('dylan');
 const static = require('@dylan/static');
 const app = dylan();
-const files = fs.readdirSync('test/app/dist');
+const files = fs.readdirSync('cypress/app/dist');
 const frontendFile = files.find(file => /^frontend\..+\.js$/);
 
 
-app.use(static('test/app/dist'));
+app.use(static('cypress/app/dist'));
 
 
 app.get('/', (req, res) => res.send(`
   <html>
     <head>
-      <title>Hi</title>
+      <title>Home</title>
       <script src="/${frontendFile}" type="application/javascript"></script>
     </head>
     <body>
+      <a href="/about">About Link</a>
+      <a href="/about" data-swap="h1">About Header</a>
+      <a href="/about" data-swap="div, h1, h2">About Elements</a>
+      <a href="/about" data-swap=".content">About Body</a>
+      <a href="/about" data-swap=".content, .header">About Header and Body</a>
+      <a href="/about" data-swap-inline=".content">Inline About</a>
       <a href="/dos" data-swap="h1">Swap h1 with /dos h1</a>
       <h1>Hi</h1>
+      <div class="header"></div>
+      <div class="content"></div>
+    </body>
+  </html>
+`));
+
+
+app.get('/about', (req, res) => res.send(`
+  <html>
+    <head>
+      <title>About</title>
+      <script src="/${frontendFile}" type="application/javascript"></script>
+    </head>
+    <body>
+      <div class="header">Header</div>
+      <div class="content">
+        About page
+      </div>
     </body>
   </html>
 `));
