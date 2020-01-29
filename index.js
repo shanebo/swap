@@ -1,3 +1,6 @@
+const qs = document.querySelector.bind(document);
+const qsa = document.querySelectorAll.bind(document);
+
 const {
   talk,
   findRoute,
@@ -13,11 +16,9 @@ const {
   bypassKeyPressed
 } = require('./utils');
 
-let paneUrl;
-let isFormSubmit;
+let _paneUrl;
+let _isFormSubmit;
 let paneHistory = [];
-let activePanelIndex = -1;
-let panelDirection = 1;
 
 const swap = {
   metaKeyOn: false
@@ -74,13 +75,13 @@ swap.to = (html, sels, inline) => {
   const changes = selectors.map(sel => {
     if (sel[1]) {
       // arrow use case
-      const oldEl = document.querySelector(sel[1]);
+      const oldEl = qs(sel[1]);
       const newEl = dom.querySelector(sel[0]);
       return !oldEl || !newEl
         ? null
         : innerHtmlRender.bind(null, oldEl, newEl);
     } else {
-      const oldEl = document.querySelector(sel[0]);
+      const oldEl = qs(sel[0]);
       const newEl = dom.querySelector(sel[0]);
       return !oldEl || !newEl
         ? null
@@ -142,7 +143,9 @@ swap.to = (html, sels, inline) => {
 }
 
 
-swap.with = (options, selectors = [], inline) => {
+
+
+swap.with = (options, selectors = [], callback = openPage) => {
   const opts = typeof options === 'string'
     ? { url: options, method: 'get' }
     : options;
@@ -151,35 +154,67 @@ swap.with = (options, selectors = [], inline) => {
 
   fireRoutes('before', url, method);
 
-  if (inline) {
-    opts.headers = {
-      'x-requested-with': 'xmlhttprequest',
-      'pane-url': paneUrl
-    }
-  }
-
   talk(opts, (xhr, res, html) => {
     const wasRedirected = url !== xhr.responseURL;
     const finalUrl = wasRedirected ? xhr.responseURL : url;
     const finalMethod = wasRedirected ? 'get' : method;
 
-    if (inline || (isFormSubmit && document.documentElement.getAttribute('swap-pane-is-active'))) {
-      swap.openPane(html, finalUrl);
-    } else {
-      document.documentElement.removeAttribute('swap-pane-is-active');
+    callback({
+      opts,
+      xhr,
+      url,
+      method,
+      html,
+      selectors,
+      finalMethod,
+      finalUrl
+    });
 
-      const headers = getHeaders(xhr.getAllResponseHeaders());
-      fireRoutes('off', url, method); // confusing but accurate because url is the toUrl
-      swap.to(html, selectors);
-      history.pushState({ html, selectors, headers, method: finalMethod }, '', finalUrl);
-      fireRoutes('on', finalUrl, finalMethod);
-    }
-
-    isFormSubmit = false;
+    _isFormSubmit = false;
   });
 
   return swap;
 }
+
+
+// swap.with = (options, selectors = [], inline) => {
+//   const opts = typeof options === 'string'
+//     ? { url: options, method: 'get' }
+//     : options;
+
+//   const { url, method } = opts;
+
+//   fireRoutes('before', url, method);
+
+//   if (inline) {
+//     opts.headers = {
+//       'x-requested-with': 'xmlhttprequest',
+//       'pane-url': _paneUrl
+//     }
+//   }
+
+//   talk(opts, (xhr, res, html) => {
+//     const wasRedirected = url !== xhr.responseURL;
+//     const finalUrl = wasRedirected ? xhr.responseURL : url;
+//     const finalMethod = wasRedirected ? 'get' : method;
+
+//     if (inline || (_isFormSubmit && document.documentElement.getAttribute('swap-pane-is-active'))) {
+//       swap.openPane(html, finalUrl);
+//     } else {
+//       document.documentElement.removeAttribute('swap-pane-is-active');
+
+//       const headers = getHeaders(xhr.getAllResponseHeaders());
+//       fireRoutes('off', url, method); // confusing but accurate because url is the toUrl
+//       swap.to(html, selectors);
+//       history.pushState({ html, selectors, headers, method: finalMethod }, '', finalUrl);
+//       fireRoutes('on', finalUrl, finalMethod);
+//     }
+
+//     _isFormSubmit = false;
+//   });
+
+//   return swap;
+// }
 
 
 
@@ -239,6 +274,35 @@ swap.event = function(name, delegate, fn) {
 }
 
 
+
+
+
+
+
+
+
+const buildPaneClickRequest = (url) => ({
+  url,
+  method: 'get',
+  headers: {
+    'x-requested-with': 'xmlhttprequest',
+    'pane-url': _paneUrl
+  }
+});
+
+const buildSubmitRequest = (form) => ({
+  url: form.action,
+  method: form.method,
+  body: new URLSearchParams(new FormData(form)).toString(),
+  headers: {
+    'Content-Type': 'application/x-www-form-urlencoded',
+    ..._paneUrl && { 'pane-url': _paneUrl }
+  }
+});
+
+
+
+
 swap.click = function(e, selectors) {
   const link = this;
 
@@ -249,12 +313,46 @@ swap.click = function(e, selectors) {
     const sels = selectors || getSelectors(link);
 
     if (link.dataset.swapPane) {
-      swap.with(link.pathname, sels, true);
+      swap.with(
+        buildPaneClickRequest(link.pathname),
+        sels,
+        document.documentElement.getAttribute('swap-pane-is-active')
+          ? nextPane
+          : openPane
+      );
     } else {
       swap.with(link.href, sels);
     }
   }
 }
+
+// swap.click = function(e, selectors) {
+//   const link = this;
+
+//   if (!link.href || !shouldSwap(buildUrl(link))) return;
+
+//   if (!swap.metaKeyOn) {
+//     e.preventDefault();
+//     const sels = selectors || getSelectors(link);
+
+//     if (link.dataset.swapPane) {
+//       swap.with(link.pathname, sels, true);
+//     } else {
+//       swap.with(link.href, sels);
+//     }
+//   }
+// }
+
+
+
+
+
+
+
+
+
+
+
 
 
 swap.submit = function(e, selectors) {
@@ -271,17 +369,10 @@ swap.submit = function(e, selectors) {
 
   e.preventDefault();
 
-  isFormSubmit = true;
-
+  _isFormSubmit = true;
 
   const sels = selectors || getSelectors(form);
   console.log({ sels });
-
-
-
-  // might be no bueno
-  panelDirection = 0;
-
 
   if (method.toLowerCase() === 'get') {
     const query = new URLSearchParams(new FormData(form)).toString();
@@ -295,27 +386,21 @@ swap.submit = function(e, selectors) {
       swap.with(urlWithParams, sels);
     }
   } else {
-    if (inline) {
-      swap.inline({
-        url,
-        method,
-        body: new URLSearchParams(new FormData(form)).toString(),
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-      }, sels);
 
+    if (inline) {
+      swap.inline(buildSubmitRequest(form), sels);
+    } else if (document.documentElement.getAttribute('swap-pane-is-active')) {
+      swap.with(buildSubmitRequest(form), sels, samePane);
     } else {
-      swap.with({
-        url,
-        method,
-        body: new URLSearchParams(new FormData(form)).toString(),
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          ...paneUrl && { 'pane-url': paneUrl }
-        }
-      }, sels);
+      swap.with(buildSubmitRequest(form), sels);
     }
+
+
+    // if (inline) {
+    //   swap.inline(buildSubmitRequest(form), sels);
+    // } else {
+    //   swap.with(buildSubmitRequest(form), sels);
+    // }
   }
 }
 
@@ -355,7 +440,7 @@ const popstate = (e) => {
 
 const fireElements = (when) => {
   elements[when].forEach((el) => {
-    const target = document.querySelector(el.selector);
+    const target = qs(el.selector);
     if (target) {
       el.handle({ target });
     }
@@ -391,25 +476,90 @@ const loader = require('./loader');
 
 
 
+// const changePanelTo = (index) => {
+//   const oldPanel = qs('.PaneContent');
+
+//   if (oldPanel) {
+//     oldPanel.classList.remove('PaneContent');
+//     // oldPanel.innerHTML = '';
+//   }
+
+//   const newPanel = qs(`.PanesHolder > div:nth-child(${index + 1})`);
+//   newPanel.classList.add('PaneContent');
+
+//   // const mask = qs('.PaneMask');
+//   // mask.style.setProperty('--pane-x', - (index * mask.offsetWidth) + 'px');
+// }
+
+
+const openPage = (state) => {
+  const { opts, xhr, url, method, html, selectors, finalMethod, finalUrl } = state;
+  document.documentElement.removeAttribute('swap-pane-is-active');
+  const headers = getHeaders(xhr.getAllResponseHeaders());
+  fireRoutes('off', url, method); // confusing but accurate because url is the toUrl
+  swap.to(html, selectors);
+  history.pushState({ html, selectors, headers, method: finalMethod }, '', finalUrl);
+  fireRoutes('on', finalUrl, finalMethod);
+}
+
+const updatePane = (direction, html) => {
+  if (direction) {
+    const activePane = qs('.PaneContent');
+    const activeIndex = [...qsa('.PanesHolder > div')].indexOf(activePane);
+    const newIndex = activeIndex + direction;
+    activePane.classList.remove('PaneContent');
+    if (direction === -1) activePane.innerHTML = '';
+    qs(`.PanesHolder > div:nth-child(${newIndex + 1})`).classList.add('PaneContent');
+    // const mask = qs('.PaneMask');
+    // mask.style.setProperty('--pane-x', - (newIndex * mask.offsetWidth) + 'px');
+  }
+
+  swap.to(html, swap.pane.selectors, true);
+
+  // const shouldScroll = !_isFormSubmit;
+  // swap.pane.open(shouldScroll);
+  // if (shouldScroll) {
+  //   // qs('.PaneContent').scrollTop = 0;
+  //   // qs(swap.pane.selector).scrollTop = 0;
+  // }
+
+  qs(swap.pane.backButton).style.display = paneHistory.length > 1 ? 'inline' : 'none';
+}
+
+const addPaneHistory = (url) => {
+  const pathname = getUrl(url).pathname;
+  _paneUrl = url; // consider handling urls with multiple query strings
+  location.hash = `#pane=${pathname}`;
+  paneHistory.push(location.hash.replace('#pane=', ''));
+}
+
+const openPane = (state) => {
+  document.documentElement.setAttribute('swap-pane-is-active', 'true');
+  addPaneHistory(state.finalUrl);
+  updatePane(0, state.html);
+}
+
+const nextPane = (state) => {
+  addPaneHistory(state.finalUrl);
+  updatePane(1, state.html);
+}
+
+const samePane = (state) => {
+  paneHistory.pop();
+  addPaneHistory(state.finalUrl);
+  updatePane(0, state.html);
+}
+
+const prevPane = (state) => {
+  updatePane(-1, state.html);
+  // swap.pane.back(paneHistory.length - 1);
+}
+
+
 
 
 module.exports = function (opts = {}) {
   loader(opts);
-
-  const changePanelTo = (index) => {
-    const oldPanel = document.querySelector('.PaneContent');
-
-    if (oldPanel) {
-      oldPanel.classList.remove('PaneContent');
-      // oldPanel.innerHTML = '';
-    }
-
-    const newPanel = document.querySelector(`.PanesHolder > div:nth-child(${index + 1})`);
-    newPanel.classList.add('PaneContent');
-
-    // const mask = document.querySelector('.PaneMask');
-    // mask.style.setProperty('--pane-x', - (index * mask.offsetWidth) + 'px');
-  }
 
   swap.formValidator = opts.formValidator || ((e) => true);
 
@@ -418,65 +568,28 @@ module.exports = function (opts = {}) {
     selectors: ['.Main -> .PaneContent', '.PaneHeader'],
     closeButton: '.PaneCloseBtn',
     backButton: '.PaneBackBtn',
-    open: () => {
-    },
-
-    back: (index) => {
-      const oldPanel = document.querySelector('.PaneContent');
-      if (oldPanel) {
-        oldPanel.innerHTML = '';
-      }
-
-      changePanelTo(index);
-      // if current pane has been edited
-      // hard refresh back, unless previous pane was edited
-      panelDirection = -1;
-      const url = paneHistory[index];
-      paneHistory.splice(index, 1);
-      swap.with(url, swap.pane.selectors, true);
-      // swap.with(url, '.Main -> .PaneContent', true);
-    },
-
-    close: () => {
-      console.log('close pane');
-      activePanelIndex = -1;
-    }
+    open: () => {},
+    back: () => {},
+    close: () => {}
   };
-
-  swap.openPane = (html, url) => {
-    document.documentElement.setAttribute('swap-pane-is-active', 'true');
-    const shouldScroll = !isFormSubmit;
-    const pathname = getUrl(url).pathname;
-    paneUrl = url; // should this be pathname?
-    location.hash = `#pane=${pathname}`;
-    paneHistory.push(location.hash.replace('#pane=', ''));
-    console.log({ activePanelIndex });
-    console.log({ panelDirection });
-    activePanelIndex += panelDirection;
-    changePanelTo(activePanelIndex);
-    panelDirection = 1;
-    swap.to(html, swap.pane.selectors, true);
-    swap.pane.open(shouldScroll);
-
-    if (shouldScroll) {
-      // document.querySelector('.PaneContent').scrollTop = 0;
-      // document.querySelector(swap.pane.selector).scrollTop = 0;
-    }
-
-    document.querySelector(swap.pane.backButton).style.display = paneHistory.length > 1 ? 'inline' : 'none';
-  }
-
-
-
 
   swap.backPane = () => {
     paneHistory.pop();
-    swap.pane.back(paneHistory.length - 1);
+
+    // if (previous pane is NOT edited && current pane was saved) {
+    // THEN RELOAD PREV PANE
+      swap.with(
+        buildPaneClickRequest(paneHistory[paneHistory.length - 1]),
+        swap.pane.selectors,
+        prevPane);
+    // }
   }
+
+
 
   swap.closePane = () => {
     setTimeout(() => {
-      [...document.querySelectorAll('.PanesHolder > div')].forEach((div, d) => {
+      [...qsa('.PanesHolder > div')].forEach((div, d) => {
         div.classList.remove('PaneContent');
         div.innerHTML = '';
         if (d === 0) {
