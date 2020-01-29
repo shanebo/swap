@@ -16,6 +16,8 @@ const {
 let paneUrl;
 let isFormSubmit;
 let paneHistory = [];
+let activePanelIndex = -1;
+let panelDirection = 1;
 
 const swap = {
   metaKeyOn: false
@@ -277,6 +279,10 @@ swap.submit = function(e, selectors) {
 
 
 
+  // might be no bueno
+  panelDirection = 0;
+
+
   if (method.toLowerCase() === 'get') {
     const query = new URLSearchParams(new FormData(form)).toString();
     const cleanQuery = decodeURIComponent(query).replace(/[^=&]+=(&|$)/g, '').replace(/&$/, '');
@@ -378,12 +384,32 @@ const loader = require('./loader');
 
 
 
-const compressArr = (arr = []) => arr.reduce((list, next) => list.slice(-1)[0] === next ? list : [...list, next], []);
+
+
+
+
+
+
 
 
 
 module.exports = function (opts = {}) {
   loader(opts);
+
+  const changePanelTo = (index) => {
+    const oldPanel = document.querySelector('.PaneContent');
+
+    if (oldPanel) {
+      oldPanel.classList.remove('PaneContent');
+      // oldPanel.innerHTML = '';
+    }
+
+    const newPanel = document.querySelector(`.PanesHolder > div:nth-child(${index + 1})`);
+    newPanel.classList.add('PaneContent');
+
+    // const mask = document.querySelector('.PaneMask');
+    // mask.style.setProperty('--pane-x', - (index * mask.offsetWidth) + 'px');
+  }
 
   swap.formValidator = opts.formValidator || ((e) => true);
 
@@ -394,11 +420,26 @@ module.exports = function (opts = {}) {
     backButton: '.PaneBackBtn',
     open: () => {
     },
-    back: (url) => {
-      swap.with(url, '.Main -> .PaneContent', true);
+
+    back: (index) => {
+      const oldPanel = document.querySelector('.PaneContent');
+      if (oldPanel) {
+        oldPanel.innerHTML = '';
+      }
+
+      changePanelTo(index);
+      // if current pane has been edited
+      // hard refresh back, unless previous pane was edited
+      panelDirection = -1;
+      const url = paneHistory[index];
+      paneHistory.splice(index, 1);
+      swap.with(url, swap.pane.selectors, true);
+      // swap.with(url, '.Main -> .PaneContent', true);
     },
+
     close: () => {
       console.log('close pane');
+      activePanelIndex = -1;
     }
   };
 
@@ -409,24 +450,42 @@ module.exports = function (opts = {}) {
     paneUrl = url; // should this be pathname?
     location.hash = `#pane=${pathname}`;
     paneHistory.push(location.hash.replace('#pane=', ''));
-    paneHistory = compressArr(paneHistory);
-
+    console.log({ activePanelIndex });
+    console.log({ panelDirection });
+    activePanelIndex += panelDirection;
+    changePanelTo(activePanelIndex);
+    panelDirection = 1;
     swap.to(html, swap.pane.selectors, true);
     swap.pane.open(shouldScroll);
+
     if (shouldScroll) {
-      document.querySelector('.PaneContent').scrollTop = 0;
+      // document.querySelector('.PaneContent').scrollTop = 0;
       // document.querySelector(swap.pane.selector).scrollTop = 0;
     }
+
     document.querySelector(swap.pane.backButton).style.display = paneHistory.length > 1 ? 'inline' : 'none';
   }
 
+
+
+
   swap.backPane = () => {
     paneHistory.pop();
-    const url = paneHistory.pop();
-    swap.pane.back(url);
+    swap.pane.back(paneHistory.length - 1);
   }
 
   swap.closePane = () => {
+    setTimeout(() => {
+      [...document.querySelectorAll('.PanesHolder > div')].forEach((div, d) => {
+        div.classList.remove('PaneContent');
+        div.innerHTML = '';
+        if (d === 0) {
+          div.classList.add('PaneContent');
+        }
+      });
+    }, 700);
+
+
     document.documentElement.removeAttribute('swap-pane-is-active');
     const noHashURL = location.href.replace(/#.*$/, '');
     window.history.replaceState('', document.title, noHashURL);
