@@ -5,9 +5,24 @@ const app = dylan();
 const files = fs.readdirSync('cypress/app/dist');
 const frontendFile = files.find(file => /^frontend\..+\.js$/);
 
+const paneHtml = `
+    <div class="Pane">
+      <div class="PaneHeader">
+        <button class="PaneCloseBtn">Close</button>
+        <button class="PaneBackBtn">Back</button>
+        <a href="url/goes/here">Expand</a>
+      </div>
+      <div class="PaneMask">
+        <div class="PanesHolder">
+          <div class="PaneContent"></div>
+          <div></div>
+          <div></div>
+        </div>
+      </div>
+    </div>
+  `;
 
 app.use(static('cypress/app/dist'));
-
 
 app.get('/', (req, res) => res.send(`
   <html>
@@ -18,7 +33,7 @@ app.get('/', (req, res) => res.send(`
     <body>
       <a href="/about">About Link</a>
       <a href="/arrive">Arrive Link</a>
-      <a href="/route">Route Link</a>
+      <a href="/route-on">Route Link</a>
       <a href="/about" data-swap="h1">About Header</a>
       <a href="/about" data-swap="div, h1, h2">About Elements</a>
       <a href="/about" data-swap=".content">About Body</a>
@@ -76,7 +91,7 @@ app.get('/leave', (req, res) => res.send(`
 `));
 
 
-app.get('/route', (req, res) => res.send(`
+app.get('/route-on', (req, res) => res.send(`
   <html>
     <head>
       <title>On</title>
@@ -88,9 +103,86 @@ app.get('/route', (req, res) => res.send(`
   </html>
 `));
 
+app.get('/route-off', (req, res) => res.send(`
+  <html>
+    <head>
+      <title>Off</title>
+      <script src="/${frontendFile}" type="application/javascript"></script>
+    </head>
+    <body>
+      <div>Off route</div>
+      <a href="/">Home</a>
+    </body>
+  </html>
+`));
 
-app.get('/foo', (req, res) => res.send('<h1>Pane</h1>'));
 
+app.get('/accounts', (req, res) => res.send(`
+  <html>
+    <head>
+      <title>Accounts</title>
+      <script src="/${frontendFile}" type="application/javascript"></script>
+    </head>
+    <body>
+      <a href="/account" data-swap-pane=".Main -> .PaneContent">View Account</a>
+      <a href="/edit-account" data-swap-pane=".Main -> .PaneContent">Edit Account</a>
+
+      ${paneHtml}
+    </body>
+  </html>
+`));
+
+app.get('/account', (req, res) => res.send(`
+  <html>
+    <head>
+      <title>Account</title>
+      <script src="/${frontendFile}" type="application/javascript"></script>
+    </head>
+    <body>
+      <div class="Main">
+        Account Info
+        <a href="/donation" data-swap-pane=".Main -> .PaneContent">View Donation</a>
+      </div>
+
+      ${paneHtml}
+    </body>
+  </html>
+`));
+
+app.get('/edit-account', (req, res) => res.send(`
+  <html>
+    <head>
+      <title>Account</title>
+      <script src="/${frontendFile}" type="application/javascript"></script>
+    </head>
+    <body>
+      <div class="Main">
+        Edit Account
+        <form action="/edit-account" method="post"><input type="submit"></form>
+      </div>
+
+      ${paneHtml}
+    </body>
+  </html>
+`));
+
+app.post('/edit-account', (req, res) => res.redirect('/edit-account'));
+
+app.get('/donation', (req, res) => res.send(`
+  <html>
+    <head>
+      <title>Account</title>
+      <script src="/${frontendFile}" type="application/javascript"></script>
+    </head>
+    <body>
+      <div class="Main">
+        Donation Info
+      </div>
+
+      ${paneHtml}
+    </body>
+  </html>
+`));
 
 app.listen(8888);
 

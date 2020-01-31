@@ -15,6 +15,10 @@ swap.off('.leave', (e) => {
   alert('Left');
 });
 
-swap.on('/route', (e) => {
-  alert('Arrived at route');
+swap.on('/route-on', (e) => {
+  alert('On a route');
+});
+
+swap.off('/route-off', (e) => {
+  alert('Off a route');
 });
