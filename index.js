@@ -332,10 +332,14 @@ const updatePane = (direction, html) => {
   qs(swap.pane.backButton).style.display = _paneHistory.length > 1 ? 'inline' : 'none';
 }
 
-const addPaneHistory = (url) => {
-  const pathname = getUrl(url).pathname;
+const updatePaneHash = (url) => {
+  const pathname = getUrl(url).pathname; // we probably want url.search included in this
   _paneUrl = url; // consider whether to handle urls with multiple query strings
   location.hash = `#pane=${pathname}`;
+}
+
+const addPaneHistory = (url) => {
+  updatePaneHash(url);
   _paneHistory.push(location.hash.replace('#pane=', ''));
 }
 
@@ -370,10 +374,12 @@ const prevPane = (state) => {
 
 const backPane = (e) => {
   _paneHistory.pop();
+  const url = _paneHistory[_paneHistory.length - 1];
+  updatePaneHash(url);
   // if (previous pane is NOT edited && current pane was saved) {
   // THEN RELOAD PREV PANE
     swap.with(
-      buildPaneClickRequest(_paneHistory[_paneHistory.length - 1]),
+      buildPaneClickRequest(url),
       swap.pane.selectors,
       prevPane
     );
