@@ -51,13 +51,13 @@ describe('Swapping specific elements', function() {
   });
 });
 
-// describe('Inline swapping', function() {
-//   it('swaps content without changing the url', function() {
-//     cy.visit('http://127.0.0.1:8888/');
-//     cy.contains('Inline About').click();
-//     cy.url().should('not.include', '/about');
-//     cy.title().should('equal', 'About');
-//     cy.get('.content').should('contain', 'About page');
-//     cy.get('.header').should('be.empty');
-//   });
-// });
+describe('Inline swapping', function() {
+  it('swaps content without changing the url', function() {
+    cy.visit('http://127.0.0.1:8888/');
+    cy.contains('Inline About').click();
+    cy.url().should('not.include', '/about');
+    cy.title().should('not.equal', 'About');
+    cy.get('.content').should('contain', 'About page');
+    cy.get('.header').should('be.empty');
+  });
+});
