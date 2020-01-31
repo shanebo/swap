@@ -310,7 +310,7 @@ const openPage = (state) => {
   const { opts, xhr, url, method, html, selectors, finalMethod, finalUrl } = state;
   closePane();
   const headers = getHeaders(xhr.getAllResponseHeaders());
-  fireRoutes('off', url, method); // confusing but accurate because url is the toUrl
+  fireRoutes('off', location.href, method);
   swap.to(html, selectors);
   history.pushState({ html, selectors, headers, method: finalMethod }, '', finalUrl);
   fireRoutes('on', finalUrl, finalMethod);
