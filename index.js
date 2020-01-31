@@ -205,12 +205,14 @@ swap.click = function(e, selectors) {
 
     if (link.dataset.swapPane) {
       swap.with(
-        buildPaneClickRequest(link.pathname),
+        buildPaneClickRequest(link.pathname), // we probably need to handle query string use case here
         sels,
         swap.pane.isActive
           ? nextPane
           : openPane
       );
+    } else if (link.dataset.swapInline) {
+      swap.inline(link.href, sels);
     } else {
       swap.with(link.href, sels);
     }
