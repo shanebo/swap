@@ -405,6 +405,7 @@ const closePane = () => {
   const noHashURL = location.href.replace(/#.*$/, '');
   window.history.replaceState('', document.title, noHashURL);
   _paneHistory = [];
+  _paneUrl = false;
   // swap.pane.close();
 }
 
