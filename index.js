@@ -404,8 +404,6 @@ const closePane = () => {
 
   swap.pane.isActive = false;
   document.documentElement.removeAttribute('swap-pane-is-active');
-  const noHashURL = location.href.replace(/#.*$/, '');
-  window.history.replaceState('', document.title, noHashURL);
   _paneHistory = [];
   _paneUrl = false;
   // swap.pane.close();
@@ -482,10 +480,14 @@ module.exports = function (opts = {}) {
   window.addEventListener('submit', delegateHandle(formSelector, swap.submit));
 
   swap.event('click', swap.pane.backButton, backPane);
-  swap.event('click', swap.pane.closeButton, closePane);
+  swap.event('click', swap.pane.closeButton, (e) => {
+    closePane();
+    window.history.replaceState('', document.title, location.href.replace(/#.*$/, ''));
+  });
   swap.event('click', '[swap-pane-is-active]', (e) => {
     if (!e.target.closest(swap.pane.selector)) {
       closePane();
+      window.history.replaceState('', document.title, location.href.replace(/#.*$/, ''));
     }
   });
 }
