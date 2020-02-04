@@ -34,6 +34,7 @@ app.get('/', (req, res) => res.send(`
       <script src="/${frontendFile}" type="application/javascript"></script>
     </head>
     <body>
+      <a>Nothing Link</a>
       <a href="/about">About Link</a>
       <a href="/arrive">Arrive Link</a>
       <a href="/route-on">Route Link</a>
