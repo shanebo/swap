@@ -64,7 +64,9 @@ swap.off = listener.bind(swap, 'off');
 swap.to = (html, sels, inline) => {
   fireElements('off');
 
-  const dom = new DOMParser().parseFromString(html, 'text/html');
+  const dom = typeof html === 'string'
+    ? new DOMParser().parseFromString(html, 'text/html')
+    : html;
   const selectors = sels.map(sel => sel.split(/\s*->\s*/));
 
   const changes = selectors.map(sel => {
@@ -123,6 +125,7 @@ swap.to = (html, sels, inline) => {
 
   if (!inline) {
     document.head = dom.head;
+    // injectNewScriptsStylesAndMetaTags()
     document.title = dom.head.querySelector('title').innerText;
   }
 
@@ -267,6 +270,8 @@ const loaded = (e) => {
     fireElements('on');
     fireRoutes('on', location.href);
   }
+
+  history.replaceState({ html: document.documentElement.outerHTML, selectors: [] }, document.title, location.href);
 }
 
 const popstate = (e) => {
@@ -277,14 +282,30 @@ const popstate = (e) => {
     - check headers on whether to cache or not
   */
 
-  if (!e.state || location.hash) return;
+  console.log({state: e.state});
+
+  // if (!e.state || location.hash) return;
+  if (!e.state) return;
+
+  // alert(e.state);
+  // console.log({eventState: e.state});
+  // console.log(e.state.html);
 
   const { href } = location;
   const { html, selectors } = e.state;
 
   fireRoutes('off', href);
-  swap.to(html, selectors);
-  history.replaceState(e.state, '', href);
+  const dom = new DOMParser().parseFromString(html, 'text/html');
+  swap.to(dom, selectors);
+  const paneIsActive = dom.documentElement.getAttribute('swap-pane-is-active');
+  if (paneIsActive) {
+    swap.pane.isActive = true;
+    document.documentElement.setAttribute('swap-pane-is-active', 'true');
+  } else {
+    swap.pane.isActive = false;
+    document.documentElement.removeAttribute('swap-pane-is-active');
+  }
+  // history.replaceState(e.state, '', href);
   fireRoutes('on', href);
 }
 
@@ -331,25 +352,31 @@ const updatePane = (direction, html) => {
   }
 
   swap.to(html, swap.pane.selectors, true);
-  qs(swap.pane.backButton).style.display = _paneHistory.length > 1 ? 'inline' : 'none';
+  // qs(swap.pane.backButton).style.display = _paneHistory.length > 1 ? 'inline' : 'none';
+  qs(swap.pane.backButton).style.display = [...qsa('.PanesHolder > div')].indexOf(qs('.PaneContent')) > 0
+    ? 'inline'
+    : 'none';
 }
 
 const updatePaneHash = (url) => {
   const pathname = getUrl(url).pathname; // we probably want url.search included in this
   _paneUrl = url; // consider whether to handle urls with multiple query strings
   location.hash = `#pane=${pathname}`;
+  history.replaceState({ html: document.documentElement.outerHTML, selectors: [] }, '', location.href);
+  // history.pushState({ html: document.documentElement.innerHTML, selectors: [] }, '', location.href);
 }
 
 const addPaneHistory = (url) => {
   updatePaneHash(url);
   _paneHistory.push(location.hash.replace('#pane=', ''));
+  // qs(swap.pane.backButton).style.display = _paneHistory.length > 1 ? 'inline' : 'none';
 }
 
 const openPane = (state) => {
   swap.pane.isActive = true;
   document.documentElement.setAttribute('swap-pane-is-active', 'true');
-  addPaneHistory(state.finalUrl);
   updatePane(0, state.html);
+  addPaneHistory(state.finalUrl);
   // swap.pane.open();
   // const shouldScroll = !_isFormSubmit;
   // if (shouldScroll) {
@@ -359,25 +386,28 @@ const openPane = (state) => {
 }
 
 const nextPane = (state) => {
-  addPaneHistory(state.finalUrl);
   updatePane(1, state.html);
+  addPaneHistory(state.finalUrl);
 }
 
 const samePane = (state) => {
   _paneHistory.pop();
-  addPaneHistory(state.finalUrl);
   updatePane(0, state.html);
+  addPaneHistory(state.finalUrl);
 }
 
 const prevPane = (state) => {
   updatePane(-1, state.html);
+  // _paneHistory.pop();
+  // const url = _paneHistory[_paneHistory.length - 1];
+  updatePaneHash(state.finalUrl);
   // swap.pane.back();
 }
 
 const backPane = (e) => {
   _paneHistory.pop();
   const url = _paneHistory[_paneHistory.length - 1];
-  updatePaneHash(url);
+  // updatePaneHash(url);
   // if (previous pane is NOT edited && current pane was saved) {
   // THEN RELOAD PREV PANE
     swap.with(
@@ -402,8 +432,6 @@ const resetPane = () => {
 
   swap.pane.isActive = false;
   document.documentElement.removeAttribute('swap-pane-is-active');
-  const noHashURL = location.href.replace(/#.*$/, '');
-  window.history.replaceState('', document.title, noHashURL);
   _paneHistory = [];
   _paneUrl = false;
   // swap.pane.close();
@@ -411,7 +439,12 @@ const resetPane = () => {
 
 const closePane = () => {
   resetPane();
-  window.history.replaceState('', document.title, location.href.replace(/#.*$/, ''));
+  // window.history.replaceState({ html: document.documentElement.innerHTML, selectors: []}, document.title, location.href);
+  // window.history.pushState({ html: document.documentElement.outerHTML, selectors: []}, document.title, location.href.replace(/#.*$/, ''));
+
+  setTimeout(() => {
+    window.history.pushState({ html: document.documentElement.outerHTML, selectors: []}, document.title, location.href.replace(/#.*$/, ''));
+  }, 700);
 }
 
 const innerHtmlRender = (oldEl, newEl) => {
