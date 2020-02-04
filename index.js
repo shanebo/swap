@@ -312,7 +312,7 @@ const fireRoutes = (when, url, method = 'get') => {
 
 const openPage = (state) => {
   const { opts, xhr, url, method, html, selectors, finalMethod, finalUrl } = state;
-  closePane();
+  resetPane();
   const headers = getHeaders(xhr.getAllResponseHeaders());
   fireRoutes('off', location.href, method);
   swap.to(html, selectors);
@@ -390,7 +390,7 @@ const backPane = (e) => {
   // }
 }
 
-const closePane = () => {
+const resetPane = () => {
   setTimeout(() => {
     [...qsa('.PanesHolder > div')].forEach((div, d) => {
       div.classList.remove('PaneContent');
@@ -407,6 +407,11 @@ const closePane = () => {
   _paneHistory = [];
   _paneUrl = false;
   // swap.pane.close();
+}
+
+const closePane = () => {
+  resetPane();
+  window.history.replaceState('', document.title, location.href.replace(/#.*$/, ''));
 }
 
 const innerHtmlRender = (oldEl, newEl) => {
@@ -480,14 +485,10 @@ module.exports = function (opts = {}) {
   window.addEventListener('submit', delegateHandle(formSelector, swap.submit));
 
   swap.event('click', swap.pane.backButton, backPane);
-  swap.event('click', swap.pane.closeButton, (e) => {
-    closePane();
-    window.history.replaceState('', document.title, location.href.replace(/#.*$/, ''));
-  });
+  swap.event('click', swap.pane.closeButton, closePane);
   swap.event('click', '[swap-pane-is-active]', (e) => {
     if (!e.target.closest(swap.pane.selector)) {
       closePane();
-      window.history.replaceState('', document.title, location.href.replace(/#.*$/, ''));
     }
   });
 }
