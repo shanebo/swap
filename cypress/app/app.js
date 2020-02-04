@@ -2,8 +2,11 @@ const fs = require('fs');
 const dylan = require('dylan');
 const static = require('@dylan/static');
 const app = dylan();
+const parser = require('@dylan/parser');
 const files = fs.readdirSync('cypress/app/dist');
 const frontendFile = files.find(file => /^frontend\..+\.js$/);
+
+app.use(parser());
 
 const paneHtml = `
     <div class="Pane">
