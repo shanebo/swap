@@ -38,7 +38,7 @@ describe('Swapping specific elements', function() {
     cy.url().should('include', '/about');
     cy.title().should('equal', 'About');
     cy.get('.content').should('contain', 'About page');
-    cy.get('.header').should('be.empty');
+    cy.get('.header').should('contain', 'Home Header');
   });
 
   it('swaps a specific elements', function() {
@@ -58,6 +58,6 @@ describe('Inline swapping', function() {
     cy.url().should('not.include', '/about');
     cy.title().should('not.equal', 'About');
     cy.get('.content').should('contain', 'About page');
-    cy.get('.header').should('be.empty');
+    cy.get('.header').should('contain', 'Home Header');
   });
 });

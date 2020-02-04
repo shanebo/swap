@@ -42,10 +42,9 @@ app.get('/', (req, res) => res.send(`
       <a href="/about" data-swap=".content">About Body</a>
       <a href="/about" data-swap=".content, .header">About Header and Body</a>
       <a href="/about" data-swap-inline=".content">Inline About</a>
-      <a href="/dos" data-swap="h1">Swap h1 with /dos h1</a>
       <h1>Hi</h1>
-      <div class="header"></div>
-      <div class="content"></div>
+      <div class="header">Home Header</div>
+      <div class="content">Home Content</div>
     </body>
   </html>
 `));
