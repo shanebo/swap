@@ -129,6 +129,7 @@ app.get('/accounts', (req, res) => res.send(`
     <body>
       <a href="/account" data-swap-pane=".Main -> .PaneContent">View Account</a>
       <a href="/edit-account" data-swap-pane=".Main -> .PaneContent">Edit Account</a>
+      <a href="/edit-donation" data-swap-pane=".Main -> .PaneContent">Edit Donation</a>
 
       ${paneHtml}
     </body>
@@ -170,6 +171,25 @@ app.get('/edit-account', (req, res) => res.send(`
 `));
 
 app.post('/edit-account', (req, res) => res.redirect('/edit-account'));
+
+app.get('/edit-donation', (req, res) => res.send(`
+  <html>
+    <head>
+      <title>Donation</title>
+      <script src="/${frontendFile}" type="application/javascript"></script>
+    </head>
+    <body>
+      <div class="Main">
+        Edit Donation
+        <form action="/edit-donation" method="post"><input type="submit"></form>
+      </div>
+
+      ${paneHtml}
+    </body>
+  </html>
+`));
+
+app.post('/edit-donation', (req, res) => res.redirect(req.get('pane-url')));
 
 app.get('/donation', (req, res) => res.send(`
   <html>
