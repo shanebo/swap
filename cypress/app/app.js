@@ -207,6 +207,70 @@ app.get('/donation', (req, res) => res.send(`
   </html>
 `));
 
+app.get('/get-form', (req, res) => res.send(`
+  <html>
+    <head>
+      <title>Get Form</title>
+      <script src="/${frontendFile}" type="application/javascript"></script>
+    </head>
+    <body>
+      <div class="Main">
+        <form action="/get-submit" method="get">
+          <input name="name" type="text">
+          <input name="email" type="text">
+          <input type="submit">
+        </form>
+      </div>
+    </body>
+  </html>
+`));
+
+app.get('/get-submit', (req, res) => {
+  res.send(`
+<html>
+  <head>
+    <title>Get Form</title>
+    <script src="/${frontendFile}" type="application/javascript"></script>
+  </head>
+  <body>
+    ${JSON.stringify(req.query)}
+  </body>
+</html>
+`);
+});
+
+app.get('/post-form', (req, res) => res.send(`
+  <html>
+    <head>
+      <title>Post Form</title>
+      <script src="/${frontendFile}" type="application/javascript"></script>
+    </head>
+    <body>
+      <div class="Main">
+        <form action="/post-submit" method="post">
+          <input name="name" type="text">
+          <input name="email" type="text">
+          <input type="submit">
+        </form>
+      </div>
+    </body>
+  </html>
+`));
+
+app.post('/post-submit', (req, res) => {
+  res.send(`
+<html>
+  <head>
+    <title>Post Form</title>
+    <script src="/${frontendFile}" type="application/javascript"></script>
+  </head>
+  <body>
+    ${JSON.stringify(req.body)}
+  </body>
+</html>
+`);
+});
+
 app.listen(8888);
 
 
