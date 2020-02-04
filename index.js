@@ -267,6 +267,8 @@ const loaded = (e) => {
     fireElements('on');
     fireRoutes('on', location.href);
   }
+
+  history.replaceState({ html: document.documentElement.innerHTML, selectors: [] }, document.title, location.href);
 }
 
 const popstate = (e) => {
