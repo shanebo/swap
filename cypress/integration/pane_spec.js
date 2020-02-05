@@ -64,4 +64,15 @@ describe('Pane functionality', function() {
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/edit-account');
     cy.get('.PaneBackBtn').should('be.hidden');
   });
+
+  it('sends a pane-url header on pane form submissions', function() {
+    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.contains('Edit Donation').click();
+
+    cy.get('form').submit();
+
+    cy.get('.PaneContent').should('contain', 'Edit Donation');
+    cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/edit-donation');
+    cy.get('.PaneBackBtn').should('be.hidden');
+  });
 });

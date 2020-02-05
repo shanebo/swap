@@ -8,6 +8,46 @@ describe('Full Page Swaps', function() {
     cy.get('.content').should('contain', 'About page');
   });
 
+  it('does nothing on a link with no href', function() {
+    cy.visit('http://127.0.0.1:8888/');
+    cy.contains('Nothing Link').click();
+    cy.get('.swap-progressing').should('not.exist');
+    cy.url().should('equal', 'http://127.0.0.1:8888/');
+    cy.title().should('equal', 'Home');
+  });
+
+  // it('does a normal network request with meta (cmd, ctrl) clicks', function() {
+  //   // cy.visit('http://127.0.0.1:8888/', {
+  //   //   onBeforeLoad: (win) => {
+  //   //     cy.stub(win, 'open')
+  //   //   }
+  //   // });
+  //   cy.visit('http://127.0.0.1:8888/');
+
+  //   Cypress.on('window:after:load', (win) => {
+  //     cy.stub(win, 'open');
+  //   });
+  //   cy.get('body').type('{meta}', { release: false });
+  //   cy.contains('Delayed Link').click();
+  //   cy.window().its('open').should('be.called');
+  // });
+
+  // it('hard refreshes on links to external domains', function() {
+  //   cy.visit('http://127.0.0.1:8888/');
+  //   cy.contains('External Link').click();
+  //   cy.get('.swap-progressing').should('not.exist');
+  // });
+
+  it('hard refreshes with data-swap=false', function() {
+    cy.visit('http://127.0.0.1:8888/');
+    cy.contains('Hard Delay').click();
+    cy.get('.swap-progressing').should('not.exist');
+    cy.url().should('include', '/delayed');
+    cy.title().should('equal', 'Delayed');
+    cy.get('.header').should('contain', 'Header');
+    cy.get('.content').should('contain', 'Delayed page');
+  });
+
   context("data-swap elements don't exist", function() {
     it('swaps the full page', function() {
       cy.visit('http://127.0.0.1:8888/');
@@ -38,7 +78,7 @@ describe('Swapping specific elements', function() {
     cy.url().should('include', '/about');
     cy.title().should('equal', 'About');
     cy.get('.content').should('contain', 'About page');
-    cy.get('.header').should('be.empty');
+    cy.get('.header').should('contain', 'Home Header');
   });
 
   it('swaps a specific elements', function() {
@@ -58,6 +98,6 @@ describe('Inline swapping', function() {
     cy.url().should('not.include', '/about');
     cy.title().should('not.equal', 'About');
     cy.get('.content').should('contain', 'About page');
-    cy.get('.header').should('be.empty');
+    cy.get('.header').should('contain', 'Home Header');
   });
 });

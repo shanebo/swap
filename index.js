@@ -267,6 +267,8 @@ const loaded = (e) => {
     fireElements('on');
     fireRoutes('on', location.href);
   }
+
+  history.replaceState({ html: document.documentElement.innerHTML, selectors: [] }, document.title, location.href);
 }
 
 const popstate = (e) => {
@@ -310,7 +312,7 @@ const fireRoutes = (when, url, method = 'get') => {
 
 const openPage = (state) => {
   const { opts, xhr, url, method, html, selectors, finalMethod, finalUrl } = state;
-  closePane();
+  resetPane();
   const headers = getHeaders(xhr.getAllResponseHeaders());
   fireRoutes('off', location.href, method);
   swap.to(html, selectors);
@@ -388,7 +390,7 @@ const backPane = (e) => {
   // }
 }
 
-const closePane = () => {
+const resetPane = () => {
   setTimeout(() => {
     [...qsa('.PanesHolder > div')].forEach((div, d) => {
       div.classList.remove('PaneContent');
@@ -402,11 +404,14 @@ const closePane = () => {
 
   swap.pane.isActive = false;
   document.documentElement.removeAttribute('swap-pane-is-active');
-  const noHashURL = location.href.replace(/#.*$/, '');
-  window.history.replaceState('', document.title, noHashURL);
   _paneHistory = [];
   _paneUrl = false;
   // swap.pane.close();
+}
+
+const closePane = () => {
+  resetPane();
+  window.history.replaceState('', document.title, location.href.replace(/#.*$/, ''));
 }
 
 const innerHtmlRender = (oldEl, newEl) => {
