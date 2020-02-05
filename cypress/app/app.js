@@ -36,6 +36,9 @@ app.get('/', (req, res) => res.send(`
     <body>
       <a>Nothing Link</a>
       <a href="/about">About Link</a>
+      <a href="/delayed">Delayed Link</a>
+      <a href="/delayed" data-swap="false">Hard Delay</a>
+      <a href="https://www.desiringgod.org">External Link</a>
       <a href="/arrive">Arrive Link</a>
       <a href="/route-on">Route Link</a>
       <a href="/about" data-swap="h1">About Header</a>
@@ -65,6 +68,25 @@ app.get('/about', (req, res) => res.send(`
     </body>
   </html>
 `));
+
+app.get('/delayed', (req, res) => {
+  setTimeout(() => {
+    res.send(`
+      <html>
+        <head>
+          <title>Delayed</title>
+          <script src="/${frontendFile}" type="application/javascript"></script>
+        </head>
+        <body>
+          <div class="header">Header</div>
+          <div class="content">
+            Delayed page
+          </div>
+        </body>
+      </html>
+    `);
+  }, 50);
+});
 
 
 app.get('/arrive', (req, res) => res.send(`
