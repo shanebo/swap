@@ -80,8 +80,6 @@ describe('Pane History', function() {
         cy.get(div).invoke('html').should('equal', '');
       }
     });
-
-    cy.window().its('swap.pane.isActive').should('equal', false);
   });
 
   it('goes backward and then forward in history to open a pane', function() {
@@ -128,7 +126,5 @@ describe('Pane History', function() {
         cy.get(div).should('have.class', 'PaneContent');
       }
     });
-
-    cy.window().its('swap.pane.isActive').should('equal', false);
   });
 });

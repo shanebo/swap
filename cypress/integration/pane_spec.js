@@ -27,8 +27,6 @@ describe('Pane functionality', function() {
         cy.get(div).invoke('html').should('equal', '');
       }
     });
-
-    cy.window().its('swap.pane.isActive').should('equal', false);
   });
 
   it('goes to the next pane', function() {
