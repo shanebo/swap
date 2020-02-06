@@ -127,19 +127,6 @@ swap.with = (options, selectors = [], callback = openPage) => {
 }
 
 
-swap.inline = (options, selectors = []) => {
-  const opts = typeof options === 'string'
-    ? { url: options, method: 'get' }
-    : options;
-
-  talk(opts, (xhr, res, html) => {
-    swap.to(html, selectors, true);
-  });
-
-  return swap;
-}
-
-
 swap.event = function(name, delegate, fn) {
   const e = {
     name,
@@ -180,37 +167,35 @@ swap.click = function(e, selectors) {
 }
 
 
+swap.inline = (options, selectors = []) => {
+  const opts = typeof options === 'string'
+    ? { url: options, method: 'get' }
+    : options;
+
+  talk(opts, (xhr, res, html) => {
+    swap.to(html, selectors, true);
+  });
+
+  return swap;
+}
+
+
 swap.submit = function(e, selectors) {
   const form = e.target;
-  const inline = form.dataset.swapInline;
-  const { action: url, method } = form;
 
-  if (!shouldSwap(getUrl(url))) return;
+  if (!shouldSwap(getUrl(form.action))) return;
   if (!swap.formValidator(e)) return;
 
   e.preventDefault();
   const sels = selectors || getSelectors(form);
+  const req = buildSubmitRequest(form);
 
-  if (method.toLowerCase() === 'get') {
-    // this block can get refactored/reused with utils
-    const query = new URLSearchParams(new FormData(form)).toString();
-    const cleanQuery = decodeURIComponent(query).replace(/[^=&]+=(&|$)/g, '').replace(/&$/, '');
-    const search = cleanQuery ? '?' + encodeURI(cleanQuery) : cleanQuery;
-    const urlWithParams = `${url}${search}`;
-
-    if (inline) {
-      swap.inline(urlWithParams, sels);
-    } else {
-      swap.with(urlWithParams, sels);
-    }
+  if (form.dataset.swapInline) {
+    swap.inline(req, sels);
+  } else if ($html.getAttribute(swap.pane.activeAttribute)) {
+    swap.with(req, sels, samePane);
   } else {
-    if (inline) {
-      swap.inline(buildSubmitRequest(form), sels);
-    } else if ($html.getAttribute(swap.pane.activeAttribute)) {
-      swap.with(buildSubmitRequest(form), sels, samePane);
-    } else {
-      swap.with(buildSubmitRequest(form), sels);
-    }
+    swap.with(req, sels);
   }
 }
 
