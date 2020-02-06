@@ -1,31 +1,20 @@
 const loader = require('./lib/loader');
-const talk = require('./lib/talk');
 const { qs, $html, innerHtmlRender, replaceRender, delegateHandle } = require('./lib/dom');
-const { buildPaneClickRequest, buildSubmitRequest } = require('./lib/request');
+const { talk, buildPaneClickRequest, buildSubmitRequest } = require('./lib/request');
 const { pushState, replaceState } = require('./lib/history');
 const { listener, fireElements, fireRoutes } = require('./lib/events');
 const { prevPane, samePane, openPane, nextPane, resetPane } = require('./lib/pane');
-
-const {
-  buildUrl,
-  shouldSwap,
-  getUrl,
-  getSelectors,
-  parseQuery,
-  bypassKeyPressed
-} = require('./lib/utils');
+const { buildUrl, shouldSwap, getUrl, getSelectors, parseQuery, bypassKeyPressed } = require('./lib/utils');
 
 
-const swap = {
+window.swap = {
   metaKeyOn: false,
   paneUrl: false,
-  paneHistory: []
+  paneHistory: [],
+  before: listener.bind(window.swap, 'before'),
+  on: listener.bind(window.swap, 'on'),
+  off: listener.bind(window.swap, 'off')
 };
-
-
-swap.before = listener.bind(swap, 'before');
-swap.on = listener.bind(swap, 'on');
-swap.off = listener.bind(swap, 'off');
 
 
 swap.to = (html, sels, inline) => {
@@ -315,10 +304,6 @@ const openPage = ({ method, html, selectors, finalMethod, finalUrl }) => {
   fireRoutes('on', finalUrl, finalMethod);
 }
 
-
-
-window.swap = swap;
-window.app = swap;
 
 
 
