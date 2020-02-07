@@ -246,6 +246,15 @@ const loaded = (e) => {
 }
 
 
+const openPage = ({ method, html, selectors, finalMethod, finalUrl }) => {
+  resetPane();
+  fireRoutes('off', location.href, method);
+  swap.to(html, selectors);
+  pushState(finalUrl);
+  fireRoutes('on', finalUrl, finalMethod);
+}
+
+
 const popstate = (e) => {
   /*
     - check to if headers determine it should be cached or not
@@ -280,14 +289,6 @@ const popstate = (e) => {
 }
 
 
-
-const openPage = ({ method, html, selectors, finalMethod, finalUrl }) => {
-  resetPane();
-  fireRoutes('off', location.href, method);
-  swap.to(html, selectors);
-  pushState(finalUrl);
-  fireRoutes('on', finalUrl, finalMethod);
-}
 
 
 
