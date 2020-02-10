@@ -4,7 +4,10 @@ const static = require('@dylan/static');
 const app = dylan();
 const parser = require('@dylan/parser');
 const files = fs.readdirSync('cypress/app/dist');
-const frontendFile = files.find(file => /^frontend\..+\.js$/);
+const frontendJS = files.find(file => /^frontend\..+\.js$/.test(file));
+const headJS = files.find(file => /^head\..+\.js$/.test(file));
+const mainCSS = files.find(file => /^main\..+\.css$/.test(file));
+const headCSS = files.find(file => /^head\..+\.css$/.test(file));
 
 app.use(parser());
 
@@ -31,11 +34,13 @@ app.get('/', (req, res) => res.send(`
   <html>
     <head>
       <title>Home</title>
-      <script src="/${frontendFile}" type="application/javascript"></script>
+      <script src="/${frontendJS}" type="application/javascript"></script>
+      <link rel="stylesheet" href="/${mainCSS}">
     </head>
     <body>
       <a>Nothing Link</a>
       <a href="/about">About Link</a>
+      <a href="/head">Head Link</a>
       <a href="/delayed">Delayed Link</a>
       <a href="/delayed" data-swap="false">Hard Delay</a>
       <a href="https://www.desiringgod.org">External Link</a>
@@ -58,14 +63,33 @@ app.get('/about', (req, res) => res.send(`
   <html>
     <head>
       <title>About</title>
+      <script src="/${frontendJS}" type="application/javascript"></script>
+    </head>
+    <body>
+      <div class="header">Header</div>
+      <div class="content">
+        About page
+      </div>
+    </body>
+  </html>
+`));
+
+
+app.get('/head', (req, res) => res.send(`
+  <html>
+    <head>
+      <title>Head</title>
       <meta charset="UTF-8">
       <meta name="description" content="About page">
       <meta name="keywords" content="about,swap">
       <meta name="author" content="Shane Thacker">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <script src="/${frontendFile}" type="application/javascript"></script>
+      <script src="/${frontendJS}" type="application/javascript"></script>
+      <script src="/${headJS}" type="application/javascript"></script>
+      <link rel="stylesheet" href="/${headCSS}">
     </head>
     <body>
+      <script>alert('hi from body');</script>
       <div class="header">Header</div>
       <div class="content">
         About page
@@ -80,7 +104,7 @@ app.get('/delayed', (req, res) => {
       <html>
         <head>
           <title>Delayed</title>
-          <script src="/${frontendFile}" type="application/javascript"></script>
+          <script src="/${frontendJS}" type="application/javascript"></script>
         </head>
         <body>
           <div class="header">Header</div>
@@ -98,7 +122,7 @@ app.get('/arrive', (req, res) => res.send(`
   <html>
     <head>
       <title>Elements</title>
-      <script src="/${frontendFile}" type="application/javascript"></script>
+      <script src="/${frontendJS}" type="application/javascript"></script>
     </head>
     <body>
       <div class="arrive">Arrive</div>
@@ -111,7 +135,7 @@ app.get('/leave', (req, res) => res.send(`
   <html>
     <head>
       <title>Elements</title>
-      <script src="/${frontendFile}" type="application/javascript"></script>
+      <script src="/${frontendJS}" type="application/javascript"></script>
     </head>
     <body>
       <div class="leave">Leave/div>
@@ -125,7 +149,7 @@ app.get('/route-on', (req, res) => res.send(`
   <html>
     <head>
       <title>On</title>
-      <script src="/${frontendFile}" type="application/javascript"></script>
+      <script src="/${frontendJS}" type="application/javascript"></script>
     </head>
     <body>
       <div>On route</div>
@@ -137,7 +161,7 @@ app.get('/route-off', (req, res) => res.send(`
   <html>
     <head>
       <title>Off</title>
-      <script src="/${frontendFile}" type="application/javascript"></script>
+      <script src="/${frontendJS}" type="application/javascript"></script>
     </head>
     <body>
       <div>Off route</div>
@@ -151,7 +175,7 @@ app.get('/accounts', (req, res) => res.send(`
   <html>
     <head>
       <title>Accounts</title>
-      <script src="/${frontendFile}" type="application/javascript"></script>
+      <script src="/${frontendJS}" type="application/javascript"></script>
     </head>
     <body>
       <a href="/account" data-swap-pane=".Main -> .PaneContent">View Account</a>
@@ -167,7 +191,7 @@ app.get('/account', (req, res) => res.send(`
   <html>
     <head>
       <title>Account</title>
-      <script src="/${frontendFile}" type="application/javascript"></script>
+      <script src="/${frontendJS}" type="application/javascript"></script>
     </head>
     <body>
       <div class="Main">
@@ -184,7 +208,7 @@ app.get('/edit-account', (req, res) => res.send(`
   <html>
     <head>
       <title>Account</title>
-      <script src="/${frontendFile}" type="application/javascript"></script>
+      <script src="/${frontendJS}" type="application/javascript"></script>
     </head>
     <body>
       <div class="Main">
@@ -203,7 +227,7 @@ app.get('/edit-donation', (req, res) => res.send(`
   <html>
     <head>
       <title>Donation</title>
-      <script src="/${frontendFile}" type="application/javascript"></script>
+      <script src="/${frontendJS}" type="application/javascript"></script>
     </head>
     <body>
       <div class="Main">
@@ -222,7 +246,7 @@ app.get('/donation', (req, res) => res.send(`
   <html>
     <head>
       <title>Account</title>
-      <script src="/${frontendFile}" type="application/javascript"></script>
+      <script src="/${frontendJS}" type="application/javascript"></script>
     </head>
     <body>
       <div class="Main">
@@ -238,7 +262,7 @@ app.get('/get-form', (req, res) => res.send(`
   <html>
     <head>
       <title>Get Form</title>
-      <script src="/${frontendFile}" type="application/javascript"></script>
+      <script src="/${frontendJS}" type="application/javascript"></script>
     </head>
     <body>
       <div class="Main">
@@ -257,7 +281,7 @@ app.get('/get-submit', (req, res) => {
 <html>
   <head>
     <title>Get Form</title>
-    <script src="/${frontendFile}" type="application/javascript"></script>
+    <script src="/${frontendJS}" type="application/javascript"></script>
   </head>
   <body>
     ${JSON.stringify(req.query)}
@@ -270,7 +294,7 @@ app.get('/post-form', (req, res) => res.send(`
   <html>
     <head>
       <title>Post Form</title>
-      <script src="/${frontendFile}" type="application/javascript"></script>
+      <script src="/${frontendJS}" type="application/javascript"></script>
     </head>
     <body>
       <div class="Main">
@@ -289,7 +313,7 @@ app.post('/post-submit', (req, res) => {
 <html>
   <head>
     <title>Post Form</title>
-    <script src="/${frontendFile}" type="application/javascript"></script>
+    <script src="/${frontendJS}" type="application/javascript"></script>
   </head>
   <body>
     ${JSON.stringify(req.body)}
