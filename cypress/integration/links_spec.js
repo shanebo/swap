@@ -59,7 +59,7 @@ describe('Full Page Swaps', function() {
     });
   });
 
-  context("some data-swap elements exist but some do", function() {
+  context("some data-swap elements exist but some don't", function() {
     it('swaps the full page', function() {
       cy.visit('http://127.0.0.1:8888/');
       cy.contains('About Elements').click();
