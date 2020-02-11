@@ -1,5 +1,5 @@
 const loader = require('./lib/loader');
-const { qs, $html, innerHtmlRender, replaceRender, delegateHandle } = require('./lib/dom');
+const { $html, renderTitle, extractNewAssets, renderAssets, renderBody, delegateHandle } = require('./lib/dom');
 const { talk, buildPaneClickRequest, buildSubmitRequest } = require('./lib/request');
 const { pushState, replaceState } = require('./lib/history');
 const { listener, fireElements, fireRoutes } = require('./lib/events');
@@ -17,73 +17,23 @@ window.swap = {
 };
 
 
+
+
 swap.to = (html, sels, inline) => {
   fireElements('off');
 
   const dom = typeof html === 'string'
     ? new DOMParser().parseFromString(html, 'text/html')
     : html;
+
   const selectors = sels.map(sel => sel.split(/\s*->\s*/));
+  const links = extractNewAssets(dom, 'link');
+  const scripts = extractNewAssets(dom, 'script');
 
-  const changes = selectors.map(sel => {
-    if (sel[1]) {
-      // arrow use case
-      const oldEl = qs(sel[1]);
-      const newEl = dom.querySelector(sel[0]);
-      return !oldEl || !newEl
-        ? null
-        : innerHtmlRender.bind(null, oldEl, newEl);
-    } else {
-      const oldEl = qs(sel[0]);
-      const newEl = dom.querySelector(sel[0]);
-      return !oldEl || !newEl
-        ? null
-        : replaceRender.bind(null, oldEl, newEl);
-    }
-  }).filter(el => el);
-
-  const fullSwap = (!selectors.length || (changes.length !== selectors.length));
-
-  if (fullSwap) {
-    document.body = dom.body;
-
-
-            // CLEAN THIS UP. THIS ALLOWS INLINE SCRIPTS TO RUN
-            // get a list of all <script> tags in the new page
-            var tmpScripts = document.querySelectorAll('script:not([src])');
-
-            if (tmpScripts.length > 0) {
-              // push all of the document's script tags into an array
-              // (to prevent dom manipulation while iterating over dom nodes)
-              var scripts = [];
-              for (var i = 0; i < tmpScripts.length; i++) {
-                  scripts.push(tmpScripts[i]);
-              }
-
-              // iterate over all script tags and create a duplicate tags for each
-              for (var i = 0; i < scripts.length; i++) {
-                var s = document.createElement('script');
-                s.innerHTML = scripts[i].innerHTML;
-
-                // add the new node to the page
-                scripts[i].parentNode.appendChild(s);
-
-                // remove the original (non-executing) node from the page
-                scripts[i].parentNode.removeChild(scripts[i]);
-              }
-            }
-
-
-
-  } else {
-    changes.forEach(render => render());
-  }
-
-  if (!inline) {
-    // document.head = dom.head;
-    injectNewScriptsAndStyles(dom);
-    document.title = dom.head.querySelector('title').innerText;
-  }
+  renderBody(dom, selectors);
+  if (!inline) renderTitle(dom);
+  renderAssets(links);
+  renderAssets(scripts);
 
   if (!selectors.length) {
     // make this smarter where it only scrolls to top on different urls?
@@ -94,46 +44,6 @@ swap.to = (html, sels, inline) => {
   fireElements('on');
 
   return swap;
-}
-
-injectNewScriptsAndStyles = (dom) => {
-  const scripts = newNodes(dom, 'script[src]', (existingScripts, script) => {
-    return existingScripts.filter((e) => e.src === script.src).length === 0;
-  });
-
-  if (scripts) {
-    appendNodes('script', scripts, (script, newScript) => {
-      newScript.type = script.type;
-      newScript.src = script.src;
-    });
-  }
-
-  const csses = newNodes(dom, 'link[href]', (existingCsses, css) => {
-    return existingCsses.filter((e) => e.href === css.href).length === 0;
-  });
-
-  if (csses) {
-    appendNodes('link', csses, (css, newCss) => {
-      newCss.rel = css.rel;
-      newCss.href = css.href;
-    });
-  }
-}
-
-newNodes = (dom, selector, filter) => {
-  let nodes = [...dom.querySelectorAll(selector)];
-  nodes.forEach((n) => n.parentNode.removeChild(n));
-  const existingNodes = [...document.querySelectorAll(selector)];
-
-  return nodes.filter((node) => filter(existingNodes, node));
-}
-
-appendNodes = (type, nodes, setter) => {
-  nodes.forEach((node) => {
-    const newNode = document.createElement(type);
-    setter(node, newNode);
-    document.head.appendChild(newNode);
-  });
 }
 
 
