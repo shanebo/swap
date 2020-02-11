@@ -1,1 +1,1 @@
-alert('Hi from Head');
+document.querySelector('.change-from-remote-script').innerText = 'changed';

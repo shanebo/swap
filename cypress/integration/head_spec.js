@@ -1,37 +1,37 @@
 describe('Head', function() {
   it('runs inline scripts', function() {
-    const stub = cy.stub();
-    cy.on('window:alert', stub)
-
     cy.visit('http://127.0.0.1:8888/');
-    cy
-    .contains('Head Link').click()
-    .then(() => {
-      expect(stub.getCall(0)).to.be.calledWith('hi from body');
+
+    cy.contains('Head Link').click();
+
+    cy.get('.change-from-inline-script').then(($el) => {
+      expect($el).to.have.text('changed');
     });
   });
 
-  it('inserts new js scripts', function() {
-    const stub = cy.stub();
-    cy.on('window:alert', stub)
-
+  it('inserts new js scripts', function(done) {
     cy.visit('http://127.0.0.1:8888/');
-    cy
-    .contains('Head Link').click()
-    .then(() => {
-      expect(stub.getCall(1)).to.be.calledWith('Hi from Head');
+
+    cy.contains('Head Link').click();
+
+    cy.get('.change-from-remote-script').then(($el) => {
+      setTimeout(function(){
+        expect($el).to.have.text('changed');
+        done();
+      }, 100);
     });
   });
 
-  it('inserts new css files', function() {
-    const stub = cy.stub();
-    cy.on('window:alert', stub)
-
+  it('inserts new css files', function(done) {
     cy.visit('http://127.0.0.1:8888/');
+
     cy.contains('Head Link').click();
 
     cy.get('body').then(($el) => {
-      expect($el).to.have.css('color', 'rgb(165, 42, 42)');
+      setTimeout(function(){
+        expect($el).to.have.css('color', 'rgb(165, 42, 42)');
+        done();
+      }, 100);
     });
   });
 });

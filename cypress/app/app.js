@@ -89,11 +89,13 @@ app.get('/head', (req, res) => res.send(`
       <link rel="stylesheet" href="/${headCSS}">
     </head>
     <body>
-      <script>alert('hi from body');</script>
+    <div class="change-from-remote-script">Should change</div>
+    <div class="change-from-inline-script">Should change</div>
       <div class="header">Header</div>
       <div class="content">
         About page
       </div>
+      <script>document.querySelector('.change-from-inline-script').innerText = 'changed';</script>
     </body>
   </html>
 `));
