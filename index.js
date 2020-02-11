@@ -50,7 +50,7 @@ swap.to = (html, sels, inline) => {
 
             // CLEAN THIS UP. THIS ALLOWS INLINE SCRIPTS TO RUN
             // get a list of all <script> tags in the new page
-            var tmpScripts = document.getElementsByTagName('script');
+            var tmpScripts = document.querySelectorAll('script:not([src])');
 
             if (tmpScripts.length > 0) {
               // push all of the document's script tags into an array
@@ -81,7 +81,7 @@ swap.to = (html, sels, inline) => {
 
   if (!inline) {
     // document.head = dom.head;
-    // injectNewScriptsStylesAndMetaTags()
+    injectNewScriptsAndStyles(dom);
     document.title = dom.head.querySelector('title').innerText;
   }
 
@@ -94,6 +94,46 @@ swap.to = (html, sels, inline) => {
   fireElements('on');
 
   return swap;
+}
+
+injectNewScriptsAndStyles = (dom) => {
+  const scripts = newNodes(dom, 'script[src]', (existingScripts, script) => {
+    return existingScripts.filter((e) => e.src === script.src).length === 0;
+  });
+
+  if (scripts) {
+    appendNodes('script', scripts, (script, newScript) => {
+      newScript.type = script.type;
+      newScript.src = script.src;
+    });
+  }
+
+  const csses = newNodes(dom, 'link[href]', (existingCsses, css) => {
+    return existingCsses.filter((e) => e.href === css.href).length === 0;
+  });
+
+  if (csses) {
+    appendNodes('link', csses, (css, newCss) => {
+      newCss.rel = css.rel;
+      newCss.href = css.href;
+    });
+  }
+}
+
+newNodes = (dom, selector, filter) => {
+  let nodes = [...dom.querySelectorAll(selector)];
+  nodes.forEach((n) => n.parentNode.removeChild(n));
+  const existingNodes = [...document.querySelectorAll(selector)];
+
+  return nodes.filter((node) => filter(existingNodes, node));
+}
+
+appendNodes = (type, nodes, setter) => {
+  nodes.forEach((node) => {
+    const newNode = document.createElement(type);
+    setter(node, newNode);
+    document.head.appendChild(newNode);
+  });
 }
 
 
