@@ -54,7 +54,7 @@ swap.with = (options, selectors = [], callback = openPage) => {
 
   const { url, method } = opts;
 
-  fireRoutes('before', url, method);
+  fireRoutes('before', url, location, method);
 
   talk(opts, (xhr, res, html) => {
     const wasRedirected = url.replace(/#.*$/, '') !== xhr.responseURL;
@@ -189,7 +189,7 @@ const loaded = (e) => {
     }
   } else {
     fireElements('on');
-    fireRoutes('on', location.href);
+    fireRoutes('on', location.href, location.href);
   }
 
   replaceState(location.href);
@@ -198,10 +198,11 @@ const loaded = (e) => {
 
 const openPage = ({ method, html, selectors, finalMethod, finalUrl }) => {
   resetPane();
-  fireRoutes('off', location.href, method);
+  const from = location.href;
+  fireRoutes('off', finalUrl, from, method);
   swap.to(html, selectors);
   pushState(finalUrl);
-  fireRoutes('on', finalUrl, finalMethod);
+  fireRoutes('on', finalUrl, from, finalMethod);
 }
 
 
@@ -219,7 +220,7 @@ const popstate = (e) => {
   const { href } = location;
   const { html, selectors } = e.state;
 
-  fireRoutes('off', href);
+  fireRoutes('off', href, href);
 
   const dom = new DOMParser().parseFromString(html, 'text/html');
 
@@ -235,7 +236,7 @@ const popstate = (e) => {
     $html.removeAttribute(swap.pane.activeAttribute);
   }
 
-  fireRoutes('on', href);
+  fireRoutes('on', href, href);
 }
 
 
