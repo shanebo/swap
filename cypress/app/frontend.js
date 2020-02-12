@@ -22,3 +22,15 @@ swap.on('/route-on', (e) => {
 swap.off('/route-off', (e) => {
   alert('Off a route');
 });
+
+swap.before('/events', (e) => {
+  alert(`Before from: ${e.from.href}, to: ${e.to.href}`);
+});
+
+swap.on('/events', (e) => {
+  alert(`On from: ${e.from.href}, to: ${e.to.href}`);
+});
+
+swap.off('/events', (e) => {
+  alert(`Off from: ${e.from.href}, to: ${e.to.href}`);
+});
