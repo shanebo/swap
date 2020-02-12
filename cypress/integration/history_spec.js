@@ -1,44 +1,59 @@
 describe('History', function() {
-  it('goes backward in history', function() {
+  it('goes backward in history', function(done) {
     cy.visit('http://127.0.0.1:8888/');
     cy.contains('About Link').click();
 
     cy.go('back');
 
-    cy.url().should('equal', 'http://127.0.0.1:8888/');
-    cy.title().should('equal', 'Home');
-    cy.get('.header').should('contain', 'Home Header');
-    cy.get('.content').should('contain', 'Home Content');
+    cy.url().then(($url) => {
+      setTimeout(function() {
+        expect($url).to.equal('http://127.0.0.1:8888/');
+        cy.title().should('equal', 'Home');
+        cy.get('.header').should('equal', 'Home Header');
+        cy.get('.content').should('equal', 'Home Content');
+        done();
+      }, 100);
+    });
   });
 
-  it('goes forward in history', function() {
+  it('goes forward in history', function(done) {
     cy.visit('http://127.0.0.1:8888/');
     cy.contains('About Link').click();
     cy.go('back');
 
     cy.go('forward');
 
-    cy.url().should('equal', 'http://127.0.0.1:8888/about');
-    cy.title().should('equal', 'About');
-    cy.get('.header').should('contain', 'Header');
-    cy.get('.content').should('contain', 'About page');
+    cy.url().then(($url) => {
+      setTimeout(function() {
+        expect($url).to.equal('http://127.0.0.1:8888/about');
+        cy.title().should('equal', 'About');
+        cy.get('.header').should('equal', 'Header');
+        cy.get('.content').should('equal', 'About page');
+        done();
+      }, 100);
+    });
   });
 });
 
 describe('Pane History', function() {
-  it('goes backward in history on a pane', function() {
+  it('goes backward in history on a pane', function(done) {
     cy.visit('http://127.0.0.1:8888/accounts');
     cy.contains('View Account').click();
     cy.contains('View Donation').click();
 
     cy.go('back');
 
-    cy.get('.PaneContent').should('contain', 'Account Info');
-    cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/account');
-    cy.get('.PaneBackBtn').should('be.hidden');
+    cy.get('.PaneContent').then(($el) => {
+      setTimeout(function() {
+        expect($el).to.contain('Account Info');
+        cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/account');
+        cy.get('.PaneBackBtn').should('be.hidden');
+        done();
+      }, 100);
+    });
   });
 
-  it('goes forward in history on a pane', function() {
+  it('goes forward in history on a pane', function(done) {
     cy.visit('http://127.0.0.1:8888/accounts');
     cy.contains('View Account').click();
     cy.contains('View Donation').click();
@@ -46,9 +61,14 @@ describe('Pane History', function() {
 
     cy.go('forward');
 
-    cy.get('.PaneContent').should('contain', 'Donation Info');
-    cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/donation');
-    cy.get('.PaneBackBtn').should('be.visible');
+    cy.get('.PaneContent').then(($el) => {
+      setTimeout(function() {
+        expect($el).to.contain('Donation Info');
+        cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/donation');
+        cy.get('.PaneBackBtn').should('be.visible');
+        done();
+      }, 100);
+    });
   });
 
   it('goes backward in history on a pane after using the pane back button', function() {
