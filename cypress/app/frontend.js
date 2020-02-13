@@ -28,7 +28,7 @@ swap.before('/events', (e) => {
 });
 
 swap.on('/events', (e) => {
-  alert(`On from: ${e.from.href}, to: ${e.to.href}`);
+  alert(`On from: ${e.from ? e.from.href : 'null'}, to: ${e.to.href}`);
 });
 
 swap.off('/events', (e) => {
