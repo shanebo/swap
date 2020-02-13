@@ -1,7 +1,7 @@
 const loader = require('./lib/loader');
-const { $html, renderTitle, extractNewAssets, renderAssets, renderBody } = require('./lib/dom');
+const { $html, renderTitle, extractNewAssets, loadAssets, renderBody } = require('./lib/dom');
 const { talk, buildPaneClickRequest, buildSubmitRequest } = require('./lib/request');
-const { pushState, replaceState } = require('./lib/history');
+const { pushState, replaceState, updateOurState, session } = require('./lib/history');
 const { listener, fireElements, fireRoutes, delegateHandle } = require('./lib/events');
 const { prevPane, samePane, openPane, nextPane, resetPane } = require('./lib/pane');
 const { buildUrl, shouldSwap, getUrl, getSelectors, parseQuery, bypassKeyPressed } = require('./lib/utils');
@@ -13,13 +13,12 @@ window.swap = {
   paneHistory: [],
   before: listener.bind(window.swap, 'before'),
   on: listener.bind(window.swap, 'on'),
-  off: listener.bind(window.swap, 'off')
+  off: listener.bind(window.swap, 'off'),
+  stateId: 0
 };
 
 
-
-
-swap.to = (html, sels, inline) => {
+swap.to = (html, sels, inline, callback) => {
   fireElements('off');
 
   const dom = typeof html === 'string'
@@ -31,17 +30,17 @@ swap.to = (html, sels, inline) => {
   const scripts = extractNewAssets(dom, 'script');
 
   renderBody(dom, selectors);
+
   if (!inline) renderTitle(dom);
-  renderAssets(links);
-  renderAssets(scripts);
 
-  if (!selectors.length) {
-    // make this smarter where it only scrolls to top on different urls?
-    console.log('no selectors so scroll to top');
-    window.scrollTo(0, 0);
-  }
-
-  fireElements('on');
+  loadAssets(scripts.concat(links), () => {
+    fireElements('on');
+    if (callback) callback();
+    if (!selectors.length) {
+      // make this smarter where it only scrolls to top on different urls?
+      window.scrollTo(0, 0);
+    }
+  });
 
   return swap;
 }
@@ -165,16 +164,11 @@ swap.backPane = (e) => {
 
 
 swap.closePane = () => {
+  const to = location.href.replace(/#.*$/, '');
+  replaceState(location.href, to);
   resetPane();
-  pushState(location.href.replace(/#.*$/, ''));
+  pushState(to);
 }
-
-
-
-
-
-
-
 
 
 const loaded = (e) => {
@@ -189,7 +183,7 @@ const loaded = (e) => {
     }
   } else {
     fireElements('on');
-    fireRoutes('on', location.href, location.href);
+    fireRoutes('on', location.href, null);
   }
 
   replaceState(location.href);
@@ -197,12 +191,18 @@ const loaded = (e) => {
 
 
 const openPage = ({ method, html, selectors, finalMethod, finalUrl }) => {
-  resetPane();
   const from = location.href;
+
+  replaceState(location.href, finalUrl);
+  resetPane();
+
   fireRoutes('off', finalUrl, from, method);
-  swap.to(html, selectors);
-  pushState(finalUrl);
-  fireRoutes('on', finalUrl, from, finalMethod);
+
+  swap.to(html, selectors, false, () => {
+    console.log('FIRED!');
+    pushState(finalUrl, from);
+    fireRoutes('on', finalUrl, from, finalMethod);
+  });
 }
 
 
@@ -214,34 +214,31 @@ const popstate = (e) => {
     - check headers on whether to cache or not
   */
 
-  // if (!e.state || location.hash) return;
-  if (!e.state) return;
-
   const { href } = location;
-  const { html, selectors } = e.state;
+  const { html, selectors, from, to, id } = session.get(e.state.id);
+  const goForward = swap.stateId < id;
+  const justAt = goForward ? from : to;
 
-  fireRoutes('off', href, href);
+  updateOurState(justAt, href);
+
+  swap.stateId = id;
+
+  fireRoutes('off', href, justAt);
 
   const dom = new DOMParser().parseFromString(html, 'text/html');
 
-  swap.to(dom, selectors);
+  swap.to(dom, selectors, false, () => {
+    // this block feels like it should go in swap.to maybe
+    const paneIsActive = dom.documentElement.getAttribute(swap.pane.activeAttribute);
+    if (paneIsActive) {
+      $html.setAttribute(swap.pane.activeAttribute, 'true');
+    } else {
+      $html.removeAttribute(swap.pane.activeAttribute);
+    }
 
-  // getstateofourpanehistoryatthistime
-
-  // this block feels like it should go in swap.to maybe
-  const paneIsActive = dom.documentElement.getAttribute(swap.pane.activeAttribute);
-  if (paneIsActive) {
-    $html.setAttribute(swap.pane.activeAttribute, 'true');
-  } else {
-    $html.removeAttribute(swap.pane.activeAttribute);
-  }
-
-  fireRoutes('on', href, href);
+    fireRoutes('on', href, from);
+  });
 }
-
-
-
-
 
 
 module.exports = function (opts = {}) {
