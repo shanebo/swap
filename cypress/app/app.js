@@ -46,6 +46,7 @@ app.get('/', (req, res) => res.send(`
       <a href="https://www.desiringgod.org">External Link</a>
       <a href="/arrive">Arrive Link</a>
       <a href="/route-on">Route Link</a>
+      <a href="/events">Events Link</a>
       <a href="/about" data-swap="h1">About Header</a>
       <a href="/about" data-swap="div, h1, h2">About Elements</a>
       <a href="/about" data-swap=".content">About Body</a>
@@ -167,6 +168,20 @@ app.get('/route-off', (req, res) => res.send(`
     </head>
     <body>
       <div>Off route</div>
+      <a href="/">Home</a>
+    </body>
+  </html>
+`));
+
+
+app.get('/events', (req, res) => res.send(`
+  <html>
+    <head>
+      <title>Events</title>
+      <script src="/${frontendJS}" type="application/javascript"></script>
+    </head>
+    <body>
+      <div>Events</div>
       <a href="/">Home</a>
     </body>
   </html>
