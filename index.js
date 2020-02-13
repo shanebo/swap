@@ -1,7 +1,7 @@
 const loader = require('./lib/loader');
 const { $html, renderTitle, extractNewAssets, renderAssets, renderBody, delegateHandle } = require('./lib/dom');
 const { talk, buildPaneClickRequest, buildSubmitRequest } = require('./lib/request');
-const { pushState, replaceState } = require('./lib/history');
+const { pushState, replaceState, stateId } = require('./lib/history');
 const { listener, fireElements, fireRoutes } = require('./lib/events');
 const { prevPane, samePane, openPane, nextPane, resetPane } = require('./lib/pane');
 const { buildUrl, shouldSwap, getUrl, getSelectors, parseQuery, bypassKeyPressed } = require('./lib/utils');
@@ -13,7 +13,8 @@ window.swap = {
   paneHistory: [],
   before: listener.bind(window.swap, 'before'),
   on: listener.bind(window.swap, 'on'),
-  off: listener.bind(window.swap, 'off')
+  off: listener.bind(window.swap, 'off'),
+  stateId: 0
 };
 
 
@@ -165,8 +166,10 @@ swap.backPane = (e) => {
 
 
 swap.closePane = () => {
+  const to = location.href.replace(/#.*$/, '');
+  replaceState(location.href, to);
   resetPane();
-  pushState(location.href.replace(/#.*$/, ''));
+  pushState(to);
 }
 
 
@@ -189,7 +192,7 @@ const loaded = (e) => {
     }
   } else {
     fireElements('on');
-    fireRoutes('on', location.href, location.href);
+    fireRoutes('on', location.href, null);
   }
 
   replaceState(location.href);
@@ -197,11 +200,13 @@ const loaded = (e) => {
 
 
 const openPage = ({ method, html, selectors, finalMethod, finalUrl }) => {
-  resetPane();
   const from = location.href;
+  replaceState(from, finalUrl);
+  resetPane();
   fireRoutes('off', finalUrl, from, method);
   swap.to(html, selectors);
-  pushState(finalUrl);
+  pushState(finalUrl, from);
+  // location.href = finalUrl;
   fireRoutes('on', finalUrl, from, finalMethod);
 }
 
@@ -218,9 +223,16 @@ const popstate = (e) => {
   if (!e.state) return;
 
   const { href } = location;
-  const { html, selectors } = e.state;
+  const { html, selectors, from, to, id } = e.state;
 
-  fireRoutes('off', href, href);
+  const direction = swap.stateId < id ? 'forward' : 'back';
+  const old = direction == 'forward' ? from : to;
+
+  // console.log({direction, old, from, to});
+
+  swap.stateId = id;
+
+  fireRoutes('off', href, old);
 
   const dom = new DOMParser().parseFromString(html, 'text/html');
 
@@ -236,7 +248,7 @@ const popstate = (e) => {
     $html.removeAttribute(swap.pane.activeAttribute);
   }
 
-  fireRoutes('on', href, href);
+  fireRoutes('on', href, from);
 }
 
 
