@@ -33,7 +33,8 @@ swap.to = (html, sels, inline, callback) => {
 
   if (!inline) renderTitle(dom);
 
-  loadAssets(scripts.concat(links), () => {
+  const assets = scripts.concat(links);
+  loadAssets(assets, () => {
     fireElements('on');
     if (callback) callback();
     if (!selectors.length) {
@@ -164,10 +165,9 @@ swap.backPane = (e) => {
 
 
 swap.closePane = () => {
-  const to = location.href.replace(/#.*$/, '');
-  replaceState(location.href, to);
+  replaceState(location.href);
   resetPane();
-  pushState(to);
+  pushState(location.href.replace(/#.*$/, ''));
 }
 
 
@@ -193,14 +193,14 @@ const loaded = (e) => {
 const openPage = ({ method, html, selectors, finalMethod, finalUrl }) => {
   const from = location.href;
 
-  replaceState(location.href, finalUrl);
+  replaceState(location.href);
   resetPane();
 
   fireRoutes('off', finalUrl, from, method);
 
   swap.to(html, selectors, false, () => {
     console.log('FIRED!');
-    pushState(finalUrl, from);
+    pushState(finalUrl);
     fireRoutes('on', finalUrl, from, finalMethod);
   });
 }
@@ -213,13 +213,16 @@ const popstate = (e) => {
     - if cached then return state
     - check headers on whether to cache or not
   */
+ 
+ if (!e.state) return;
 
   const { href } = location;
-  const { html, selectors, from, to, id } = session.get(e.state.id);
+  const { html, selectors, id } = session.get(e.state.id);
   const goForward = swap.stateId < id;
-  const justAt = goForward ? from : to;
+  const justAtId = session.get('stateIds').indexOf(e.state.id) + (goForward ? -1 : 1);
+  const justAt = justAtId >= 0 ? session.get(justAtId).url : null;
 
-  updateOurState(justAt, href);
+  updateOurState(justAt);
 
   swap.stateId = id;
 
@@ -236,7 +239,7 @@ const popstate = (e) => {
       $html.removeAttribute(swap.pane.activeAttribute);
     }
 
-    fireRoutes('on', href, from);
+    fireRoutes('on', href, justAt);
   });
 }
 
