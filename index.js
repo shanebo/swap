@@ -1,7 +1,7 @@
 const loader = require('./lib/loader');
-const { $html, renderTitle, extractNewAssets, renderAssets, renderBody, delegateHandle } = require('./lib/dom');
+const { $html, renderTitle, extractNewAssets, loadAssets, renderBody, delegateHandle } = require('./lib/dom');
 const { talk, buildPaneClickRequest, buildSubmitRequest } = require('./lib/request');
-const { pushState, replaceState, stateId } = require('./lib/history');
+const { pushState, replaceState, updateOurState, session } = require('./lib/history');
 const { listener, fireElements, fireRoutes } = require('./lib/events');
 const { prevPane, samePane, openPane, nextPane, resetPane } = require('./lib/pane');
 const { buildUrl, shouldSwap, getUrl, getSelectors, parseQuery, bypassKeyPressed } = require('./lib/utils');
@@ -18,9 +18,7 @@ window.swap = {
 };
 
 
-
-
-swap.to = (html, sels, inline) => {
+swap.to = (html, sels, inline, callback) => {
   fireElements('off');
 
   const dom = typeof html === 'string'
@@ -32,17 +30,17 @@ swap.to = (html, sels, inline) => {
   const scripts = extractNewAssets(dom, 'script');
 
   renderBody(dom, selectors);
+
   if (!inline) renderTitle(dom);
-  renderAssets(links);
-  renderAssets(scripts);
 
-  if (!selectors.length) {
-    // make this smarter where it only scrolls to top on different urls?
-    console.log('no selectors so scroll to top');
-    window.scrollTo(0, 0);
-  }
-
-  fireElements('on');
+  loadAssets(scripts.concat(links), () => {
+    fireElements('on');
+    if (callback) callback();
+    if (!selectors.length) {
+      // make this smarter where it only scrolls to top on different urls?
+      window.scrollTo(0, 0);
+    }
+  });
 
   return swap;
 }
@@ -173,13 +171,6 @@ swap.closePane = () => {
 }
 
 
-
-
-
-
-
-
-
 const loaded = (e) => {
   if (location.hash) {
     const params = parseQuery(location.hash.substr(1));
@@ -201,13 +192,17 @@ const loaded = (e) => {
 
 const openPage = ({ method, html, selectors, finalMethod, finalUrl }) => {
   const from = location.href;
-  replaceState(from, finalUrl);
+
+  replaceState(location.href, finalUrl);
   resetPane();
+
   fireRoutes('off', finalUrl, from, method);
-  swap.to(html, selectors);
-  pushState(finalUrl, from);
-  // location.href = finalUrl;
-  fireRoutes('on', finalUrl, from, finalMethod);
+
+  swap.to(html, selectors, false, () => {
+    console.log('FIRED!');
+    pushState(finalUrl, from);
+    fireRoutes('on', finalUrl, from, finalMethod);
+  });
 }
 
 
@@ -219,41 +214,31 @@ const popstate = (e) => {
     - check headers on whether to cache or not
   */
 
-  // if (!e.state || location.hash) return;
-  if (!e.state) return;
-
   const { href } = location;
-  const { html, selectors, from, to, id } = e.state;
+  const { html, selectors, from, to, id } = session.get(e.state.id);
+  const goForward = swap.stateId < id;
+  const justAt = goForward ? from : to;
 
-  const direction = swap.stateId < id ? 'forward' : 'back';
-  const old = direction == 'forward' ? from : to;
-
-  // console.log({direction, old, from, to});
+  updateOurState(justAt, href);
 
   swap.stateId = id;
 
-  fireRoutes('off', href, old);
+  fireRoutes('off', href, justAt);
 
   const dom = new DOMParser().parseFromString(html, 'text/html');
 
-  swap.to(dom, selectors);
+  swap.to(dom, selectors, false, () => {
+    // this block feels like it should go in swap.to maybe
+    const paneIsActive = dom.documentElement.getAttribute(swap.pane.activeAttribute);
+    if (paneIsActive) {
+      $html.setAttribute(swap.pane.activeAttribute, 'true');
+    } else {
+      $html.removeAttribute(swap.pane.activeAttribute);
+    }
 
-  // getstateofourpanehistoryatthistime
-
-  // this block feels like it should go in swap.to maybe
-  const paneIsActive = dom.documentElement.getAttribute(swap.pane.activeAttribute);
-  if (paneIsActive) {
-    $html.setAttribute(swap.pane.activeAttribute, 'true');
-  } else {
-    $html.removeAttribute(swap.pane.activeAttribute);
-  }
-
-  fireRoutes('on', href, from);
+    fireRoutes('on', href, from);
+  });
 }
-
-
-
-
 
 
 module.exports = function (opts = {}) {
