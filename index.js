@@ -217,7 +217,7 @@ const popstate = (e) => {
  if (!e.state) return;
 
   const { href } = location;
-  const { html, selectors, id } = session.get(e.state.id);
+  const { html, selectors, paneHistory, id } = session.get(e.state.id);
   const goForward = swap.stateId < id;
   const justAtId = session.get('stateIds').indexOf(e.state.id) + (goForward ? -1 : 1);
   const justAt = justAtId >= 0 ? session.get(justAtId).url : null;
@@ -225,6 +225,7 @@ const popstate = (e) => {
   updateOurState(justAt);
 
   swap.stateId = id;
+  swap.paneHistory = paneHistory;
 
   fireRoutes('off', href, justAt);
 
