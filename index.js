@@ -165,10 +165,9 @@ swap.backPane = (e) => {
 
 
 swap.closePane = () => {
-  const to = location.href.replace(/#.*$/, '');
   replaceState(location.href);
   resetPane();
-  pushState(to);
+  pushState(location.href.replace(/#.*$/, ''));
 }
 
 
@@ -214,6 +213,8 @@ const popstate = (e) => {
     - if cached then return state
     - check headers on whether to cache or not
   */
+ 
+ if (!e.state) return;
 
   const { href } = location;
   const { html, selectors, id } = session.get(e.state.id);
