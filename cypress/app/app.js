@@ -81,6 +81,7 @@ app.get('/about', (req, res) => res.send(`
     <head>
       <title>About</title>
       <script src="/${frontendJS}" type="application/javascript"></script>
+      <link rel="stylesheet" href="/${mainCSS}">
     </head>
     <body>
     ${menu}
