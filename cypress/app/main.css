@@ -1,15 +1,29 @@
-a:link {
-  color: red;
-  background-color: transparent;
-  text-decoration: none;
-}
-
-a:visited {
-  color: red;
-  background-color: transparent;
-  text-decoration: none;
+* {
+  margin: 0;
+  padding: 0;
 }
 
 body {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-gap: 100px;
+  padding: 30px;
+  font-family: -apple-system;
+  font-size: 14px;
+}
+
+a:link,
+a:visited {
   color: blue;
+  text-decoration: none;
+}
+
+nav {
+  display: grid;
+  grid-auto-flow: row;
+  grid-gap: 8px;
+}
+
+nav a {
+  display: block;
 }

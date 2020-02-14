@@ -11,6 +11,33 @@ const headCSS = files.find(file => /^head\..+\.css$/.test(file));
 
 app.use(parser());
 
+
+const menu = `
+  <nav>
+    <a href="/">Home</a>
+    <a href="/about">About Link</a>
+    <a href="/about" data-swap="h1">About Header</a>
+    <a href="/about" data-swap="div, h1, h2">About Elements</a>
+    <a href="/about" data-swap=".content">About Body</a>
+    <a href="/about" data-swap=".content, .header">About Header and Body</a>
+    <a href="/about" data-swap-inline=".content">Inline About</a>
+    <a href="/head">Head Link</a>
+    <a href="/delayed">Delayed Link</a>
+    <a href="/delayed" data-swap="false">Hard Delay</a>
+    <a href="https://www.desiringgod.org">External Link</a>
+    <a href="/arrive">Arrive Link</a>
+    <a href="/route-on">Route Link</a>
+    <a href="/events">Events Link</a>
+    <a>Nothing Link</a>
+  </nav>
+`;
+
+const layout = (content) => `
+    <div>
+      ${content}
+    </div>
+  `;
+
 const paneHtml = `
     <div class="Pane">
       <div class="PaneHeader">
@@ -38,23 +65,12 @@ app.get('/', (req, res) => res.send(`
       <link rel="stylesheet" href="/${mainCSS}">
     </head>
     <body>
-      <a>Nothing Link</a>
-      <a href="/about">About Link</a>
-      <a href="/head">Head Link</a>
-      <a href="/delayed">Delayed Link</a>
-      <a href="/delayed" data-swap="false">Hard Delay</a>
-      <a href="https://www.desiringgod.org">External Link</a>
-      <a href="/arrive">Arrive Link</a>
-      <a href="/route-on">Route Link</a>
-      <a href="/events">Events Link</a>
-      <a href="/about" data-swap="h1">About Header</a>
-      <a href="/about" data-swap="div, h1, h2">About Elements</a>
-      <a href="/about" data-swap=".content">About Body</a>
-      <a href="/about" data-swap=".content, .header">About Header and Body</a>
-      <a href="/about" data-swap-inline=".content">Inline About</a>
-      <h1>Hi</h1>
-      <div class="header">Home Header</div>
-      <div class="content">Home Content</div>
+      ${menu}
+      ${layout(`
+        <h1>Hi</h1>
+        <div class="header">Home Header</div>
+        <div class="content">Home Content</div>
+      `)}
     </body>
   </html>
 `));
@@ -67,10 +83,13 @@ app.get('/about', (req, res) => res.send(`
       <script src="/${frontendJS}" type="application/javascript"></script>
     </head>
     <body>
+    ${menu}
+    ${layout(`
       <div class="header">Header</div>
       <div class="content">
         About page
       </div>
+    `)}
     </body>
   </html>
 `));
@@ -87,16 +106,20 @@ app.get('/head', (req, res) => res.send(`
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <script src="/${frontendJS}" type="application/javascript"></script>
       <script src="/${headJS}" type="application/javascript"></script>
+      <link rel="stylesheet" href="/${mainCSS}">
       <link rel="stylesheet" href="/${headCSS}">
     </head>
     <body>
-    <div class="change-from-remote-script">Should change</div>
-    <div class="change-from-inline-script">Should change</div>
+    ${menu}
+    ${layout(`
+      <div class="change-from-remote-script">Should change</div>
+      <div class="change-from-inline-script">Should change</div>
       <div class="header">Header</div>
       <div class="content">
         About page
       </div>
       <script>document.querySelector('.change-from-inline-script').innerText = 'changed';</script>
+    `)}
     </body>
   </html>
 `));
@@ -110,11 +133,14 @@ app.get('/delayed', (req, res) => {
           <script src="/${frontendJS}" type="application/javascript"></script>
         </head>
         <body>
+        ${menu}
+        ${layout(`
           <div class="header">Header</div>
           <div class="content">
             Delayed page
           </div>
-        </body>
+        `)}
+      </body>
       </html>
     `);
   }, 50);
@@ -128,7 +154,10 @@ app.get('/arrive', (req, res) => res.send(`
       <script src="/${frontendJS}" type="application/javascript"></script>
     </head>
     <body>
+    ${menu}
+    ${layout(`
       <div class="arrive">Arrive</div>
+    `)}
     </body>
   </html>
 `));
@@ -141,8 +170,11 @@ app.get('/leave', (req, res) => res.send(`
       <script src="/${frontendJS}" type="application/javascript"></script>
     </head>
     <body>
+    ${menu}
+    ${layout(`
       <div class="leave">Leave/div>
       <a href="/about">About</a>
+    `)}
     </body>
   </html>
 `));
@@ -155,7 +187,10 @@ app.get('/route-on', (req, res) => res.send(`
       <script src="/${frontendJS}" type="application/javascript"></script>
     </head>
     <body>
+    ${menu}
+    ${layout(`
       <div>On route</div>
+    `)}
     </body>
   </html>
 `));
@@ -167,8 +202,11 @@ app.get('/route-off', (req, res) => res.send(`
       <script src="/${frontendJS}" type="application/javascript"></script>
     </head>
     <body>
+    ${menu}
+    ${layout(`
       <div>Off route</div>
       <a href="/">Home</a>
+    `)}
     </body>
   </html>
 `));
@@ -181,8 +219,11 @@ app.get('/events', (req, res) => res.send(`
       <script src="/${frontendJS}" type="application/javascript"></script>
     </head>
     <body>
+    ${menu}
+    ${layout(`
       <div>Events</div>
       <a href="/">Home</a>
+    `)}
     </body>
   </html>
 `));
@@ -195,10 +236,12 @@ app.get('/accounts', (req, res) => res.send(`
       <script src="/${frontendJS}" type="application/javascript"></script>
     </head>
     <body>
-      <a href="/account" data-swap-pane=".Main -> .PaneContent">View Account</a>
-      <a href="/edit-account" data-swap-pane=".Main -> .PaneContent">Edit Account</a>
-      <a href="/edit-donation" data-swap-pane=".Main -> .PaneContent">Edit Donation</a>
-
+      ${menu}
+      ${layout(`
+        <a href="/account" data-swap-pane=".Main -> .PaneContent">View Account</a>
+        <a href="/edit-account" data-swap-pane=".Main -> .PaneContent">Edit Account</a>
+        <a href="/edit-donation" data-swap-pane=".Main -> .PaneContent">Edit Donation</a>
+      `)}
       ${paneHtml}
     </body>
   </html>
@@ -211,11 +254,13 @@ app.get('/account', (req, res) => res.send(`
       <script src="/${frontendJS}" type="application/javascript"></script>
     </head>
     <body>
-      <div class="Main">
-        Account Info
-        <a href="/donation" data-swap-pane=".Main -> .PaneContent">View Donation</a>
-      </div>
-
+      ${menu}
+      ${layout(`
+        <div class="Main">
+          Account Info
+          <a href="/donation" data-swap-pane=".Main -> .PaneContent">View Donation</a>
+        </div>
+      `)}
       ${paneHtml}
     </body>
   </html>
@@ -228,11 +273,13 @@ app.get('/edit-account', (req, res) => res.send(`
       <script src="/${frontendJS}" type="application/javascript"></script>
     </head>
     <body>
-      <div class="Main">
-        Edit Account
-        <form action="/edit-account" method="post"><input type="submit"></form>
-      </div>
-
+      ${menu}
+      ${layout(`
+        <div class="Main">
+          Edit Account
+          <form action="/edit-account" method="post"><input type="submit"></form>
+        </div>
+      `)}
       ${paneHtml}
     </body>
   </html>
@@ -247,11 +294,13 @@ app.get('/edit-donation', (req, res) => res.send(`
       <script src="/${frontendJS}" type="application/javascript"></script>
     </head>
     <body>
-      <div class="Main">
-        Edit Donation
-        <form action="/edit-donation" method="post"><input type="submit"></form>
-      </div>
-
+      ${menu}
+      ${layout(`
+        <div class="Main">
+          Edit Donation
+          <form action="/edit-donation" method="post"><input type="submit"></form>
+        </div>
+      `)}
       ${paneHtml}
     </body>
   </html>
@@ -266,10 +315,12 @@ app.get('/donation', (req, res) => res.send(`
       <script src="/${frontendJS}" type="application/javascript"></script>
     </head>
     <body>
-      <div class="Main">
-        Donation Info
-      </div>
-
+      ${menu}
+      ${layout(`
+        <div class="Main">
+          Donation Info
+        </div>
+      `)}
       ${paneHtml}
     </body>
   </html>
@@ -282,7 +333,7 @@ app.get('/get-form', (req, res) => res.send(`
       <script src="/${frontendJS}" type="application/javascript"></script>
     </head>
     <body>
-      <div class="Main">
+    <div class="Main">
         <form action="/get-submit" method="get">
           <input name="name" type="text">
           <input name="email" type="text">
