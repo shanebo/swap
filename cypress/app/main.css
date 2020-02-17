@@ -5,11 +5,29 @@
 
 body {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto 1fr 1fr;
   grid-gap: 100px;
   padding: 30px;
   font-family: -apple-system;
   font-size: 14px;
+}
+
+html[swap-pane-is-active]::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 50;
+  background-color: black;
+  opacity: 0.5;
+}
+
+.Pane {
+  position: relative;
+  z-index: 1000;
+  background-color: coral;
 }
 
 a:link,
