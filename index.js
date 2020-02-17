@@ -151,6 +151,7 @@ swap.submit = function(e, selectors) {
 
 
 swap.backPane = (e) => {
+  replaceState(location.href);
   swap.paneHistory.pop();
   const url = swap.paneHistory[swap.paneHistory.length - 1];
   // if (previous pane is NOT edited && current pane was saved) {
