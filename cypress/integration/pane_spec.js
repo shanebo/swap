@@ -73,4 +73,43 @@ describe('Pane functionality', function() {
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/edit-donation');
     cy.get('.PaneBackBtn').should('be.hidden');
   });
+
+  it('reloads form that is not edited when going back to it', function() {
+    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.contains('Edit Account').click();
+    cy.contains('View Donation').click();
+
+    cy.get('#tag').then(($tag) => {
+      cy.get('.PaneBackBtn').click();
+
+      cy.get('#tag').invoke('text').should('not.equal', $tag.text());
+    });
+  });
+
+  it('does not reload form that is edited when going back to it', function() {
+    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.contains('Edit Account').click();
+    cy.get('input[type=text]').type('Shane');
+    cy.contains('View Donation').click();
+
+    cy.get('#tag').then(($tag) => {
+      cy.get('.PaneBackBtn').click();
+
+      cy.get('#tag').invoke('text').should('equal', $tag.text());
+    });
+  });
+
+  it('reloads form that is edited but changed back to default value when going back to it', function() {
+    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.contains('Edit Account').click();
+    cy.get('input[type=text]').type('Shane').clear();
+    cy.get('input[type=text]').type('Joe');
+    cy.contains('View Donation').click();
+
+    cy.get('#tag').then(($tag) => {
+      cy.get('.PaneBackBtn').click();
+
+      cy.get('#tag').invoke('text').should('not.equal', $tag.text());
+    });
+  });
 });

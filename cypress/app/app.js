@@ -278,8 +278,13 @@ app.get('/edit-account', (req, res) => res.send(`
       ${menu}
       ${layout(`
         <div class="Main">
+          <span id="tag">${Math.random()}</span><br>
           Edit Account
-          <form action="/edit-account" method="post"><input type="submit"></form>
+          <a href="/donation" data-swap-pane=".Main -> .PaneContent">View Donation</a>
+          <form action="/edit-account" method="post">
+            <input type="text" name="account" value="Joe">
+            <input type="submit">
+          </form>
         </div>
       `)}
       ${paneHtml}

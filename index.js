@@ -3,7 +3,7 @@ const { $html, renderTitle, extractNewAssets, loadAssets, renderBody, delegateHa
 const { talk, buildPaneClickRequest, buildSubmitRequest } = require('./lib/request');
 const { pushState, replaceState, updateOurState, session } = require('./lib/history');
 const { listener, fireElements, fireRoutes } = require('./lib/events');
-const { prevPane, samePane, openPane, nextPane, resetPane } = require('./lib/pane');
+const { loadPrevPane, prevPane, samePane, openPane, nextPane, resetPane, getPaneFormsData } = require('./lib/pane');
 const { buildUrl, shouldSwap, getUrl, getSelectors, parseQuery, bypassKeyPressed } = require('./lib/utils');
 
 
@@ -153,15 +153,17 @@ swap.submit = function(e, selectors) {
 swap.backPane = (e) => {
   replaceState(location.href);
   swap.paneHistory.pop();
-  const url = swap.paneHistory[swap.paneHistory.length - 1];
-  // if (previous pane is NOT edited && current pane was saved) {
-  // THEN RELOAD PREV PANE
+  const { url, edited } = swap.paneHistory[swap.paneHistory.length - 1];
+
+  if (edited) {
+    prevPane(url);
+  } else {
     swap.with(
       buildPaneClickRequest(url),
       swap.pane.selectors,
-      prevPane
+      loadPrevPane
     );
-  // }
+  }
 }
 
 
@@ -169,6 +171,13 @@ swap.closePane = () => {
   replaceState(location.href);
   resetPane();
   pushState(location.href.replace(/#.*$/, ''));
+}
+
+
+swap.formChanged = (e) => {
+  const formsData = getPaneFormsData();
+  const paneHistoryItem = swap.paneHistory[swap.paneHistory.length - 1];
+  paneHistoryItem.edited = !(formsData.toString() === paneHistoryItem.formsData.toString());
 }
 
 
@@ -214,7 +223,7 @@ const popstate = (e) => {
     - if cached then return state
     - check headers on whether to cache or not
   */
- 
+
  if (!e.state) return;
 
   const { href } = location;
@@ -295,4 +304,6 @@ module.exports = function (opts = {}) {
       swap.closePane();
     }
   });
+
+  swap.event('input', 'form:not([data-swap="false"])', swap.formChanged);
 }
