@@ -67,9 +67,9 @@ describe('Pane functionality', function() {
     cy.visit('http://127.0.0.1:8888/accounts');
     cy.contains('Edit Donation').click();
 
-    cy.get('form').submit();
+    cy.contains('Change').click();
 
-    cy.get('.PaneContent').should('contain', 'Edit Donation');
+    cy.get('.PaneContent').should('contain', 'Donation Editing');
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/edit-donation');
     cy.get('.PaneBackBtn').should('be.hidden');
   });
@@ -111,5 +111,47 @@ describe('Pane functionality', function() {
 
       cy.get('#tag').invoke('text').should('not.equal', $tag.text());
     });
+  });
+
+  it('saving and continuing on a successful form goes back to the previous pane and reloads it if unedited', function() {
+    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.contains('Edit Account').click();
+    cy.get('#tag').then(($tag) => {
+      cy.contains('Modify Donation').click();
+      cy.contains('Save and Continue').click();
+
+      cy.get('.PaneContent').should('contain', 'Edit Account');
+      cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/edit-account');
+      cy.get('.PaneBackBtn').should('be.hidden');
+      cy.get('#tag').invoke('text').should('not.equal', $tag.text());
+    });
+  });
+
+  it('saving and continuing on a successful form goes back to the previous pane and does not reload it if edited', function() {
+    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.contains('Edit Account').click();
+    cy.get('input[type=text]').type('Shane');
+    cy.get('#tag').then(($tag) => {
+      cy.contains('Modify Donation').click();
+      cy.contains('Save and Continue').click();
+
+      cy.get('.PaneContent').should('contain', 'Edit Account');
+      cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/edit-account');
+      cy.get('.PaneBackBtn').should('be.hidden');
+      cy.get('#tag').invoke('text').should('equal', $tag.text());
+    });
+  });
+
+  it('saving and continuing on an unsuccessful form stays on the same pane', function() {
+    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.contains('Edit Account').click();
+    cy.contains('Modify Donation').click();
+
+    cy.get('[type="checkbox"]').check(); // makes it so form fails
+    cy.contains('Save and Continue').click();
+
+    cy.get('.PaneContent').should('contain', 'Donation Editing');
+    cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/edit-donation');
+    cy.get('.PaneBackBtn').should('be.visible');
   });
 });
