@@ -1,9 +1,9 @@
 const loader = require('./lib/loader');
 const { $html, renderTitle, extractNewAssets, loadAssets, renderBody } = require('./lib/dom');
 const { talk, buildPaneClickRequest, buildSubmitRequest } = require('./lib/request');
-const { pushState, replaceState, updateOurState, session } = require('./lib/history');
+const { pushState, replaceState, updateOurState, session, getCurrentHistoryPane } = require('./lib/history');
 const { listener, fireElements, fireRoutes, delegateHandle } = require('./lib/events');
-const { prevPane, samePane, openPane, nextPane, resetPane } = require('./lib/pane');
+const { loadPrevPane, prevPane, continuePane, samePane, openPane, nextPane, resetPane, getPaneFormsData } = require('./lib/pane');
 const { buildUrl, shouldSwap, getUrl, getSelectors, parseQuery, bypassKeyPressed } = require('./lib/utils');
 
 
@@ -104,7 +104,7 @@ swap.click = function(e, selectors) {
       swap.with(
         buildPaneClickRequest(link.pathname), // we probably need to handle query string use case here
         sels,
-        $html.getAttribute(swap.pane.activeAttribute)
+        $html.getAttribute(swap.qs.sheetOpen)
           ? nextPane
           : openPane
       );
@@ -140,9 +140,11 @@ swap.submit = function(e, selectors) {
   const sels = selectors || getSelectors(form);
   const req = buildSubmitRequest(form);
 
-  if (form.dataset.swapInline) {
+  if (form.dataset.swapContinue) {
+    swap.with(req, sels, continuePane);
+  } else if (form.dataset.swapInline) {
     swap.inline(req, sels);
-  } else if ($html.getAttribute(swap.pane.activeAttribute)) {
+  } else if ($html.getAttribute(swap.qs.sheetOpen)) {
     swap.with(req, sels, samePane);
   } else {
     swap.with(req, sels);
@@ -153,15 +155,17 @@ swap.submit = function(e, selectors) {
 swap.backPane = (e) => {
   replaceState(location.href);
   swap.paneHistory.pop();
-  const url = swap.paneHistory[swap.paneHistory.length - 1];
-  // if (previous pane is NOT edited && current pane was saved) {
-  // THEN RELOAD PREV PANE
+  const { url, edited } = getCurrentHistoryPane();
+
+  if (edited) {
+    prevPane(url);
+  } else {
     swap.with(
       buildPaneClickRequest(url),
-      swap.pane.selectors,
-      prevPane
+      swap.sheetSelectors,
+      loadPrevPane
     );
-  // }
+  }
 }
 
 
@@ -172,13 +176,26 @@ swap.closePane = () => {
 }
 
 
+swap.formChanged = (e) => {
+  const formsData = getPaneFormsData();
+  const paneHistoryItem = getCurrentHistoryPane();
+  if (paneHistoryItem) {
+    paneHistoryItem.edited = formsData !== paneHistoryItem.formsData;
+  }
+}
+
+
 const loaded = (e) => {
+  if (!session.get('stateIds')) {
+    session.set('stateIds', [0]);
+  }
+
   if (location.hash) {
     const params = parseQuery(location.hash.substr(1));
     if (params.pane) {
       swap.with(
         buildPaneClickRequest(params.pane),
-        swap.pane.selectors,
+        swap.sheetSelectors,
         openPane
       );
     }
@@ -196,11 +213,9 @@ const openPage = ({ method, html, selectors, finalMethod, finalUrl }) => {
 
   replaceState(location.href);
   resetPane();
-
   fireRoutes('off', finalUrl, from, method);
 
   swap.to(html, selectors, false, () => {
-    console.log('FIRED!');
     pushState(finalUrl);
     fireRoutes('on', finalUrl, from, finalMethod);
   });
@@ -214,8 +229,8 @@ const popstate = (e) => {
     - if cached then return state
     - check headers on whether to cache or not
   */
- 
- if (!e.state) return;
+
+  if (!e.state) return;
 
   const { href } = location;
   const { html, selectors, paneHistory, id } = session.get(e.state.id);
@@ -234,11 +249,11 @@ const popstate = (e) => {
 
   swap.to(dom, selectors, false, () => {
     // this block feels like it should go in swap.to maybe
-    const paneIsActive = dom.documentElement.getAttribute(swap.pane.activeAttribute);
+    const paneIsActive = dom.documentElement.getAttribute(swap.qs.sheetOpen);
     if (paneIsActive) {
-      $html.setAttribute(swap.pane.activeAttribute, 'true');
+      $html.setAttribute(swap.qs.sheetOpen, 'true');
     } else {
-      $html.removeAttribute(swap.pane.activeAttribute);
+      $html.removeAttribute(swap.qs.sheetOpen);
     }
 
     fireRoutes('on', href, justAt);
@@ -249,50 +264,47 @@ const popstate = (e) => {
 module.exports = function (opts = {}) {
   loader(opts);
 
+  swap.qs = {};
+  swap.qs.link = 'a:not([target="_blank"]):not([data-swap="false"])';
+  swap.qs.form = 'form:not([data-swap="false"])';
+  swap.qs.continue = 'button[data-swap-continue]';
+  swap.qs.sheet = '.Pane';
+  swap.qs.sheetMask = '.PaneMask';
+  swap.qs.sheetPanes = '.PanesHolder > div';
+  swap.qs.pane = '.PaneContent';
+  swap.qs.sheetBackButton = '.PaneBackBtn';
+  swap.qs.sheetCloseButton = '.PaneCloseBtn';
+  swap.qs.sheetOpen = 'swap-pane-is-active';
+
+  swap.paneName = swap.qs.pane.substring(1);
+  swap.sheetSelectors = opts.sheetSelectors || ['.Main -> .PaneContent', '.PaneHeader'];
   swap.formValidator = opts.formValidator || ((e) => true);
 
-  const paneDefaults = {
-    selector: '.Pane',
-    selectors: ['.Main -> .PaneContent', '.PaneHeader'],
-    closeButton: '.PaneCloseBtn',
-    mask: '.PaneMask',
-    panels: '.PanesHolder > div',
-    activePanelName: 'PaneContent',
-    backButton: '.PaneBackBtn',
-    activeAttribute: 'swap-pane-is-active',
-    open: () => {},
-    back: () => {},
-    close: () => {}
-  };
-
-  swap.pane = {
-    ...paneDefaults,
-    ...opts.pane
-  };
-
-  window.addEventListener('DOMContentLoaded', loaded);
-  window.addEventListener('popstate', popstate);
-
-  window.addEventListener('keydown', (e) => {
+  swap.event('DOMContentLoaded', loaded);
+  swap.event('popstate', popstate);
+  swap.event('keydown', (e) => {
     if (bypassKeyPressed(e.key)) {
       swap.metaKeyOn = true;
     }
   });
-
-  window.addEventListener('keyup', (e) => {
+  swap.event('keyup', (e) => {
     if (bypassKeyPressed(e.key)) {
       swap.metaKeyOn = false;
     }
   });
-
-  window.addEventListener('click', delegateHandle('a:not([target="_blank"]):not([data-swap="false"])', swap.click));
-  window.addEventListener('submit', delegateHandle('form:not([data-swap="false"])', swap.submit));
-
-  swap.event('click', swap.pane.backButton, swap.backPane);
-  swap.event('click', swap.pane.closeButton, swap.closePane);
-  swap.event('click', '[swap-pane-is-active]', (e) => {
-    if (!e.target.closest(swap.pane.selector)) {
+  swap.event('click', swap.qs.link, swap.click);
+  swap.event('click', swap.qs.continue, (e) => {
+    const form = e.target.closest('form');
+    form.dataset.swapContinue = 'true';
+  });
+  swap.event('submit', swap.qs.form, swap.submit);
+  swap.event('click', swap.qs.sheetBackButton, swap.backPane);
+  swap.event('click', swap.qs.sheetCloseButton, swap.closePane);
+  swap.event('click', `[${swap.qs.sheetOpen}]`, (e) => {
+    if (!e.target.closest(swap.qs.sheet)) {
       swap.closePane();
     }
   });
+
+  swap.event('input', swap.qs.form, swap.formChanged);
 }

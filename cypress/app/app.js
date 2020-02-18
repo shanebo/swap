@@ -281,8 +281,14 @@ app.get('/edit-account', (req, res) => res.send(`
       ${menu}
       ${layout(`
         <div class="Main">
+          <span id="tag">${Math.random()}</span><br>
           Edit Account
-          <form action="/edit-account" method="post"><input type="submit"></form>
+          <a href="/donation" data-swap-pane=".Main -> .PaneContent">View Donation</a>
+          <a href="/edit-donation" data-swap-pane=".Main -> .PaneContent">Modify Donation</a>
+          <form action="/edit-account" method="post">
+            <input type="text" name="account" value="Joe">
+            <input type="submit">
+          </form>
         </div>
       `)}
       ${paneHtml}
@@ -302,8 +308,12 @@ app.get('/edit-donation', (req, res) => res.send(`
       ${menu}
       ${layout(`
         <div class="Main">
-          Edit Donation
-          <form action="/edit-donation" method="post"><input type="submit"></form>
+          Donation Editing
+          <form action="/edit-donation" method="post">
+            <input type="submit" value="Change">
+            <input type="checkbox" name="fail">
+            <button data-swap-continue="true" type="submit" value="Save and Continue">
+          </form>
         </div>
       `)}
       ${paneHtml}
@@ -311,7 +321,13 @@ app.get('/edit-donation', (req, res) => res.send(`
   </html>
 `));
 
-app.post('/edit-donation', (req, res) => res.redirect(req.get('pane-url')));
+app.post('/edit-donation', (req, res) => {
+  if (req.body && req.body.fail) {
+    res.sendStatus(403);
+  } else {
+    res.redirect(req.get('pane-url'));
+  }
+});
 
 app.get('/donation', (req, res) => res.send(`
   <html>
