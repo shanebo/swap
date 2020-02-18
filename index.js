@@ -179,7 +179,9 @@ swap.closePane = () => {
 swap.formChanged = (e) => {
   const formsData = getPaneFormsData();
   const paneHistoryItem = swap.paneHistory[swap.paneHistory.length - 1];
-  paneHistoryItem.edited = !(formsData.toString() === paneHistoryItem.formsData.toString());
+  if (paneHistoryItem) {
+    paneHistoryItem.edited = !(formsData.toString() === paneHistoryItem.formsData.toString());
+  }
 }
 
 
