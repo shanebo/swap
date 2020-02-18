@@ -3,7 +3,7 @@ const { $html, renderTitle, extractNewAssets, loadAssets, renderBody, delegateHa
 const { talk, buildPaneClickRequest, buildSubmitRequest } = require('./lib/request');
 const { pushState, replaceState, updateOurState, session } = require('./lib/history');
 const { listener, fireElements, fireRoutes } = require('./lib/events');
-const { loadPrevPane, prevPane, samePane, openPane, nextPane, resetPane, getPaneFormsData } = require('./lib/pane');
+const { loadPrevPane, prevPane, continuePane, samePane, openPane, nextPane, resetPane, getPaneFormsData } = require('./lib/pane');
 const { buildUrl, shouldSwap, getUrl, getSelectors, parseQuery, bypassKeyPressed } = require('./lib/utils');
 
 
@@ -140,7 +140,9 @@ swap.submit = function(e, selectors) {
   const sels = selectors || getSelectors(form);
   const req = buildSubmitRequest(form);
 
-  if (form.dataset.swapInline) {
+  if (form.dataset.swapContinue) {
+    swap.with(req, sels, continuePane);
+  } else if (form.dataset.swapInline) {
     swap.inline(req, sels);
   } else if ($html.getAttribute(swap.pane.activeAttribute)) {
     swap.with(req, sels, samePane);
@@ -295,6 +297,13 @@ module.exports = function (opts = {}) {
   });
 
   window.addEventListener('click', delegateHandle('a:not([target="_blank"]):not([data-swap="false"])', swap.click));
+  window.addEventListener('click', delegateHandle('button[data-swap-continue]', (e) => {
+    const form = e.target.closest('form');
+    form.dataset.swapContinue = 'true';
+    // const formId = e.target.getAttribute('form');
+    // const form = document.getElementById(formId);
+    // form.dataset.swapContinue = 'true';
+  }));
   window.addEventListener('submit', delegateHandle('form:not([data-swap="false"])', swap.submit));
 
   swap.event('click', swap.pane.backButton, swap.backPane);
