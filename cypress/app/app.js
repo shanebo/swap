@@ -235,6 +235,7 @@ app.get('/accounts', (req, res) => res.send(`
     <head>
       <title>Accounts</title>
       <script src="/${frontendJS}" type="application/javascript"></script>
+      <link rel="stylesheet" href="/${mainCSS}">
     </head>
     <body>
       ${menu}
