@@ -1,5 +1,5 @@
 const loader = require('./lib/loader');
-const { renderTitle, extractNewAssets, loadAssets, renderBody } = require('./lib/dom');
+const { renderTitle, extractNewAssets, loadAssets, renderBody } = require('./lib/render');
 const { talk, buildPaneClickRequest, buildSubmitRequest } = require('./lib/request');
 const { pushState, replaceState, updateOurState, session, getCurrentHistoryPane } = require('./lib/history');
 const { listener, fireElements, fireRoutes, delegateHandle } = require('./lib/events');
