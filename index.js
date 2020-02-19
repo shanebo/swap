@@ -57,7 +57,7 @@ swap.with = (options, selectors = [], callback = openPage) => {
   fireRoutes('before', url, location, method);
 
   talk(opts, (xhr, res, html) => {
-    const wasRedirected = url !== xhr.responseURL;
+    const wasRedirected = url.replace(/#.*$/, '') !== xhr.responseURL;
     const finalUrl = wasRedirected ? xhr.responseURL : url;
     const finalMethod = wasRedirected ? 'get' : method;
 
@@ -272,6 +272,7 @@ module.exports = function (opts = {}) {
   swap.qs.sheetMask = '.PaneMask';
   swap.qs.sheetPanes = '.PanesHolder > div';
   swap.qs.pane = '.PaneContent';
+  swap.qs.paneForms = '.PaneContent form:not([data-swap="false"])';
   swap.qs.sheetBackButton = '.PaneBackBtn';
   swap.qs.sheetCloseButton = '.PaneCloseBtn';
   swap.qs.sheetOpen = 'swap-pane-is-active';
@@ -306,5 +307,5 @@ module.exports = function (opts = {}) {
     }
   });
 
-  swap.event('input', swap.qs.form, swap.formChanged);
+  swap.event('input', swap.qs.paneForms, swap.formChanged);
 }
