@@ -125,7 +125,7 @@ swap.with = (options, selectors = [], inline) => {
   }
 
   talk(opts, (xhr, res, html) => {
-    const wasRedirected = url !== xhr.responseURL;
+    const wasRedirected = url.replace(/#.*$/, '') !== xhr.responseURL;
     const finalUrl = wasRedirected ? xhr.responseURL : url;
     const finalMethod = wasRedirected ? 'get' : method;
 
