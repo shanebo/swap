@@ -180,7 +180,7 @@ swap.formChanged = (e) => {
   const formsData = getPaneFormsData();
   const paneHistoryItem = getCurrentHistoryPane();
   if (paneHistoryItem) {
-    paneHistoryItem.edited = !(formsData.toString() === paneHistoryItem.formsData.toString());
+    paneHistoryItem.edited = formsData !== paneHistoryItem.formsData;
   }
 }
 
@@ -213,11 +213,9 @@ const openPage = ({ method, html, selectors, finalMethod, finalUrl }) => {
 
   replaceState(location.href);
   resetPane();
-
   fireRoutes('off', finalUrl, from, method);
 
   swap.to(html, selectors, false, () => {
-    console.log('FIRED!');
     pushState(finalUrl);
     fireRoutes('on', finalUrl, from, finalMethod);
   });
@@ -232,7 +230,7 @@ const popstate = (e) => {
     - check headers on whether to cache or not
   */
 
- if (!e.state) return;
+  if (!e.state) return;
 
   const { href } = location;
   const { html, selectors, paneHistory, id } = session.get(e.state.id);
