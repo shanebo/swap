@@ -186,6 +186,10 @@ swap.formChanged = (e) => {
 
 
 const loaded = (e) => {
+  if (!session.get('stateIds')) {
+    session.set('stateIds', [0]);
+  }
+
   if (location.hash) {
     const params = parseQuery(location.hash.substr(1));
     if (params.pane) {
