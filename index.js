@@ -1,8 +1,8 @@
 const loader = require('./lib/loader');
-const { $html, renderTitle, extractNewAssets, loadAssets, renderBody, delegateHandle } = require('./lib/dom');
+const { $html, renderTitle, extractNewAssets, loadAssets, renderBody } = require('./lib/dom');
 const { talk, buildPaneClickRequest, buildSubmitRequest } = require('./lib/request');
 const { pushState, replaceState, updateOurState, session, getCurrentHistoryPane } = require('./lib/history');
-const { listener, fireElements, fireRoutes } = require('./lib/events');
+const { listener, fireElements, fireRoutes, delegateHandle } = require('./lib/events');
 const { loadPrevPane, prevPane, continuePane, samePane, openPane, nextPane, resetPane, getPaneFormsData } = require('./lib/pane');
 const { buildUrl, shouldSwap, getUrl, getSelectors, parseQuery, bypassKeyPressed } = require('./lib/utils');
 
