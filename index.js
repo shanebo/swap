@@ -176,15 +176,6 @@ swap.closePane = () => {
 }
 
 
-swap.formChanged = (e) => {
-  const formsData = getPaneFormsData();
-  const paneHistoryItem = getCurrentHistoryPane();
-  if (paneHistoryItem) {
-    paneHistoryItem.edited = formsData !== paneHistoryItem.formsData;
-  }
-}
-
-
 const loaded = (e) => {
   if (!session.get('stateIds')) {
     session.set('stateIds', [0]);
@@ -272,6 +263,7 @@ module.exports = function (opts = {}) {
   swap.qs.sheetMask = '.PaneMask';
   swap.qs.sheetPanes = '.PanesHolder > div';
   swap.qs.pane = '.PaneContent';
+  swap.qs.paneForms = '.PaneContent form:not([data-swap="false"])';
   swap.qs.sheetBackButton = '.PaneBackBtn';
   swap.qs.sheetCloseButton = '.PaneCloseBtn';
   swap.qs.sheetOpen = 'swap-pane-is-active';
@@ -306,5 +298,11 @@ module.exports = function (opts = {}) {
     }
   });
 
-  swap.event('input', swap.qs.form, swap.formChanged);
+  swap.event('input', swap.qs.paneForms, (e) => {
+    const formsData = getPaneFormsData();
+    const paneHistoryItem = getCurrentHistoryPane();
+    if (paneHistoryItem) {
+      paneHistoryItem.edited = formsData !== paneHistoryItem.formsData;
+    }
+  });
 }
