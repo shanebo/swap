@@ -104,7 +104,7 @@ swap.click = function(e, selectors) {
       swap.with(
         buildPaneClickRequest(link.pathname), // we probably need to handle query string use case here
         sels,
-        $html.getAttribute(swap.pane.activeAttribute)
+        $html.getAttribute(swap.qs.sheetOpen)
           ? nextPane
           : openPane
       );
@@ -144,7 +144,7 @@ swap.submit = function(e, selectors) {
     swap.with(req, sels, continuePane);
   } else if (form.dataset.swapInline) {
     swap.inline(req, sels);
-  } else if ($html.getAttribute(swap.pane.activeAttribute)) {
+  } else if ($html.getAttribute(swap.qs.sheetOpen)) {
     swap.with(req, sels, samePane);
   } else {
     swap.with(req, sels);
@@ -162,7 +162,7 @@ swap.backPane = (e) => {
   } else {
     swap.with(
       buildPaneClickRequest(url),
-      swap.pane.selectors,
+      swap.sheetSelectors,
       loadPrevPane
     );
   }
@@ -195,7 +195,7 @@ const loaded = (e) => {
     if (params.pane) {
       swap.with(
         buildPaneClickRequest(params.pane),
-        swap.pane.selectors,
+        swap.sheetSelectors,
         openPane
       );
     }
@@ -249,11 +249,11 @@ const popstate = (e) => {
 
   swap.to(dom, selectors, false, () => {
     // this block feels like it should go in swap.to maybe
-    const paneIsActive = dom.documentElement.getAttribute(swap.pane.activeAttribute);
+    const paneIsActive = dom.documentElement.getAttribute(swap.qs.sheetOpen);
     if (paneIsActive) {
-      $html.setAttribute(swap.pane.activeAttribute, 'true');
+      $html.setAttribute(swap.qs.sheetOpen, 'true');
     } else {
-      $html.removeAttribute(swap.pane.activeAttribute);
+      $html.removeAttribute(swap.qs.sheetOpen);
     }
 
     fireRoutes('on', href, justAt);
@@ -264,59 +264,47 @@ const popstate = (e) => {
 module.exports = function (opts = {}) {
   loader(opts);
 
+  swap.qs = {};
+  swap.qs.link = 'a:not([target="_blank"]):not([data-swap="false"])';
+  swap.qs.form = 'form:not([data-swap="false"])';
+  swap.qs.continue = 'button[data-swap-continue]';
+  swap.qs.sheet = '.Pane';
+  swap.qs.sheetMask = '.PaneMask';
+  swap.qs.sheetPanes = '.PanesHolder > div';
+  swap.qs.pane = '.PaneContent';
+  swap.qs.sheetBackButton = '.PaneBackBtn';
+  swap.qs.sheetCloseButton = '.PaneCloseBtn';
+  swap.qs.sheetOpen = 'swap-pane-is-active';
+
+  swap.paneName = swap.qs.pane.substring(1);
+  swap.sheetSelectors = opts.sheetSelectors || ['.Main -> .PaneContent', '.PaneHeader'];
   swap.formValidator = opts.formValidator || ((e) => true);
 
-  const paneDefaults = {
-    selector: '.Pane',
-    selectors: ['.Main -> .PaneContent', '.PaneHeader'],
-    closeButton: '.PaneCloseBtn',
-    mask: '.PaneMask',
-    panels: '.PanesHolder > div',
-    activePanelName: 'PaneContent',
-    backButton: '.PaneBackBtn',
-    activeAttribute: 'swap-pane-is-active',
-    open: () => {},
-    back: () => {},
-    close: () => {}
-  };
-
-  swap.pane = {
-    ...paneDefaults,
-    ...opts.pane
-  };
-
-  window.addEventListener('DOMContentLoaded', loaded);
-  window.addEventListener('popstate', popstate);
-
-  window.addEventListener('keydown', (e) => {
+  swap.event('DOMContentLoaded', loaded);
+  swap.event('popstate', popstate);
+  swap.event('keydown', (e) => {
     if (bypassKeyPressed(e.key)) {
       swap.metaKeyOn = true;
     }
   });
-
-  window.addEventListener('keyup', (e) => {
+  swap.event('keyup', (e) => {
     if (bypassKeyPressed(e.key)) {
       swap.metaKeyOn = false;
     }
   });
-
-  window.addEventListener('click', delegateHandle('a:not([target="_blank"]):not([data-swap="false"])', swap.click));
-  window.addEventListener('click', delegateHandle('button[data-swap-continue]', (e) => {
+  swap.event('click', swap.qs.link, swap.click);
+  swap.event('click', swap.qs.continue, (e) => {
     const form = e.target.closest('form');
     form.dataset.swapContinue = 'true';
-    // const formId = e.target.getAttribute('form');
-    // const form = document.getElementById(formId);
-    // form.dataset.swapContinue = 'true';
-  }));
-  window.addEventListener('submit', delegateHandle('form:not([data-swap="false"])', swap.submit));
-
-  swap.event('click', swap.pane.backButton, swap.backPane);
-  swap.event('click', swap.pane.closeButton, swap.closePane);
-  swap.event('click', '[swap-pane-is-active]', (e) => {
-    if (!e.target.closest(swap.pane.selector)) {
+  });
+  swap.event('submit', swap.qs.form, swap.submit);
+  swap.event('click', swap.qs.sheetBackButton, swap.backPane);
+  swap.event('click', swap.qs.sheetCloseButton, swap.closePane);
+  swap.event('click', `[${swap.qs.sheetOpen}]`, (e) => {
+    if (!e.target.closest(swap.qs.sheet)) {
       swap.closePane();
     }
   });
 
-  swap.event('input', 'form:not([data-swap="false"])', swap.formChanged);
+  swap.event('input', swap.qs.form, swap.formChanged);
 }
