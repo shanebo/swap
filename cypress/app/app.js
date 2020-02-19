@@ -28,12 +28,13 @@ const menu = `
     <a href="/arrive">Arrive Link</a>
     <a href="/route-on">Route Link</a>
     <a href="/events">Events Link</a>
+    <a href="/about#layout">Anchor Link</a>
     <a>Nothing Link</a>
   </nav>
 `;
 
 const layout = (content) => `
-    <div>
+    <div id="layout">
       ${content}
     </div>
   `;
@@ -86,6 +87,7 @@ app.get('/about', (req, res) => res.send(`
     <body>
     ${menu}
     ${layout(`
+      <span id="tag">${Math.random()}</span><br>
       <div class="header">Header</div>
       <div class="content">
         About page
