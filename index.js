@@ -1,7 +1,7 @@
 const loader = require('./lib/loader');
 const { $html, renderTitle, extractNewAssets, loadAssets, renderBody, delegateHandle } = require('./lib/dom');
 const { talk, buildPaneClickRequest, buildSubmitRequest } = require('./lib/request');
-const { pushState, replaceState, updateOurState, session } = require('./lib/history');
+const { pushState, replaceState, updateOurState, session, getCurrentHistoryPane } = require('./lib/history');
 const { listener, fireElements, fireRoutes } = require('./lib/events');
 const { loadPrevPane, prevPane, continuePane, samePane, openPane, nextPane, resetPane, getPaneFormsData } = require('./lib/pane');
 const { buildUrl, shouldSwap, getUrl, getSelectors, parseQuery, bypassKeyPressed } = require('./lib/utils');
@@ -155,7 +155,7 @@ swap.submit = function(e, selectors) {
 swap.backPane = (e) => {
   replaceState(location.href);
   swap.paneHistory.pop();
-  const { url, edited } = swap.paneHistory[swap.paneHistory.length - 1];
+  const { url, edited } = getCurrentHistoryPane();
 
   if (edited) {
     prevPane(url);
@@ -178,7 +178,7 @@ swap.closePane = () => {
 
 swap.formChanged = (e) => {
   const formsData = getPaneFormsData();
-  const paneHistoryItem = swap.paneHistory[swap.paneHistory.length - 1];
+  const paneHistoryItem = getCurrentHistoryPane();
   if (paneHistoryItem) {
     paneHistoryItem.edited = !(formsData.toString() === paneHistoryItem.formsData.toString());
   }
