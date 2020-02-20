@@ -24,10 +24,14 @@ html[swap-pane-is-active]::after {
   opacity: 0.5;
 }
 
+.PaneContent {
+  background-color: tomato;
+}
+
 .Pane {
   position: relative;
   z-index: 1000;
-  background-color: coral;
+  background-color: #aea;
 }
 
 a:link,
