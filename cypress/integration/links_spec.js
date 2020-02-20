@@ -16,6 +16,24 @@ describe('Full Page Swaps', function() {
     cy.title().should('equal', 'Home');
   });
 
+  it('goes to anchor link on another page', function() {
+    cy.visit('http://127.0.0.1:8888/');
+    cy.contains('Anchor Link').click();
+    cy.url().should('equal', 'http://127.0.0.1:8888/about#layout');
+    cy.title().should('equal', 'About');
+  });
+
+  it('goes to anchor link on same page', function() {
+    cy.visit('http://127.0.0.1:8888/about');
+
+    cy.get('#tag').then(($tag) => {
+      cy.contains('Anchor Link').click();
+
+      cy.url().should('equal', 'http://127.0.0.1:8888/about#layout');
+      cy.get('#tag').invoke('text').should('equal', $tag.text());
+    });
+  });
+
   // it('does a normal network request with meta (cmd, ctrl) clicks', function() {
   //   // cy.visit('http://127.0.0.1:8888/', {
   //   //   onBeforeLoad: (win) => {

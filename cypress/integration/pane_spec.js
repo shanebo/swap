@@ -67,10 +67,118 @@ describe('Pane functionality', function() {
     cy.visit('http://127.0.0.1:8888/accounts');
     cy.contains('Edit Donation').click();
 
-    cy.get('form').submit();
+    cy.contains('Change').click();
 
-    cy.get('.PaneContent').should('contain', 'Edit Donation');
+    cy.get('.PaneContent').should('contain', 'Donation Editing');
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/edit-donation');
     cy.get('.PaneBackBtn').should('be.hidden');
+  });
+
+  it('does not reload form that is not edited when going back to it', function() {
+    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.contains('Edit Account').click();
+    cy.contains('View Donation').click();
+
+    cy.get('#tag').then(($tag) => {
+      cy.get('.PaneBackBtn').click();
+
+      cy.get('#tag').invoke('text').should('equal', $tag.text());
+    });
+  });
+
+  it('does not reload form that is edited when going back to it', function() {
+    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.contains('Edit Account').click();
+    cy.get('input[type=text]').type('Shane');
+    cy.contains('View Donation').click();
+
+    cy.get('#tag').then(($tag) => {
+      cy.get('.PaneBackBtn').click();
+
+      cy.get('#tag').invoke('text').should('equal', $tag.text());
+    });
+  });
+
+  it('does not reload form that is edited but changed back to default value when going back to it', function() {
+    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.contains('Edit Account').click();
+    cy.get('input[type=text]').type('Shane').clear();
+    cy.get('input[type=text]').type('Joe');
+    cy.contains('View Donation').click();
+
+    cy.get('#tag').then(($tag) => {
+      cy.get('.PaneBackBtn').click();
+
+      cy.get('#tag').invoke('text').should('equal', $tag.text());
+    });
+  });
+
+  it('saving and continuing on a successful form goes back to the previous pane and reloads it if unedited', function() {
+    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.contains('Edit Account').click();
+    cy.get('#tag').then(($tag) => {
+      cy.contains('Modify Donation').click();
+      cy.contains('Save and Continue').click();
+
+      cy.get('.PaneContent').should('contain', 'Edit Account');
+      cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/edit-account');
+      cy.get('.PaneBackBtn').should('be.hidden');
+      cy.get('#tag').invoke('text').should('not.equal', $tag.text());
+    });
+  });
+
+  it('saving and continuing on a successful form goes back to the previous pane and does not reload it if edited', function() {
+    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.contains('Edit Account').click();
+    cy.get('input[type=text]').type('Shane');
+    cy.get('#tag').then(($tag) => {
+      cy.contains('Modify Donation').click();
+      cy.contains('Save and Continue').click();
+
+      cy.get('.PaneContent').should('contain', 'Edit Account');
+      cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/edit-account');
+      cy.get('.PaneBackBtn').should('be.hidden');
+      cy.get('#tag').invoke('text').should('equal', $tag.text());
+    });
+  });
+
+  it('saving and continuing on an unsuccessful form stays on the same pane', function() {
+    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.contains('Edit Account').click();
+    cy.contains('Modify Donation').click();
+
+    cy.get('[type="checkbox"]').check(); // makes it so form fails
+    cy.contains('Save and Continue').click();
+
+    cy.get('.PaneContent').should('contain', 'Donation Editing');
+    cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/edit-donation');
+    cy.get('.PaneBackBtn').should('be.visible');
+  });
+
+  it('not saving a form and then clicking the back button does not reload the previous pane', function() {
+    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.contains('View Account').click();
+    cy.contains('Modify Account').click();
+
+    cy.get('#tag').then(($tag) => {
+      cy.get('input[type=text]').clear().type('Shane');
+      cy.get('.PaneBackBtn').click();
+
+      cy.get('#tag').invoke('text').should('equal', $tag.text());
+    });
+  });
+
+  it('saving a form and then clicking the back button does reload the previous pane', function() {
+    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.contains('View Account').click();
+    cy.contains('Modify Account').click();
+
+    cy.get('#tag').then(($tag) => {
+      cy.get('input[type=text]').clear().type('Shane');
+      cy.get('form').submit();
+      cy.get('.PaneBackBtn').click();
+
+      cy.get('#tag').invoke('text').should('not.equal', $tag.text());
+    });
   });
 });

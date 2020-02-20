@@ -147,4 +147,32 @@ describe('Pane History', function() {
       }
     });
   });
+
+  it('goes backward in history to re-open a pane with retained pane-history', function() {
+    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.contains('View Account').click();
+    cy.get('.PaneCloseBtn').click();
+
+    cy.go('back');
+
+    cy.get('.PaneBackBtn').should('be.hidden');
+    cy.get('.PaneContent').should('contain', 'Account Info');
+    cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/account');
+  });
+
+  it('goes backward in history to re-open a pane with retained pane-history and use pane back button', function() {
+    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.contains('View Account').click();
+    cy.contains('View Donation').click();
+    cy.get('.PaneCloseBtn').click();
+
+    cy.go('back');
+    cy.get('.PaneBackBtn').should('be.visible');
+    cy.get('.PaneBackBtn').click();
+
+    cy.get('.PaneContent').should('contain', 'Account Info');
+    cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/account');
+    cy.get('.PaneBackBtn').should('be.hidden');
+  });
+
 });
