@@ -1,6 +1,6 @@
 const loader = require('./lib/loader');
 const { renderTitle, extractNewAssets, loadAssets, renderBody } = require('./lib/render');
-const { talk, buildPaneClickRequest, buildSubmitRequest } = require('./lib/request');
+const { ajax, buildPaneClickRequest, buildSubmitRequest } = require('./lib/request');
 const { pushState, replaceState, updateOurState, session, getCurrentHistoryPane } = require('./lib/history');
 const { listener, fireElements, fireRoutes, delegateHandle } = require('./lib/events');
 const { loadPrevPane, prevPane, continuePane, samePane, openSheet, nextPane, resetSheet, renderPane, changePane, getPaneFormsData } = require('./lib/sheet');
@@ -56,7 +56,7 @@ swap.with = (options, selectors = [], callback = openPage) => {
 
   fireRoutes('before', url, location, method);
 
-  talk(opts, (xhr, res, html) => {
+  ajax(opts, (xhr, res, html) => {
     const wasRedirected = url.replace(/#.*$/, '') !== xhr.responseURL;
     const finalUrl = wasRedirected ? xhr.responseURL : url;
     const finalMethod = wasRedirected ? 'get' : method;
@@ -122,7 +122,7 @@ swap.inline = (options, selectors = []) => {
     ? { url: options, method: 'get' }
     : options;
 
-  talk(opts, (xhr, res, html) => {
+  ajax(opts, (xhr, res, html) => {
     swap.to(html, selectors, true);
   });
 
