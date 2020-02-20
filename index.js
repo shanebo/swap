@@ -1,9 +1,9 @@
 const loader = require('./lib/loader');
 const { renderTitle, extractNewAssets, loadAssets, renderBody } = require('./lib/render');
-const { ajax, buildPaneClickRequest, buildSubmitRequest } = require('./lib/request');
-const { pushState, replaceState, updateOurState, session, getCurrentHistoryPane } = require('./lib/history');
+const { ajax, buildRequest } = require('./lib/request');
+const { pushState, getPaneFormsData, replaceState, updateSessionState, session, getPaneState } = require('./lib/history');
 const { listener, fireElements, fireRoutes, delegateHandle } = require('./lib/events');
-const { loadPrevPane, prevPane, continuePane, samePane, openPane, nextPane, resetPane, getPaneFormsData } = require('./lib/pane');
+const { prevPane, continuePane, samePane, addPane, closePanes } = require('./lib/pane');
 const { $html, buildUrl, shouldSwap, getUrl, getSelectors, parseQuery, bypassKeyPressed } = require('./lib/utils');
 
 
@@ -11,10 +11,11 @@ window.swap = {
   metaKeyOn: false,
   paneUrl: false,
   paneHistory: [],
+  paneSaved: false,
   before: listener.bind(window.swap, 'before'),
   on: listener.bind(window.swap, 'on'),
   off: listener.bind(window.swap, 'off'),
-  stateId: 0
+  stateId: 0,
 };
 
 
@@ -48,21 +49,17 @@ swap.to = (html, sels, inline, callback) => {
 
 
 swap.with = (options, selectors = [], callback = openPage) => {
-  const opts = typeof options === 'string'
-    ? { url: options, method: 'get' }
-    : options;
-
-  const { url, method } = opts;
+  const req = buildRequest(options);
+  const { url, method } = req;
 
   fireRoutes('before', url, location, method);
 
-  ajax(opts, (xhr, res, html) => {
+  ajax(req, (xhr, res, html) => {
     const wasRedirected = url.replace(/#.*$/, '') !== xhr.responseURL;
     const finalUrl = wasRedirected ? xhr.responseURL : url;
     const finalMethod = wasRedirected ? 'get' : method;
 
     callback({
-      opts,
       xhr,
       url,
       method,
@@ -72,8 +69,6 @@ swap.with = (options, selectors = [], callback = openPage) => {
       finalUrl
     });
   });
-
-  return swap;
 }
 
 
@@ -99,34 +94,22 @@ swap.click = function(e, selectors) {
   if (!swap.metaKeyOn) {
     e.preventDefault();
     const sels = selectors || getSelectors(link);
+    const { swapInline, swapPane } = link.dataset;
 
-    if (link.dataset.swapPane) {
-      swap.with(
-        buildPaneClickRequest(link.pathname), // we probably need to handle query string use case here
-        sels,
-        $html.getAttribute(swap.qs.sheetOpen)
-          ? nextPane
-          : openPane
-      );
-    } else if (link.dataset.swapInline) {
-      swap.inline(link.href, sels);
+    if (swapInline) {
+      swap.inline(link, sels);
     } else {
-      swap.with(link.href, sels);
+      swap.with(link, sels, swapPane ? addPane : openPage);
     }
   }
 }
 
 
 swap.inline = (options, selectors = []) => {
-  const opts = typeof options === 'string'
-    ? { url: options, method: 'get' }
-    : options;
-
-  ajax(opts, (xhr, res, html) => {
+  const req = buildRequest(options);
+  ajax(req, (xhr, res, html) => {
     swap.to(html, selectors, true);
   });
-
-  return swap;
 }
 
 
@@ -138,41 +121,38 @@ swap.submit = function(e, selectors) {
 
   e.preventDefault();
   const sels = selectors || getSelectors(form);
-  const req = buildSubmitRequest(form);
+  const { swapInline, swapContinue } = form.dataset;
 
-  if (form.dataset.swapContinue) {
-    swap.with(req, sels, continuePane);
-  } else if (form.dataset.swapInline) {
-    swap.inline(req, sels);
-  } else if ($html.getAttribute(swap.qs.sheetOpen)) {
-    swap.with(req, sels, samePane);
+  if (swapInline) {
+    swap.inline(form, sels);
   } else {
-    swap.with(req, sels);
+    const callback = swapContinue
+      ? continuePane
+      : $html.classList.contains(swap.qs.paneOpen)
+        ? samePane
+        : openPage;
+    swap.with(form, sels, callback);
   }
 }
 
 
-swap.backPane = (e) => {
-  replaceState(location.href);
+swap.closePane = ({ html, finalUrl } = {}) => {
+  updateSessionState(location.href);
   swap.paneHistory.pop();
-  const { url, edited } = getCurrentHistoryPane();
 
-  if (edited) {
-    prevPane(url);
+  if (swap.paneHistory.length) {
+    const { url, edited } = getPaneState();
+
+    if (!swap.paneSaved || edited) {
+      prevPane(url);
+    } else if (url === getUrl(finalUrl).pathname) {
+      prevPane(url, html);
+    } else {
+      swap.with(url, swap.paneSelectors, ({ html, finalUrl }) => prevPane(finalUrl, html));
+    }
   } else {
-    swap.with(
-      buildPaneClickRequest(url),
-      swap.sheetSelectors,
-      loadPrevPane
-    );
+    closePanes();
   }
-}
-
-
-swap.closePane = () => {
-  replaceState(location.href);
-  resetPane();
-  pushState(location.href.replace(/#.*$/, ''));
 }
 
 
@@ -184,17 +164,14 @@ const loaded = (e) => {
   if (location.hash) {
     const params = parseQuery(location.hash.substr(1));
     if (params.pane) {
-      swap.with(
-        buildPaneClickRequest(params.pane),
-        swap.sheetSelectors,
-        openPane
-      );
+      swap.with(params.pane, swap.paneSelectors, addPane);
     }
   } else {
     fireElements('on');
     fireRoutes('on', location.href, null);
   }
 
+  updateSessionState(location.href);
   replaceState(location.href);
 }
 
@@ -202,8 +179,12 @@ const loaded = (e) => {
 const openPage = ({ method, html, selectors, finalMethod, finalUrl }) => {
   const from = location.href;
 
-  replaceState(location.href);
-  resetPane();
+  updateSessionState(location.href);
+
+  if ($html.classList.contains(swap.qs.paneOpen)) {
+    closePanes();
+  }
+
   fireRoutes('off', finalUrl, from, method);
 
   swap.to(html, selectors, false, () => {
@@ -215,7 +196,7 @@ const openPage = ({ method, html, selectors, finalMethod, finalUrl }) => {
 
 const popstate = (e) => {
   /*
-    - check to if headers determine it should be cached or not
+    - check if headers determine it should be cached or not
     - if not cached then ajax request
     - if cached then return state
     - check headers on whether to cache or not
@@ -223,31 +204,23 @@ const popstate = (e) => {
 
   if (!e.state) return;
 
-  const { href } = location;
   const { html, selectors, paneHistory, id } = session.get(e.state.id);
-  const goForward = swap.stateId < id;
-  const justAtId = session.get('stateIds').indexOf(e.state.id) + (goForward ? -1 : 1);
-  const justAt = justAtId >= 0 ? session.get(justAtId).url : null;
+  const forward = id > swap.stateId;
+  const justAtId = session.get('stateIds').indexOf(id) + (forward ? -1 : 1);
+  const justAt = session.get(justAtId).url;
 
-  updateOurState(justAt);
+  updateSessionState(justAt);
 
   swap.stateId = id;
   swap.paneHistory = paneHistory;
 
-  fireRoutes('off', href, justAt);
+  fireRoutes('off', location.href, justAt);
 
   const dom = new DOMParser().parseFromString(html, 'text/html');
 
   swap.to(dom, selectors, false, () => {
-    // this block feels like it should go in swap.to maybe
-    const paneIsActive = dom.documentElement.getAttribute(swap.qs.sheetOpen);
-    if (paneIsActive) {
-      $html.setAttribute(swap.qs.sheetOpen, 'true');
-    } else {
-      $html.removeAttribute(swap.qs.sheetOpen);
-    }
-
-    fireRoutes('on', href, justAt);
+    $html.className = dom.documentElement.className;
+    fireRoutes('on', location.href, justAt);
   });
 }
 
@@ -256,20 +229,17 @@ module.exports = function (opts = {}) {
   loader(opts);
 
   swap.qs = {};
-  swap.qs.link = 'a:not([target="_blank"]):not([data-swap="false"])';
-  swap.qs.form = 'form:not([data-swap="false"])';
-  swap.qs.continue = 'button[data-swap-continue]';
-  swap.qs.sheet = '.Pane';
-  swap.qs.sheetMask = '.PaneMask';
-  swap.qs.sheetPanes = '.PanesHolder > div';
-  swap.qs.pane = '.PaneContent';
-  swap.qs.paneForms = '.PaneContent form:not([data-swap="false"])';
-  swap.qs.sheetBackButton = '.PaneBackBtn';
-  swap.qs.sheetCloseButton = '.PaneCloseBtn';
-  swap.qs.sheetOpen = 'swap-pane-is-active';
+  swap.qs.link = 'a:not([target="_blank"]):not([data-swap-ignore])';
+  swap.qs.form = 'form:not([data-swap-ignore])';
+  swap.qs.continue = '[data-swap-continue]';
+  swap.qs.pane = '.Pane';
+  swap.qs.paneContent = '.PaneContent';
+  swap.qs.paneForms = '.PaneContent form:not([data-swap-ignore])';
+  swap.qs.paneCloseBtn = '.PaneCloseBtn';
+  swap.qs.paneOpen = 'swap-pane';
 
-  swap.paneName = swap.qs.pane.substring(1);
-  swap.sheetSelectors = opts.sheetSelectors || ['.Main -> .PaneContent', '.PaneHeader'];
+  swap.paneDuration = 700;
+  swap.paneSelectors = opts.paneSelectors || ['.Main -> .Pane.active:last-child .PaneContent'];
   swap.formValidator = opts.formValidator || ((e) => true);
 
   swap.event('DOMContentLoaded', loaded);
@@ -279,30 +249,35 @@ module.exports = function (opts = {}) {
       swap.metaKeyOn = true;
     }
   });
+
   swap.event('keyup', (e) => {
     if (bypassKeyPressed(e.key)) {
       swap.metaKeyOn = false;
     }
   });
+
   swap.event('click', swap.qs.link, swap.click);
   swap.event('click', swap.qs.continue, (e) => {
-    const form = e.target.closest('form');
-    form.dataset.swapContinue = 'true';
+    e.target.closest('form').dataset.swapContinue = 'true';
   });
+
   swap.event('submit', swap.qs.form, swap.submit);
-  swap.event('click', swap.qs.sheetBackButton, swap.backPane);
-  swap.event('click', swap.qs.sheetCloseButton, swap.closePane);
-  swap.event('click', `[${swap.qs.sheetOpen}]`, (e) => {
-    if (!e.target.closest(swap.qs.sheet)) {
-      swap.closePane();
+
+  swap.event('click', swap.qs.paneCloseBtn, () => {
+    swap.closePane();
+  });
+
+  swap.event('click', `.${swap.qs.paneOpen}`, (e) => {
+    if (!e.target.closest(swap.qs.pane)) {
+      closePanes();
     }
   });
 
   swap.event('input', swap.qs.paneForms, (e) => {
     const formsData = getPaneFormsData();
-    const paneHistoryItem = getCurrentHistoryPane();
-    if (paneHistoryItem) {
-      paneHistoryItem.edited = formsData !== paneHistoryItem.formsData;
+    const pane = getPaneState();
+    if (pane) {
+      pane.edited = formsData !== pane.formsData;
     }
   });
 }

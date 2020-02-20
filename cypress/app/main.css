@@ -12,7 +12,7 @@ body {
   font-size: 14px;
 }
 
-html[swap-pane-is-active]::after {
+html.swap-pane::after {
   content: '';
   position: absolute;
   top: 0;
