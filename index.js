@@ -152,13 +152,16 @@ swap.submit = function(e, selectors) {
 }
 
 
-swap.backPane = (e) => {
+swap.backPane = ({ html, finalUrl } = {}) => {
   replaceState(location.href);
   swap.paneHistory.pop();
   const { url, edited } = getCurrentHistoryPane();
 
   if (edited) {
     prevPane(url);
+  } else if (url === getUrl(finalUrl).pathname) {
+    changePane(-1);
+    renderPane(html);
   } else {
     swap.with(
       buildPaneClickRequest(url),
@@ -290,7 +293,9 @@ module.exports = function (opts = {}) {
     form.dataset.swapContinue = 'true';
   });
   swap.event('submit', swap.qs.form, swap.submit);
-  swap.event('click', swap.qs.sheetBackButton, swap.backPane);
+  swap.event('click', swap.qs.sheetBackButton, () => {
+    swap.backPane();
+  });
   swap.event('click', swap.qs.sheetCloseButton, swap.closePane);
   swap.event('click', `[${swap.qs.sheetOpen}]`, (e) => {
     if (!e.target.closest(swap.qs.sheet)) {
