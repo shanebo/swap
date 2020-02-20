@@ -176,15 +176,6 @@ swap.closePane = () => {
 }
 
 
-swap.formChanged = (e) => {
-  const formsData = getPaneFormsData();
-  const paneHistoryItem = getCurrentHistoryPane();
-  if (paneHistoryItem) {
-    paneHistoryItem.edited = formsData !== paneHistoryItem.formsData;
-  }
-}
-
-
 const loaded = (e) => {
   if (!session.get('stateIds')) {
     session.set('stateIds', [0]);
@@ -307,5 +298,11 @@ module.exports = function (opts = {}) {
     }
   });
 
-  swap.event('input', swap.qs.paneForms, swap.formChanged);
+  swap.event('input', swap.qs.paneForms, (e) => {
+    const formsData = getPaneFormsData();
+    const paneHistoryItem = getCurrentHistoryPane();
+    if (paneHistoryItem) {
+      paneHistoryItem.edited = formsData !== paneHistoryItem.formsData;
+    }
+  });
 }
