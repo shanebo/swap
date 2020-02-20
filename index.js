@@ -3,7 +3,7 @@ const { renderTitle, extractNewAssets, loadAssets, renderBody } = require('./lib
 const { talk, buildPaneClickRequest, buildSubmitRequest } = require('./lib/request');
 const { pushState, replaceState, updateOurState, session, getCurrentHistoryPane } = require('./lib/history');
 const { listener, fireElements, fireRoutes, delegateHandle } = require('./lib/events');
-const { loadPrevPane, prevPane, continuePane, samePane, openPane, nextPane, resetPane, getPaneFormsData } = require('./lib/pane');
+const { loadPrevPane, prevPane, continuePane, samePane, openSheet, nextPane, resetPane, renderPane, changePane, getPaneFormsData } = require('./lib/sheet');
 const { $html, buildUrl, shouldSwap, getUrl, getSelectors, parseQuery, bypassKeyPressed } = require('./lib/utils');
 
 
@@ -106,7 +106,7 @@ swap.click = function(e, selectors) {
         sels,
         $html.getAttribute(swap.qs.sheetOpen)
           ? nextPane
-          : openPane
+          : openSheet
       );
     } else if (link.dataset.swapInline) {
       swap.inline(link.href, sels);
@@ -190,7 +190,7 @@ const loaded = (e) => {
       swap.with(
         buildPaneClickRequest(params.pane),
         swap.sheetSelectors,
-        openPane
+        openSheet
       );
     }
   } else {
