@@ -147,6 +147,7 @@ swap.submit = function(e, selectors) {
   } else if ($html.getAttribute(swap.qs.sheetOpen)) {
     swap.with(req, sels, (obj) => {
       swap.paneSaved = true;
+      getCurrentHistoryPane().edited = false;
       samePane(obj);
     });
   } else {
