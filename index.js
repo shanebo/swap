@@ -145,7 +145,10 @@ swap.submit = function(e, selectors) {
   } else if (form.dataset.swapInline) {
     swap.inline(req, sels);
   } else if ($html.getAttribute(swap.qs.sheetOpen)) {
-    swap.with(req, sels, samePane);
+    swap.with(req, sels, (obj) => {
+      swap.paneSaved = true;
+      samePane(obj);
+    });
   } else {
     swap.with(req, sels);
   }
@@ -157,7 +160,7 @@ swap.backPane = ({ html, finalUrl } = {}) => {
   swap.sheetHistory.pop();
   const { url, edited } = getCurrentHistoryPane();
 
-  if (edited || (!edited && !html && !finalUrl)) {
+  if (!swap.paneSaved || edited) {
     prevPane(url);
   } else if (url === getUrl(finalUrl).pathname) {
     changePane(-1);
@@ -274,6 +277,7 @@ module.exports = function (opts = {}) {
   swap.paneName = swap.qs.pane.substring(1);
   swap.sheetSelectors = opts.sheetSelectors || ['.Main -> .PaneContent', '.PaneHeader'];
   swap.formValidator = opts.formValidator || ((e) => true);
+  swap.paneSaved = false;
 
   swap.event('DOMContentLoaded', loaded);
   swap.event('popstate', popstate);

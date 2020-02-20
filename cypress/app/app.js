@@ -261,8 +261,10 @@ app.get('/account', (req, res) => res.send(`
       ${menu}
       ${layout(`
         <div class="Main">
+          <span id="tag">${Math.random()}</span><br>
           Account Info
           <a href="/donation" data-swap-pane=".Main -> .PaneContent">View Donation</a>
+          <a href="/edit-account" data-swap-pane=".Main -> .PaneContent">Modify Account</a>
         </div>
       `)}
       ${paneHtml}
@@ -307,6 +309,7 @@ app.get('/edit-donation', (req, res) => res.send(`
       ${menu}
       ${layout(`
         <div class="Main">
+        <span id="tag">${Math.random()}</span><br>
           Donation Editing
           <form action="/edit-donation" method="post">
             <input type="submit" value="Change">
