@@ -3,14 +3,14 @@ const { renderTitle, extractNewAssets, loadAssets, renderBody } = require('./lib
 const { talk, buildPaneClickRequest, buildSubmitRequest } = require('./lib/request');
 const { pushState, replaceState, updateOurState, session, getCurrentHistoryPane } = require('./lib/history');
 const { listener, fireElements, fireRoutes, delegateHandle } = require('./lib/events');
-const { loadPrevPane, prevPane, continuePane, samePane, openSheet, nextPane, resetPane, renderPane, changePane, getPaneFormsData } = require('./lib/sheet');
+const { loadPrevPane, prevPane, continuePane, samePane, openSheet, nextPane, resetSheet, renderPane, changePane, getPaneFormsData } = require('./lib/sheet');
 const { $html, buildUrl, shouldSwap, getUrl, getSelectors, parseQuery, bypassKeyPressed } = require('./lib/utils');
 
 
 window.swap = {
   metaKeyOn: false,
   paneUrl: false,
-  paneHistory: [],
+  sheetHistory: [],
   before: listener.bind(window.swap, 'before'),
   on: listener.bind(window.swap, 'on'),
   off: listener.bind(window.swap, 'off'),
@@ -154,10 +154,10 @@ swap.submit = function(e, selectors) {
 
 swap.backPane = ({ html, finalUrl } = {}) => {
   replaceState(location.href);
-  swap.paneHistory.pop();
+  swap.sheetHistory.pop();
   const { url, edited } = getCurrentHistoryPane();
 
-  if (edited) {
+  if (edited || (!edited && !html && !finalUrl)) {
     prevPane(url);
   } else if (url === getUrl(finalUrl).pathname) {
     changePane(-1);
@@ -174,7 +174,7 @@ swap.backPane = ({ html, finalUrl } = {}) => {
 
 swap.closePane = () => {
   replaceState(location.href);
-  resetPane();
+  resetSheet();
   pushState(location.href.replace(/#.*$/, ''));
 }
 
@@ -206,7 +206,7 @@ const openPage = ({ method, html, selectors, finalMethod, finalUrl }) => {
   const from = location.href;
 
   replaceState(location.href);
-  resetPane();
+  resetSheet();
   fireRoutes('off', finalUrl, from, method);
 
   swap.to(html, selectors, false, () => {
@@ -227,7 +227,7 @@ const popstate = (e) => {
   if (!e.state) return;
 
   const { href } = location;
-  const { html, selectors, paneHistory, id } = session.get(e.state.id);
+  const { html, selectors, sheetHistory, id } = session.get(e.state.id);
   const goForward = swap.stateId < id;
   const justAtId = session.get('stateIds').indexOf(e.state.id) + (goForward ? -1 : 1);
   const justAt = justAtId >= 0 ? session.get(justAtId).url : null;
@@ -235,7 +235,7 @@ const popstate = (e) => {
   updateOurState(justAt);
 
   swap.stateId = id;
-  swap.paneHistory = paneHistory;
+  swap.sheetHistory = sheetHistory;
 
   fireRoutes('off', href, justAt);
 
@@ -305,9 +305,9 @@ module.exports = function (opts = {}) {
 
   swap.event('input', swap.qs.paneForms, (e) => {
     const formsData = getPaneFormsData();
-    const paneHistoryItem = getCurrentHistoryPane();
-    if (paneHistoryItem) {
-      paneHistoryItem.edited = formsData !== paneHistoryItem.formsData;
+    const pane = getCurrentHistoryPane();
+    if (pane) {
+      pane.edited = formsData !== pane.formsData;
     }
   });
 }
