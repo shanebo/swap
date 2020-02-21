@@ -39,23 +39,6 @@ const layout = (content) => `
     </div>
   `;
 
-const paneHtml = `
-    <div class="Pane">
-      <div class="PaneHeader">
-        <button class="PaneCloseBtn">Close</button>
-        <button class="PaneBackBtn">Back</button>
-        <a href="url/goes/here">Expand</a>
-      </div>
-      <div class="PaneMask">
-        <div class="PanesHolder">
-          <div class="PaneContent"></div>
-          <div></div>
-          <div></div>
-        </div>
-      </div>
-    </div>
-  `;
-
 app.use(static('cypress/app/dist'));
 
 app.get('/', (req, res) => res.send(`
@@ -246,7 +229,6 @@ app.get('/accounts', (req, res) => res.send(`
         <a href="/edit-account" data-swap-pane=".Main -> .PaneContent">Edit Account</a>
         <a href="/edit-donation" data-swap-pane=".Main -> .PaneContent">Edit Donation</a>
       `)}
-      ${paneHtml}
     </body>
   </html>
 `));
@@ -267,7 +249,6 @@ app.get('/account', (req, res) => res.send(`
           <a href="/edit-account" data-swap-pane=".Main -> .PaneContent">Modify Account</a>
         </div>
       `)}
-      ${paneHtml}
     </body>
   </html>
 `));
@@ -284,6 +265,7 @@ app.get('/edit-account', (req, res) => res.send(`
         <div class="Main">
           <span id="tag">${Math.random()}</span><br>
           Edit Account
+          <a href="/add-relationship" data-swap-pane=".Main -> .PaneContent">Add Relationship</a>
           <a href="/donation" data-swap-pane=".Main -> .PaneContent">View Donation</a>
           <a href="/edit-donation" data-swap-pane=".Main -> .PaneContent">Modify Donation</a>
           <form action="/edit-account" method="post">
@@ -292,7 +274,6 @@ app.get('/edit-account', (req, res) => res.send(`
           </form>
         </div>
       `)}
-      ${paneHtml}
     </body>
   </html>
 `));
@@ -314,11 +295,10 @@ app.get('/edit-donation', (req, res) => res.send(`
           <form action="/edit-donation" method="post">
             <input type="submit" value="Change">
             <input type="checkbox" name="fail">
-            <button data-swap-continue="true" type="submit" value="Save and Continue">
+            <button data-swap-continue="true">Save and Continue</button>
           </form>
         </div>
       `)}
-      ${paneHtml}
     </body>
   </html>
 `));
@@ -329,6 +309,31 @@ app.post('/edit-donation', (req, res) => {
   } else {
     res.redirect(req.get('pane-url'));
   }
+});
+
+app.get('/add-relationship', (req, res) => res.send(`
+  <html>
+    <head>
+      <title>Donation</title>
+      <script src="/${frontendJS}" type="application/javascript"></script>
+    </head>
+    <body>
+      ${menu}
+      ${layout(`
+        <div class="Main">
+        <span id="tag">${Math.random()}</span><br>
+          Add relationship
+          <form action="/add-relationship" method="post">
+            <button data-swap-continue="true">Save and Continue</button>
+          </form>
+        </div>
+      `)}
+    </body>
+  </html>
+`));
+
+app.post('/add-relationship', (req, res) => {
+  res.redirect('/edit-account');
 });
 
 app.get('/donation', (req, res) => res.send(`
@@ -344,7 +349,6 @@ app.get('/donation', (req, res) => res.send(`
           Donation Info
         </div>
       `)}
-      ${paneHtml}
     </body>
   </html>
 `));
