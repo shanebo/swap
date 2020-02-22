@@ -154,7 +154,7 @@ swap.submit = function(e, selectors) {
 }
 
 
-swap.backPane = ({ html, finalUrl } = {}) => {
+swap.closePane = ({ html, finalUrl } = {}) => {
   updateSessionState(location.href);
   swap.paneHistory.pop();
 
@@ -294,7 +294,7 @@ module.exports = function (opts = {}) {
   swap.event('submit', swap.qs.form, swap.submit);
 
   swap.event('click', swap.qs.paneBackButton, () => {
-    swap.backPane();
+    swap.closePane();
   });
 
   swap.event('click', `.${swap.qs.paneOpen}`, (e) => {
