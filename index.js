@@ -1,16 +1,16 @@
 const loader = require('./lib/loader');
 const { renderTitle, extractNewAssets, loadAssets, renderBody } = require('./lib/render');
 const { ajax, buildPaneClickRequest, buildSubmitRequest } = require('./lib/request');
-const { pushState, replaceState, updateOurState, session, getCurrentHistoryPane } = require('./lib/history');
+const { pushState, getPaneFormsData, replaceState, updateSessionState, session, getPaneState } = require('./lib/history');
 const { listener, fireElements, fireRoutes, delegateHandle } = require('./lib/events');
-const { prevPane, continuePane, samePane, addPane, closePanes, getPaneFormsData } = require('./lib/sheet');
+const { prevPane, continuePane, samePane, addPane, closePanes } = require('./lib/pane');
 const { $html, buildUrl, shouldSwap, getUrl, getSelectors, parseQuery, bypassKeyPressed } = require('./lib/utils');
 
 
 window.swap = {
   metaKeyOn: false,
   paneUrl: false,
-  sheetHistory: [],
+  paneHistory: [],
   before: listener.bind(window.swap, 'before'),
   on: listener.bind(window.swap, 'on'),
   off: listener.bind(window.swap, 'off'),
@@ -142,11 +142,10 @@ swap.submit = function(e, selectors) {
     swap.with(req, sels, continuePane);
   } else if (form.dataset.swapInline) {
     swap.inline(req, sels);
-  } else if ($html.classList.contains(swap.qs.sheetOpen)) {
-  // } else if ($html.getAttribute(swap.qs.sheetOpen)) {
+  } else if ($html.classList.contains(swap.qs.paneOpen)) {
     swap.with(req, sels, (obj) => {
       swap.paneSaved = true;
-      getCurrentHistoryPane().edited = false;
+      getPaneState().edited = false;
       samePane(obj);
     });
   } else {
@@ -156,11 +155,11 @@ swap.submit = function(e, selectors) {
 
 
 swap.backPane = ({ html, finalUrl } = {}) => {
-  replaceState(location.href);
-  swap.sheetHistory.pop();
+  updateSessionState(location.href);
+  swap.paneHistory.pop();
 
-  if (swap.sheetHistory.length) {
-    const { url, edited } = getCurrentHistoryPane();
+  if (swap.paneHistory.length) {
+    const { url, edited } = getPaneState();
 
     if (!swap.paneSaved || edited) {
       prevPane(url);
@@ -169,7 +168,7 @@ swap.backPane = ({ html, finalUrl } = {}) => {
     } else {
       swap.with(
         buildPaneClickRequest(url),
-        swap.sheetSelectors,
+        swap.paneSelectors,
         ({ html, finalUrl }) => prevPane(finalUrl, html)
       );
     }
@@ -189,7 +188,7 @@ const loaded = (e) => {
     if (params.pane) {
       swap.with(
         buildPaneClickRequest(params.pane),
-        swap.sheetSelectors,
+        swap.paneSelectors,
         addPane
       );
     }
@@ -198,6 +197,7 @@ const loaded = (e) => {
     fireRoutes('on', location.href, null);
   }
 
+  updateSessionState(location.href);
   replaceState(location.href);
 }
 
@@ -205,7 +205,7 @@ const loaded = (e) => {
 const openPage = ({ method, html, selectors, finalMethod, finalUrl }) => {
   const from = location.href;
 
-  replaceState(location.href);
+  updateSessionState(location.href);
   closePanes();
   fireRoutes('off', finalUrl, from, method);
 
@@ -227,17 +227,15 @@ const popstate = (e) => {
   if (!e.state) return;
 
   const { href } = location;
-  const { html, selectors, sheetHistory, id } = session.get(e.state.id);
+  const { html, selectors, paneHistory, id } = session.get(e.state.id);
   const goForward = swap.stateId < id;
   const justAtId = session.get('stateIds').indexOf(e.state.id) + (goForward ? -1 : 1);
   const justAt = justAtId >= 0 ? session.get(justAtId).url : null;
 
-  updateOurState(justAt);
+  updateSessionState(justAt);
 
   swap.stateId = id;
-  swap.sheetHistory = sheetHistory;
-
-  console.log(sheetHistory);
+  swap.paneHistory = paneHistory;
 
   fireRoutes('off', href, justAt);
 
@@ -245,12 +243,12 @@ const popstate = (e) => {
 
   swap.to(dom, selectors, false, () => {
     // this block feels like it should go in swap.to maybe
-    // const paneIsActive = dom.documentElement.getAttribute(swap.qs.sheetOpen);
-    // if (paneIsActive) {
-    //   $html.setAttribute(swap.qs.sheetOpen, 'true');
-    // } else {
-    //   $html.removeAttribute(swap.qs.sheetOpen);
-    // }
+    const overlayIsOn = dom.documentElement.classList.contains(swap.qs.paneOpen);
+    if (overlayIsOn) {
+      $html.classList.add(swap.qs.paneOpen);
+    } else {
+      $html.classList.remove(swap.qs.paneOpen);
+    }
 
     fireRoutes('on', href, justAt);
   });
@@ -264,16 +262,12 @@ module.exports = function (opts = {}) {
   swap.qs.link = 'a:not([target="_blank"]):not([data-swap="false"])';
   swap.qs.form = 'form:not([data-swap="false"])';
   swap.qs.continue = 'button[data-swap-continue]';
-  swap.qs.sheet = '.pane';
-  swap.qs.sheetMask = '.PaneMask';
-  swap.qs.sheetPanes = '.PanesHolder > div';
-  swap.qs.pane = '.PaneContent';
+  swap.qs.pane = '.pane';
+  swap.qs.paneContent = '.PaneContent';
   swap.qs.paneForms = '.PaneContent form:not([data-swap="false"])';
-  swap.qs.sheetBackButton = '.PaneCloseBtn';
-  swap.qs.sheetOpen = 'swap-pane';
-
-  swap.paneName = swap.qs.pane.substring(1);
-  swap.sheetSelectors = opts.sheetSelectors || ['.Main -> .pane.active:last-child .PaneContent'];
+  swap.qs.paneBackButton = '.PaneCloseBtn';
+  swap.qs.paneOpen = 'swap-pane';
+  swap.paneSelectors = opts.paneSelectors || ['.Main -> .pane.active:last-child .PaneContent'];
   swap.formValidator = opts.formValidator || ((e) => true);
   swap.paneSaved = false;
 
@@ -284,42 +278,34 @@ module.exports = function (opts = {}) {
       swap.metaKeyOn = true;
     }
   });
+
   swap.event('keyup', (e) => {
     if (bypassKeyPressed(e.key)) {
       swap.metaKeyOn = false;
     }
   });
+
   swap.event('click', swap.qs.link, swap.click);
   swap.event('click', swap.qs.continue, (e) => {
     const form = e.target.closest('form');
     form.dataset.swapContinue = 'true';
   });
+
   swap.event('submit', swap.qs.form, swap.submit);
 
-  // swap.event('click', '.pane:last-child .PaneCloseBtn', () => {
-  //   swap.backPane();
-  // });
-
-
-  // pane.querySelector('.PaneCloseBtn').addEventListener('click', (e) => {
-  //   swap.backPane();
-  // });
-
-
-  swap.event('click', '.PaneCloseBtn', () => {
+  swap.event('click', swap.qs.paneBackButton, () => {
     swap.backPane();
   });
 
-
-  swap.event('click', `.${swap.qs.sheetOpen}`, (e) => {
-    if (!e.target.closest(swap.qs.sheet)) {
+  swap.event('click', `.${swap.qs.paneOpen}`, (e) => {
+    if (!e.target.closest(swap.qs.pane)) {
       closePanes();
     }
   });
 
   swap.event('input', swap.qs.paneForms, (e) => {
     const formsData = getPaneFormsData();
-    const pane = getCurrentHistoryPane();
+    const pane = getPaneState();
     if (pane) {
       pane.edited = formsData !== pane.formsData;
     }
