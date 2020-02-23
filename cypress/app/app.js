@@ -23,7 +23,7 @@ const menu = `
     <a href="/about" data-swap-inline=".content">Inline About</a>
     <a href="/head">Head Link</a>
     <a href="/delayed">Delayed Link</a>
-    <a href="/delayed" data-swap="false">Hard Delay</a>
+    <a href="/delayed" data-swap-ignore>Hard Delay</a>
     <a href="https://www.desiringgod.org">External Link</a>
     <a href="/arrive">Arrive Link</a>
     <a href="/route-on">Route Link</a>
