@@ -246,7 +246,6 @@ const popstate = (e) => {
   const dom = new DOMParser().parseFromString(html, 'text/html');
 
   swap.to(dom, selectors, false, () => {
-    // this block feels like it should go in swap.to maybe
     const overlayIsOn = dom.documentElement.classList.contains(swap.qs.paneOpen);
     if (overlayIsOn) {
       $html.classList.add(swap.qs.paneOpen);
@@ -269,7 +268,7 @@ module.exports = function (opts = {}) {
   swap.qs.pane = '.pane';
   swap.qs.paneContent = '.PaneContent';
   swap.qs.paneForms = '.PaneContent form:not([data-swap="false"])';
-  swap.qs.paneBackButton = '.PaneCloseBtn';
+  swap.qs.paneCloseBtn = '.PaneCloseBtn';
   swap.qs.paneOpen = 'swap-pane';
   swap.paneSelectors = opts.paneSelectors || ['.Main -> .pane.active:last-child .PaneContent'];
   swap.formValidator = opts.formValidator || ((e) => true);
@@ -297,7 +296,7 @@ module.exports = function (opts = {}) {
 
   swap.event('submit', swap.qs.form, swap.submit);
 
-  swap.event('click', swap.qs.paneBackButton, () => {
+  swap.event('click', swap.qs.paneCloseBtn, () => {
     swap.closePane();
   });
 
