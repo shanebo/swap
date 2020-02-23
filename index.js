@@ -265,7 +265,7 @@ module.exports = function (opts = {}) {
   swap.qs = {};
   swap.qs.link = 'a:not([target="_blank"]):not([data-swap="false"])';
   swap.qs.form = 'form:not([data-swap="false"])';
-  swap.qs.continue = 'button[data-swap-continue]';
+  swap.qs.continue = '[data-swap-continue]';
   swap.qs.pane = '.pane';
   swap.qs.paneContent = '.PaneContent';
   swap.qs.paneForms = '.PaneContent form:not([data-swap="false"])';
