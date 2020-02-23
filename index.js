@@ -206,7 +206,11 @@ const openPage = ({ method, html, selectors, finalMethod, finalUrl }) => {
   const from = location.href;
 
   updateSessionState(location.href);
-  closePanes();
+
+  if ($html.classList.contains(swap.qs.paneOpen)) {
+    closePanes();
+  }
+
   fireRoutes('off', finalUrl, from, method);
 
   swap.to(html, selectors, false, () => {
