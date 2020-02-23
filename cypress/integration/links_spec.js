@@ -11,7 +11,7 @@ describe('Full Page Swaps', function() {
   it('does nothing on a link with no href', function() {
     cy.visit('http://127.0.0.1:8888/');
     cy.contains('Nothing Link').click();
-    cy.get('.swap-progressing').should('not.exist');
+    cy.get('.swap-loading').should('not.exist');
     cy.url().should('equal', 'http://127.0.0.1:8888/');
     cy.title().should('equal', 'Home');
   });
@@ -53,13 +53,13 @@ describe('Full Page Swaps', function() {
   // it('hard refreshes on links to external domains', function() {
   //   cy.visit('http://127.0.0.1:8888/');
   //   cy.contains('External Link').click();
-  //   cy.get('.swap-progressing').should('not.exist');
+  //   cy.get('.swap-loading').should('not.exist');
   // });
 
   it('hard refreshes with data-swap=false', function() {
     cy.visit('http://127.0.0.1:8888/');
     cy.contains('Hard Delay').click();
-    cy.get('.swap-progressing').should('not.exist');
+    cy.get('.swap-loading').should('not.exist');
     cy.url().should('include', '/delayed');
     cy.title().should('equal', 'Delayed');
     cy.get('.header').should('contain', 'Header');
