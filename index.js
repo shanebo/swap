@@ -1,4 +1,4 @@
-const loader = require('./lib/loader');
+const css = require('./lib/css');
 const { renderTitle, extractNewAssets, loadAssets, renderBody } = require('./lib/render');
 const { ajax, buildRequest } = require('./lib/request');
 const { pushState, getPaneFormsData, replaceState, updateSessionState, session, getPaneState } = require('./lib/history');
@@ -226,8 +226,6 @@ const popstate = (e) => {
 
 
 module.exports = function (opts = {}) {
-  loader(opts);
-
   swap.qs = {};
   swap.qs.link = 'a:not([target="_blank"]):not([data-swap-ignore])';
   swap.qs.form = 'form:not([data-swap-ignore])';
@@ -241,7 +239,14 @@ module.exports = function (opts = {}) {
   swap.paneSelectors = opts.paneSelectors || ['.Main -> .pane.active:last-child .PaneContent'];
   swap.formValidator = opts.formValidator || ((e) => true);
 
-  swap.event('DOMContentLoaded', loaded);
+  swap.event('DOMContentLoaded', () => {
+    const style = document.createElement('style');
+    style.type = 'text/css';
+    style.appendChild(document.createTextNode(css(opts)));
+    document.head.appendChild(style);
+    loaded();
+  });
+
   swap.event('popstate', popstate);
   swap.event('keydown', (e) => {
     if (bypassKeyPressed(e.key)) {
