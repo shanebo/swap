@@ -8,6 +8,7 @@ const { $html, buildUrl, shouldSwap, getUrl, getSelectors, parseQuery, bypassKey
 
 
 window.swap = {
+  sessionExpiration: 5000,
   request: false,
   metaKeyOn: false,
   paneUrl: false,
@@ -206,7 +207,7 @@ const popstate = (e) => {
 
   if (!e.state) return;
 
-  const { html, selectors, paneHistory, id } = session.get(e.state.id);
+  const { html, selectors, paneHistory, expires, id } = session.get(e.state.id);
   const forward = id > swap.stateId;
   const justAtId = session.get('stateIds').indexOf(id) + (forward ? -1 : 1);
   const justAt = session.get(justAtId).url;
@@ -218,12 +219,23 @@ const popstate = (e) => {
 
   fireRoutes('off', location.href, justAt);
 
-  const dom = new DOMParser().parseFromString(html, 'text/html');
+  const restoreHtml = (html) => {
+    const dom = new DOMParser().parseFromString(html, 'text/html');
 
-  swap.to(dom, selectors, false, () => {
-    $html.className = dom.documentElement.className;
-    fireRoutes('on', location.href, justAt);
-  });
+    swap.to(dom, selectors, false, () => {
+      $html.className = dom.documentElement.className;
+      fireRoutes('on', location.href, justAt);
+    });
+  };
+
+  if (expires < Date.now()) {
+    console.log('reloading...');
+    const opts = { url: location.href, method: 'get' };
+    ajax(opts, (xhr, res, html) => restoreHtml(html));
+  } else {
+    console.log('using existing');
+    restoreHtml(html);
+  }
 }
 
 
