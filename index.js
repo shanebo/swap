@@ -8,6 +8,7 @@ const { $html, buildUrl, shouldSwap, getUrl, getSelectors, parseQuery, bypassKey
 
 
 window.swap = {
+  request: false,
   metaKeyOn: false,
   paneUrl: false,
   paneHistory: [],
