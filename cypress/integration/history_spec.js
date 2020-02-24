@@ -74,7 +74,7 @@ describe('Pane History', function() {
     cy.contains('View Account').click();
     cy.contains('View Donation').click();
 
-    cy.get('.pane:last-child .PaneCloseBtn').click();
+    cy.get('.Pane:last-child .PaneCloseBtn').click();
     cy.go('back');
 
     cy.get('.PaneContent').should('contain', 'Donation Info');
@@ -88,7 +88,7 @@ describe('Pane History', function() {
     cy.go('back');
 
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts');
-    cy.get('.pane').should('not.exist');
+    cy.get('.Pane').should('not.exist');
   });
 
   it('goes backward and then forward in history to open a pane', function() {
@@ -122,7 +122,7 @@ describe('Pane History', function() {
     cy.go('forward');
 
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts');
-    cy.get('.pane').should('not.exist');
+    cy.get('.Pane').should('not.exist');
   });
 
   it('goes backward in history to re-open a pane with retained pane-history', function() {
@@ -140,10 +140,10 @@ describe('Pane History', function() {
     cy.visit('http://127.0.0.1:8888/accounts');
     cy.contains('View Account').click();
     cy.contains('View Donation').click();
-    cy.get('.pane:last-child .PaneCloseBtn').click();
+    cy.get('.Pane:last-child .PaneCloseBtn').click();
 
     cy.go('back');
-    cy.get('.pane:last-child .PaneCloseBtn').click();
+    cy.get('.Pane:last-child .PaneCloseBtn').click();
 
     cy.get('.PaneContent').should('contain', 'Account Info');
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/account');

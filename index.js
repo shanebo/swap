@@ -231,13 +231,13 @@ module.exports = function (opts = {}) {
   swap.qs.link = 'a:not([target="_blank"]):not([data-swap-ignore])';
   swap.qs.form = 'form:not([data-swap-ignore])';
   swap.qs.continue = '[data-swap-continue]';
-  swap.qs.pane = '.pane';
+  swap.qs.pane = '.Pane';
   swap.qs.paneContent = '.PaneContent';
   swap.qs.paneForms = '.PaneContent form:not([data-swap-ignore])';
   swap.qs.paneCloseBtn = '.PaneCloseBtn';
   swap.qs.paneOpen = 'swap-pane';
 
-  swap.paneSelectors = opts.paneSelectors || ['.Main -> .pane.active:last-child .PaneContent'];
+  swap.paneSelectors = opts.paneSelectors || ['.Main -> .Pane.active:last-child .PaneContent'];
   swap.formValidator = opts.formValidator || ((e) => true);
 
   swap.event('DOMContentLoaded', () => {
