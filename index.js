@@ -237,6 +237,7 @@ module.exports = function (opts = {}) {
   swap.qs.paneCloseBtn = '.PaneCloseBtn';
   swap.qs.paneOpen = 'swap-pane';
 
+  swap.paneDuration = 700;
   swap.paneSelectors = opts.paneSelectors || ['.Main -> .Pane.active:last-child .PaneContent'];
   swap.formValidator = opts.formValidator || ((e) => true);
 
