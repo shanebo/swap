@@ -233,16 +233,16 @@ module.exports = function (opts = {}) {
   swap.qs.form = 'form:not([data-swap-ignore])';
   swap.qs.continue = '[data-swap-continue]';
   swap.qs.pane = '.Pane';
-  swap.qs.paneForms = `.Pane.is-active ${swap.qs.form}`;
-  swap.qs.paneContent = `.Pane.is-active > div`;
-  swap.qs.paneCloseBtn = '.PaneCloseBtn';
+  swap.qs.paneActive = '.Pane.is-active';
+  swap.qs.paneForms = `${swap.qs.paneActive} ${swap.qs.form}`;
+  swap.qs.paneContent = `${swap.qs.paneActive} .Pane-content`;
+  swap.qs.paneCloseBtn = '.Pane-closeBtn';
   swap.qs.paneOpen = 'swap-pane';
-  swap.qs.paneDefaultEl = '.Main';
+  swap.qs.paneDefaultEl = opts.paneDefaultEl || '.Main';
   swap.qs.paneDefaultRenderType = '>>';
 
   swap.paneDuration = 700;
-  swap.paneSelectors = opts.paneSelectors || [`.Main >> ${swap.qs.paneContent}`];
-  // swap.paneSelectors = opts.paneSelectors || ['.Main >> .Pane.is-active > div'];
+  swap.paneSelectors = [`${swap.qs.paneDefaultEl} ${swap.qs.paneDefaultRenderType} ${swap.qs.paneContent}`];
   swap.formValidator = opts.formValidator || ((e) => true);
 
   swap.event('DOMContentLoaded', () => {
