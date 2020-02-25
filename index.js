@@ -254,6 +254,7 @@ module.exports = function (opts = {}) {
   });
 
   swap.event('popstate', popstate);
+
   swap.event('keydown', (e) => {
     if (bypassKeyPressed(e.key)) {
       swap.metaKeyOn = true;
@@ -267,20 +268,9 @@ module.exports = function (opts = {}) {
   });
 
   swap.event('click', swap.qs.link, swap.click);
+
   swap.event('click', swap.qs.continue, (e) => {
     e.target.closest('form').dataset.swapContinue = 'true';
-  });
-
-  swap.event('submit', swap.qs.form, swap.submit);
-
-  swap.event('click', swap.qs.paneCloseBtn, () => {
-    swap.closePane();
-  });
-
-  swap.event('click', `.${swap.qs.paneOpen}`, (e) => {
-    if (!e.target.closest(swap.qs.pane)) {
-      closePanes();
-    }
   });
 
   swap.event('input', swap.qs.paneForms, (e) => {
@@ -291,9 +281,21 @@ module.exports = function (opts = {}) {
     }
   });
 
+  swap.event('submit', swap.qs.form, swap.submit);
+
+  swap.event('click', swap.qs.paneCloseBtn, () => {
+    swap.closePane();
+  });
+
   swap.event('keyup', (e) => {
     if (e.key === 'Escape') {
       swap.closePane();
+    }
+  });
+
+  swap.event('click', `.${swap.qs.paneOpen}`, (e) => {
+    if (!e.target.closest(swap.qs.pane)) {
+      closePanes();
     }
   });
 }
