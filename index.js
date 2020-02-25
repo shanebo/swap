@@ -290,4 +290,10 @@ module.exports = function (opts = {}) {
       pane.edited = formsData !== pane.formsData;
     }
   });
+
+  swap.event('keyup', (e) => {
+    if (e.key === 'Escape') {
+      swap.closePane();
+    }
+  });
 }
