@@ -130,7 +130,7 @@ swap.submit = function(e, selectors) {
   } else {
     const callback = swapContinue
       ? continuePane
-      : $html.classList.contains(swap.qs.paneOpen)
+      : $html.classList.contains(swap.qs.paneIsOpen)
         ? samePane
         : openPage;
     swap.with(form, sels, callback);
@@ -183,7 +183,7 @@ const openPage = ({ method, html, selectors, finalMethod, finalUrl }) => {
 
   updateSessionState(location.href);
 
-  if ($html.classList.contains(swap.qs.paneOpen)) {
+  if ($html.classList.contains(swap.qs.paneIsOpen)) {
     closePanes();
   }
 
@@ -237,7 +237,7 @@ module.exports = function (opts = {}) {
   swap.qs.paneForms = `${swap.qs.paneActive} ${swap.qs.form}`;
   swap.qs.paneContent = `${swap.qs.paneActive} .Pane-content`;
   swap.qs.paneCloseBtn = '.Pane-closeBtn';
-  swap.qs.paneOpen = 'swap-pane';
+  swap.qs.paneIsOpen = 'swap-pane-is-open';
   swap.qs.paneDefaultEl = opts.paneDefaultEl || '.Main';
   swap.qs.paneDefaultRenderType = '>>';
 
@@ -293,7 +293,7 @@ module.exports = function (opts = {}) {
     }
   });
 
-  swap.event('click', `.${swap.qs.paneOpen}`, (e) => {
+  swap.event('click', `.${swap.qs.paneIsOpen}`, (e) => {
     if (!e.target.closest(swap.qs.pane)) {
       closePanes();
     }
