@@ -74,7 +74,7 @@ describe('Pane History', function() {
     cy.contains('View Account').click();
     cy.contains('View Donation').click();
 
-    cy.get('.Pane:last-child .PaneCloseBtn').click();
+    cy.get('.Pane.is-active .PaneCloseBtn').click();
     cy.go('back');
 
     cy.get('.PaneContent').should('contain', 'Donation Info');
@@ -140,10 +140,10 @@ describe('Pane History', function() {
     cy.visit('http://127.0.0.1:8888/accounts');
     cy.contains('View Account').click();
     cy.contains('View Donation').click();
-    cy.get('.Pane:last-child .PaneCloseBtn').click();
+    cy.get('.Pane.is-active .PaneCloseBtn').click();
 
     cy.go('back');
-    cy.get('.Pane:last-child .PaneCloseBtn').click();
+    cy.get('.Pane.is-active .PaneCloseBtn').click();
 
     cy.get('.PaneContent').should('contain', 'Account Info');
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/account');

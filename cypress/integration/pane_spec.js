@@ -33,7 +33,7 @@ describe('Pane functionality', function() {
     cy.contains('View Account').click();
     cy.contains('View Donation').click();
 
-    cy.get('.Pane:last-child .PaneCloseBtn').click();
+    cy.get('.Pane.is-active .PaneCloseBtn').click();
 
     cy.get('.PaneContent').should('contain', 'Account Info');
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/account');
@@ -76,7 +76,7 @@ describe('Pane functionality', function() {
     cy.contains('View Donation').click();
 
     cy.get('#tag').then(($tag) => {
-      cy.get('.Pane:last-child .PaneCloseBtn').click();
+      cy.get('.Pane.is-active .PaneCloseBtn').click();
 
       cy.get('#tag').invoke('text').should('equal', $tag.text());
     });
@@ -89,7 +89,7 @@ describe('Pane functionality', function() {
     cy.contains('View Donation').click();
 
     cy.get('#tag').then(($tag) => {
-      cy.get('.Pane:last-child .PaneCloseBtn').click();
+      cy.get('.Pane.is-active .PaneCloseBtn').click();
 
       cy.get('#tag').invoke('text').should('equal', $tag.text());
     });
@@ -103,7 +103,7 @@ describe('Pane functionality', function() {
     cy.contains('View Donation').click();
 
     cy.get('#tag').then(($tag) => {
-      cy.get('.Pane:last-child .PaneCloseBtn').click();
+      cy.get('.Pane.is-active .PaneCloseBtn').click();
 
       cy.get('#tag').invoke('text').should('equal', $tag.text());
     });
@@ -116,7 +116,7 @@ describe('Pane functionality', function() {
       cy.contains('Modify Donation').click();
       cy.contains('Save and Continue').click();
 
-      cy.get('.Pane:last-child .PaneContent').should('contain', 'Edit Account');
+      cy.get('.Pane.is-active .PaneContent').should('contain', 'Edit Account');
       cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/edit-account');
       cy.get('#tag').invoke('text').should('not.equal', $tag.text());
     });
@@ -129,7 +129,7 @@ describe('Pane functionality', function() {
       cy.contains('Add Relationship').click();
       cy.contains('Save and Continue').click();
 
-      cy.get('.Pane:last-child .PaneContent').should('contain', 'Edit Account');
+      cy.get('.Pane.is-active .PaneContent').should('contain', 'Edit Account');
       cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/edit-account');
       cy.get('#tag').invoke('text').should('not.equal', $tag.text());
     });
@@ -157,7 +157,7 @@ describe('Pane functionality', function() {
     cy.get('[type="checkbox"]').check(); // makes it so form fails
     cy.contains('Save and Continue').click();
 
-    cy.get('.Pane:last-child .PaneContent').should('contain', 'Donation Editing');
+    cy.get('.Pane.is-active .PaneContent').should('contain', 'Donation Editing');
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/edit-donation');
   });
 
@@ -168,7 +168,7 @@ describe('Pane functionality', function() {
 
     cy.get('#tag').then(($tag) => {
       cy.get('input[type=text]').clear().type('Shane');
-      cy.get('.Pane:last-child .PaneCloseBtn').click();
+      cy.get('.Pane.is-active .PaneCloseBtn').click();
 
       cy.get('#tag').invoke('text').should('equal', $tag.text());
     });
@@ -182,7 +182,7 @@ describe('Pane functionality', function() {
     cy.get('#tag').then(($tag) => {
       cy.get('input[type=text]').clear().type('Shane');
       cy.get('form').submit();
-      cy.get('.Pane:last-child .PaneCloseBtn').click();
+      cy.get('.Pane.is-active .PaneCloseBtn').click();
 
       cy.get('#tag').invoke('text').should('not.equal', $tag.text());
     });

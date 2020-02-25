@@ -225,9 +225,9 @@ app.get('/accounts', (req, res) => res.send(`
     <body>
       ${menu}
       ${layout(`
-        <a href="/account" data-swap-pane=".Main -> .PaneContent">View Account</a>
-        <a href="/edit-account" data-swap-pane=".Main -> .PaneContent">Edit Account</a>
-        <a href="/edit-donation" data-swap-pane=".Main -> .PaneContent">Edit Donation</a>
+        <a href="/account" data-swap-pane=".Main">View Account</a>
+        <a href="/edit-account" data-swap-pane=".Main">Edit Account</a>
+        <a href="/edit-donation" data-swap-pane=".Main">Edit Donation</a>
       `)}
     </body>
   </html>
@@ -245,8 +245,8 @@ app.get('/account', (req, res) => res.send(`
         <div class="Main">
           <span id="tag">${Math.random()}</span><br>
           Account Info
-          <a href="/donation" data-swap-pane=".Main -> .PaneContent">View Donation</a>
-          <a href="/edit-account" data-swap-pane=".Main -> .PaneContent">Modify Account</a>
+          <a href="/donation" data-swap-pane=".Main">View Donation</a>
+          <a href="/edit-account" data-swap-pane=".Main">Modify Account</a>
         </div>
       `)}
     </body>
@@ -265,9 +265,9 @@ app.get('/edit-account', (req, res) => res.send(`
         <div class="Main">
           <span id="tag">${Math.random()}</span><br>
           Edit Account
-          <a href="/add-relationship" data-swap-pane=".Main -> .PaneContent">Add Relationship</a>
-          <a href="/donation" data-swap-pane=".Main -> .PaneContent">View Donation</a>
-          <a href="/edit-donation" data-swap-pane=".Main -> .PaneContent">Modify Donation</a>
+          <a href="/add-relationship" data-swap-pane=".Main">Add Relationship</a>
+          <a href="/donation" data-swap-pane=".Main">View Donation</a>
+          <a href="/edit-donation" data-swap-pane=".Main">Modify Donation</a>
           <form action="/edit-account" method="post">
             <input type="text" name="account" value="Joe">
             <input type="submit">
