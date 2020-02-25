@@ -20,29 +20,28 @@ window.swap = {
 };
 
 
-swap.to = (html, sels, inline, callback) => {
+swap.to = (html, selectors, inline, callback) => {
   fireElements('off');
 
   const dom = typeof html === 'string'
     ? new DOMParser().parseFromString(html, 'text/html')
     : html;
 
-  const selectors = sels.map(sel => sel.split(/\s*->\s*/));
   const links = extractNewAssets(dom, 'link');
   const scripts = extractNewAssets(dom, 'script');
 
-  renderBody(dom, selectors);
-
   if (!inline) renderTitle(dom);
 
-  const assets = scripts.concat(links);
-  loadAssets(assets, () => {
+  renderBody(dom, selectors);
+
+  loadAssets(scripts.concat(links), () => {
     fireElements('on');
     if (callback) callback();
-    if (!selectors.length) {
-      // make this smarter where it only scrolls to top on different urls?
-      window.scrollTo(0, 0);
-    }
+
+    // if (!selectors.length) {
+    //   // make this smarter where it only scrolls to top on different urls?
+    //   window.scrollTo(0, 0);
+    // }
   });
 
   return swap;
@@ -95,12 +94,14 @@ swap.click = function(e, selectors) {
   if (!swap.metaKeyOn) {
     e.preventDefault();
     const sels = selectors || getSelectors(link);
-    const { swapInline, swapPane } = link.dataset;
+    console.log({ sels });
+
+    const { swapInline } = link.dataset;
 
     if (swapInline) {
       swap.inline(link, sels);
     } else {
-      swap.with(link, sels, swapPane ? addPane : openPage);
+      swap.with(link, sels, link.dataset.hasOwnProperty('swapPane') ? addPane : openPage);
     }
   }
 }
@@ -142,14 +143,14 @@ swap.closePane = ({ html, finalUrl } = {}) => {
   swap.paneHistory.pop();
 
   if (swap.paneHistory.length) {
-    const { url, edited } = getPaneState();
+    const { url, edited, selectors } = getPaneState();
 
     if (!swap.paneSaved || edited) {
-      prevPane(url);
+      prevPane(url, false, selectors);
     } else if (url === getUrl(finalUrl).pathname) {
-      prevPane(url, html);
+      prevPane(url, html, selectors);
     } else {
-      swap.with(url, swap.paneSelectors, ({ html, finalUrl }) => prevPane(finalUrl, html));
+      swap.with(url, selectors, ({ html, finalUrl, selectors }) => prevPane(finalUrl, html, selectors));
     }
   } else {
     closePanes();
@@ -232,13 +233,16 @@ module.exports = function (opts = {}) {
   swap.qs.form = 'form:not([data-swap-ignore])';
   swap.qs.continue = '[data-swap-continue]';
   swap.qs.pane = '.Pane';
-  swap.qs.paneContent = '.PaneContent';
-  swap.qs.paneForms = '.PaneContent form:not([data-swap-ignore])';
+  swap.qs.paneForms = `.Pane.is-active ${swap.qs.form}`;
+  swap.qs.paneContent = `.Pane.is-active > div`;
   swap.qs.paneCloseBtn = '.PaneCloseBtn';
   swap.qs.paneOpen = 'swap-pane';
+  swap.qs.paneDefaultEl = '.Main';
+  swap.qs.paneDefaultRenderType = '>>';
 
   swap.paneDuration = 700;
-  swap.paneSelectors = opts.paneSelectors || ['.Main -> .Pane.active:last-child .PaneContent'];
+  swap.paneSelectors = opts.paneSelectors || [`.Main >> ${swap.qs.paneContent}`];
+  // swap.paneSelectors = opts.paneSelectors || ['.Main >> .Pane.is-active > div'];
   swap.formValidator = opts.formValidator || ((e) => true);
 
   swap.event('DOMContentLoaded', () => {
