@@ -1,7 +1,8 @@
 import swapConfig from '../../index.js';
 
 swapConfig({
-  color: '#c6000e'
+  color: '#c6000e',
+  paneDuration: 300
 });
 
 

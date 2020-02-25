@@ -1,8 +1,3 @@
-* {
-  margin: 0;
-  padding: 0;
-}
-
 body {
   display: grid;
   grid-template-columns: auto 1fr 1fr;
@@ -12,7 +7,7 @@ body {
   font-size: 14px;
 }
 
-html.swap-pane::after {
+html.swap-pane-is-open::after {
   content: '';
   position: absolute;
   top: 0;
@@ -24,14 +19,44 @@ html.swap-pane::after {
   opacity: 0.5;
 }
 
-.PaneContent {
-  background-color: tomato;
+.Pane {
+  background-color: #ffffff;
+  padding: 60px 30px 30px 30px;
+  transition: transform 300ms ease;
 }
 
-.Pane {
-  position: relative;
-  z-index: 1000;
+.Pane.is-active {
   background-color: #aea;
+}
+
+.Pane-closeBtn,
+.Pane-expandBtn {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+  top: 10px;
+  text-align: center;
+  background: none;
+  appearance: none;
+  border: 0;
+  font-size: 18px;
+}
+
+.Pane-expandBtn {
+  right: 10px;
+}
+
+.Pane-closeBtn {
+  left: 10px;
+}
+
+.Pane-closeBtn::before {
+  content: '❎'
+}
+
+.Pane-expandBtn::before {
+  content: '↗'
 }
 
 a:link,
@@ -40,12 +65,12 @@ a:visited {
   text-decoration: none;
 }
 
-nav {
+nav,
+#layout,
+.Pane-content,
+form {
   display: grid;
   grid-auto-flow: row;
+  align-content: start;
   grid-gap: 8px;
-}
-
-nav a {
-  display: block;
 }

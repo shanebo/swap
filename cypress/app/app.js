@@ -47,6 +47,7 @@ app.get('/', (req, res) => res.send(`
   <html>
     <head>
       <title>Home</title>
+      <meta charset="UTF-8">
       <script src="/${frontendJS}" type="application/javascript"></script>
       <link rel="stylesheet" href="/${mainCSS}">
     </head>
@@ -66,6 +67,7 @@ app.get('/about', (req, res) => res.send(`
   <html>
     <head>
       <title>About</title>
+      <meta charset="UTF-8">
       <script src="/${frontendJS}" type="application/javascript"></script>
       <link rel="stylesheet" href="/${mainCSS}">
     </head>
@@ -117,6 +119,7 @@ app.get('/delayed', (req, res) => {
       <html>
         <head>
           <title>Delayed</title>
+          <meta charset="UTF-8">
           <script src="/${frontendJS}" type="application/javascript"></script>
         </head>
         <body>
@@ -138,6 +141,7 @@ app.get('/arrive', (req, res) => res.send(`
   <html>
     <head>
       <title>Elements</title>
+      <meta charset="UTF-8">
       <script src="/${frontendJS}" type="application/javascript"></script>
     </head>
     <body>
@@ -154,6 +158,7 @@ app.get('/leave', (req, res) => res.send(`
   <html>
     <head>
       <title>Elements</title>
+      <meta charset="UTF-8">
       <script src="/${frontendJS}" type="application/javascript"></script>
     </head>
     <body>
@@ -220,6 +225,7 @@ app.get('/accounts', (req, res) => res.send(`
   <html>
     <head>
       <title>Accounts</title>
+      <meta charset="UTF-8">
       <script src="/${frontendJS}" type="application/javascript"></script>
       <link rel="stylesheet" href="/${mainCSS}">
     </head>
@@ -238,6 +244,7 @@ app.get('/account', (req, res) => res.send(`
   <html>
     <head>
       <title>Account</title>
+      <meta charset="UTF-8">
       <script src="/${frontendJS}" type="application/javascript"></script>
     </head>
     <body>

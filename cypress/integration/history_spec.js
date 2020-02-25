@@ -1,3 +1,11 @@
+const {
+  qsPane,
+  qsPaneContent,
+  qsPaneCloseBtn,
+  qsPaneIsOpen
+} = require('../support/selectors');
+
+
 describe('History', function() {
   it('goes backward in history', function(done) {
     cy.visit('http://127.0.0.1:8888/');
@@ -43,7 +51,7 @@ describe('Pane History', function() {
 
     cy.go('back');
 
-    cy.get('.PaneContent').then(($el) => {
+    cy.get(qsPaneContent).then(($el) => {
       setTimeout(function() {
         expect($el).to.contain('Account Info');
         cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/account');
@@ -60,7 +68,7 @@ describe('Pane History', function() {
 
     cy.go('forward');
 
-    cy.get('.PaneContent').then(($el) => {
+    cy.get(qsPaneContent).then(($el) => {
       setTimeout(function() {
         expect($el).to.contain('Donation Info');
         cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/donation');
@@ -74,10 +82,10 @@ describe('Pane History', function() {
     cy.contains('View Account').click();
     cy.contains('View Donation').click();
 
-    cy.get('.Pane.is-active .PaneCloseBtn').click();
+    cy.get(qsPaneCloseBtn).click();
     cy.go('back');
 
-    cy.get('.PaneContent').should('contain', 'Donation Info');
+    cy.get(qsPaneContent).should('contain', 'Donation Info');
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/donation');
   });
 
@@ -88,7 +96,7 @@ describe('Pane History', function() {
     cy.go('back');
 
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts');
-    cy.get('.Pane').should('not.exist');
+    cy.get(qsPane).should('not.exist');
   });
 
   it('goes backward and then forward in history to open a pane', function() {
@@ -98,54 +106,54 @@ describe('Pane History', function() {
     cy.go('back');
     cy.go('forward');
 
-    cy.get('.PaneContent').should('contain', 'Account Info');
+    cy.get(qsPaneContent).should('contain', 'Account Info');
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/account');
   });
 
   it('goes backward in history to re-open a pane', function() {
     cy.visit('http://127.0.0.1:8888/accounts');
     cy.contains('View Account').click();
-    cy.get('.PaneCloseBtn').click();
+    cy.get(qsPaneCloseBtn).click();
 
     cy.go('back');
 
-    cy.get('.PaneContent').should('contain', 'Account Info');
+    cy.get(qsPaneContent).should('contain', 'Account Info');
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/account');
   });
 
   it('goes backward and forward in history to re-close a pane', function() {
     cy.visit('http://127.0.0.1:8888/accounts');
     cy.contains('View Account').click();
-    cy.get('.PaneCloseBtn').click();
+    cy.get(qsPaneCloseBtn).click();
 
     cy.go('back');
     cy.go('forward');
 
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts');
-    cy.get('.Pane').should('not.exist');
+    cy.get(`${qsPane}.is-visible`).should('not.exist');
   });
 
   it('goes backward in history to re-open a pane with retained pane-history', function() {
     cy.visit('http://127.0.0.1:8888/accounts');
     cy.contains('View Account').click();
-    cy.get('.PaneCloseBtn').click();
+    cy.get(qsPaneCloseBtn).click();
 
     cy.go('back');
 
-    cy.get('.PaneContent').should('contain', 'Account Info');
+    cy.get(qsPaneContent).should('contain', 'Account Info');
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/account');
   });
 
-  it('goes backward in history to re-open a pane with retained pane-history and use pane back button', function() {
+  it('goes backward in history to re-open a pane with retained pane-history and use pane close button', function() {
     cy.visit('http://127.0.0.1:8888/accounts');
     cy.contains('View Account').click();
     cy.contains('View Donation').click();
-    cy.get('.Pane.is-active .PaneCloseBtn').click();
+    cy.get(qsPaneCloseBtn).click();
 
     cy.go('back');
-    cy.get('.Pane.is-active .PaneCloseBtn').click();
+    cy.get(qsPaneCloseBtn).click();
 
-    cy.get('.PaneContent').should('contain', 'Account Info');
+    cy.get(qsPaneContent).should('contain', 'Account Info');
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/account');
   });
 
