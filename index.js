@@ -1,10 +1,10 @@
 const css = require('./lib/css');
 const { renderTitle, extractNewAssets, loadAssets, renderBody } = require('./lib/render');
 const { ajax, buildRequest } = require('./lib/request');
-const { pushState, getPaneFormsData, replaceState, updateSessionState, session, getPaneState } = require('./lib/history');
+const { getPaneFormsData, replaceState, updateSessionState, pushSessionState, session, getPaneState, updateHistory} = require('./lib/history');
 const { listener, fireElements, fireRoutes, delegateHandle } = require('./lib/events');
 const { prevPane, continuePane, samePane, addPane, closePanes } = require('./lib/pane');
-const { $html, buildUrl, shouldSwap, getUrl, getSelectors, parseQuery, bypassKeyPressed } = require('./lib/utils');
+const { $html, buildUrl, shouldSwap, getUrl, getPath, getSelectors, parseQuery, bypassKeyPressed } = require('./lib/utils');
 
 
 window.swap = {
@@ -17,7 +17,7 @@ window.swap = {
   before: listener.bind(window.swap, 'before'),
   on: listener.bind(window.swap, 'on'),
   off: listener.bind(window.swap, 'off'),
-  stateId: 0,
+  stateId: -1,
 };
 
 
@@ -140,15 +140,12 @@ swap.submit = function(e, selectors) {
 
 
 swap.closePane = ({ html, finalUrl } = {}) => {
-  updateSessionState(location.href);
-  swap.paneHistory.pop();
-
-  if (swap.paneHistory.length) {
-    const { url, edited, selectors } = getPaneState();
+  if (swap.paneHistory.length >= 2) {
+    const { url, edited, selectors } = swap.paneHistory[swap.paneHistory.length - 2];
 
     if (!swap.paneSaved || edited) {
       prevPane(url, false, selectors);
-    } else if (url === getUrl(finalUrl).pathname) {
+    } else if (url === getPath(finalUrl)) {
       prevPane(url, html, selectors);
     } else {
       swap.with(url, selectors, ({ html, finalUrl, selectors }) => prevPane(finalUrl, html, selectors));
@@ -159,23 +156,32 @@ swap.closePane = ({ html, finalUrl } = {}) => {
 }
 
 
+const loadPane = (bypass = false) => {
+  const params = parseQuery(location.hash.substr(1));
+  if (params.pane) {
+    swap.paneUrl = params.pane;
+    swap.with(params.pane, swap.paneSelectors, (obj) => addPane(obj, bypass));
+  }
+}
+
+
 const loaded = (e) => {
   if (!session.get('stateIds')) {
-    session.set('stateIds', [0]);
+    session.set('stateIds', []);
+    swap.stateId = -1;
+  } else {
+    const stateIds = session.get('stateIds');
+    swap.stateId = stateIds[stateIds.length - 1];
   }
 
   if (location.hash) {
-    const params = parseQuery(location.hash.substr(1));
-    if (params.pane) {
-      swap.with(params.pane, swap.paneSelectors, addPane);
-    }
+    loadPane();
   } else {
     fireElements('on');
     fireRoutes('on', location.href, null);
+    pushSessionState(location.href);
+    replaceState(location.href);
   }
-
-  updateSessionState(location.href);
-  replaceState(location.href);
 }
 
 
@@ -191,7 +197,7 @@ const openPage = ({ method, html, selectors, finalMethod, finalUrl }) => {
   fireRoutes('off', finalUrl, from, method);
 
   swap.to(html, selectors, false, () => {
-    pushState(finalUrl);
+    updateHistory(finalUrl);
     fireRoutes('on', finalUrl, from, finalMethod);
   });
 }
@@ -207,37 +213,137 @@ const popstate = (e) => {
 
   if (!e.state) return;
 
-  const { html, selectors, paneHistory, expires, id } = session.get(e.state.id);
-  const forward = id > swap.stateId;
-  const justAtId = session.get('stateIds').indexOf(id) + (forward ? -1 : 1);
-  const justAt = session.get(justAtId).url;
+  const pageState = session.get(e.state.id);
 
-  updateSessionState(justAt);
+  if (!pageState) return reloadCurrentPage();
+
+  const { html, selectors, paneHistory, expires, id } = pageState;
+  const forward = id > swap.stateId;
+
+  const stateIds = session.get('stateIds');
+  const justAtId = stateIds[stateIds.indexOf(id) + (forward ? -1 : 1)];
+  const justAt = justAtId ? session.get(justAtId).url : null;
+
+  if (justAt) updateSessionState(justAt);
 
   swap.stateId = id;
   swap.paneHistory = paneHistory;
 
   fireRoutes('off', location.href, justAt);
 
-  const restoreHtml = (html) => {
+  if (expires < Date.now()) {
+    console.log('reloading...');
+    reloadCurrentPage(selectors);
+  } else {
     const dom = new DOMParser().parseFromString(html, 'text/html');
 
     swap.to(dom, selectors, false, () => {
       $html.className = dom.documentElement.className;
       fireRoutes('on', location.href, justAt);
-    });
-  };
+      updateSessionState(location.href);
 
-  if (expires < Date.now()) {
-    console.log('reloading...');
-    const opts = { url: location.href, method: 'get' };
-    ajax(opts, (xhr, res, html) => restoreHtml(html));
-  } else {
-    console.log('using existing');
-    restoreHtml(html);
+      if (location.hash) {
+        const params = parseQuery(location.hash.substr(1));
+        if (params.pane) swap.paneUrl = params.pane;
+      }
+    });
   }
 }
 
+
+const reloadCurrentPage = (selectors = []) => {
+  const opts = { url: location.href, method: 'get' };
+  ajax(opts, (xhr, res, html) => {
+    const dom = new DOMParser().parseFromString(html, 'text/html');
+
+    swap.to(dom, selectors, false, () => {
+      $html.className = dom.documentElement.className;
+
+      if (location.hash) {
+        loadPane(true);
+      } else {
+        fireRoutes('on', location.href, null);
+      }
+
+      updateSessionState(location.href);
+    });
+  });
+}
+
+
+// const popstate = (e) => {
+//   /*
+//     - check if headers determine it should be cached or not
+//     - if not cached then ajax request
+//     - if cached then return state
+//     - check headers on whether to cache or not
+//   */
+
+//   if (!e.state) return;
+
+//   const { html, selectors, paneHistory, expires, id } = session.get(e.state.id);
+//   const forward = id > swap.stateId;
+//   const justAtId = session.get('stateIds').indexOf(id) + (forward ? -1 : 1);
+//   console.log({justAtId});
+//   const justAt = session.get(justAtId).url;
+
+//   updateSessionState(justAt);
+
+//   swap.stateId = id;
+//   swap.paneHistory = paneHistory;
+
+//   fireRoutes('off', location.href, justAt);
+
+//   if (expires < Date.now()) {
+//     console.log('reloading...');
+//     const opts = { url: location.href, method: 'get' };
+//     ajax(opts, (xhr, res, html) => {
+//       const dom = new DOMParser().parseFromString(html, 'text/html');
+
+//       swap.to(dom, selectors, false, () => {
+//         $html.className = dom.documentElement.className;
+
+//         if (location.hash) {
+//           loadPane();
+//         } else {
+//           fireRoutes('on', location.href, null);
+//         }
+//       });
+//     });
+//   } else {
+//     const dom = new DOMParser().parseFromString(html, 'text/html');
+
+//     swap.to(dom, selectors, false, () => {
+//       $html.className = dom.documentElement.className;
+//       fireRoutes('on', location.href, justAt);
+//     });
+//   }
+
+
+  // if (expires < Date.now()) {
+  //   console.log('reloading...');
+  //   const opts = { url: location.href, method: 'get' };
+  //   ajax(opts, (xhr, res, html) => {
+  //     const dom = new DOMParser().parseFromString(html, 'text/html');
+
+  //     swap.to(dom, selectors, false, () => {
+  //       $html.className = dom.documentElement.className;
+
+  //       if (location.hash) {
+  //         loadPane();
+  //       } else {
+  //         fireRoutes('on', location.href, null);
+  //       }
+  //     });
+  //   });
+  // } else {
+  //   const dom = new DOMParser().parseFromString(html, 'text/html');
+
+  //   swap.to(dom, selectors, false, () => {
+  //     $html.className = dom.documentElement.className;
+  //     fireRoutes('on', location.href, justAt);
+  //   });
+  // }
 
 module.exports = function (opts = {}) {
   swap.qs = {};
@@ -253,9 +359,17 @@ module.exports = function (opts = {}) {
   swap.qs.paneDefaultEl = opts.paneDefaultEl || '.Main';
   swap.qs.paneDefaultRenderType = '>>';
 
-  swap.paneDuration = 700;
+  swap.paneTemplate = `
+    <div class="Pane ${opts.paneClass}">
+      <button class="Pane-closeBtn"></button>
+      <a class="Pane-expandBtn"></a>
+      <div class="Pane-content"></div>
+    </div>
+  `;
+  swap.paneDuration = opts.paneDuration || 700;
   swap.paneSelectors = [`${swap.qs.paneDefaultEl} ${swap.qs.paneDefaultRenderType} ${swap.qs.paneContent}`];
   swap.formValidator = opts.formValidator || ((e) => true);
+  swap.sessionExpiration = opts.sessionExpiration || 5000;
 
   swap.event('DOMContentLoaded', () => {
     const style = document.createElement('style');
@@ -307,6 +421,7 @@ module.exports = function (opts = {}) {
 
   swap.event('click', `.${swap.qs.paneIsOpen}`, (e) => {
     if (!e.target.closest(swap.qs.pane)) {
+      updateSessionState(location.href);
       closePanes();
     }
   });
