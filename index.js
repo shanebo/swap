@@ -1,7 +1,7 @@
 const css = require('./lib/css');
 const { renderTitle, extractNewAssets, loadAssets, renderBody } = require('./lib/render');
 const { ajax, buildRequest } = require('./lib/request');
-const { pushState, getPaneFormsData, replaceState, updateSessionState, pushSessionState, session, getPaneState } = require('./lib/history');
+const { getPaneFormsData, replaceState, updateSessionState, pushSessionState, session, getPaneState, updateHistory} = require('./lib/history');
 const { listener, fireElements, fireRoutes, delegateHandle } = require('./lib/events');
 const { prevPane, continuePane, samePane, addPane, closePanes } = require('./lib/pane');
 const { $html, buildUrl, shouldSwap, getUrl, getSelectors, parseQuery, bypassKeyPressed } = require('./lib/utils');
@@ -140,11 +140,8 @@ swap.submit = function(e, selectors) {
 
 
 swap.closePane = ({ html, finalUrl } = {}) => {
-  updateSessionState(location.href);
-  swap.paneHistory.pop();
-
-  if (swap.paneHistory.length) {
-    const { url, edited, selectors } = getPaneState();
+  if (swap.paneHistory.length >= 2) {
+    const { url, edited, selectors } = swap.paneHistory[swap.paneHistory.length - 2];
 
     if (!swap.paneSaved || edited) {
       prevPane(url, false, selectors);
@@ -158,9 +155,30 @@ swap.closePane = ({ html, finalUrl } = {}) => {
   }
 }
 
+
+// swap.closePane = ({ html, finalUrl } = {}) => {
+//   updateSessionState(location.href);
+//   swap.paneHistory.pop();
+
+//   if (swap.paneHistory.length) {
+//     const { url, edited, selectors } = getPaneState();
+
+//     if (!swap.paneSaved || edited) {
+//       prevPane(url, false, selectors);
+//     } else if (url === getUrl(finalUrl).pathname) {
+//       prevPane(url, html, selectors);
+//     } else {
+//       swap.with(url, selectors, ({ html, finalUrl, selectors }) => prevPane(finalUrl, html, selectors));
+//     }
+//   } else {
+//     closePanes();
+//   }
+// }
+
 const loadPane = () => {
   const params = parseQuery(location.hash.substr(1));
   if (params.pane) {
+    swap.paneUrl = params.pane;
     swap.with(params.pane, swap.paneSelectors, addPane);
   }
 }
@@ -168,7 +186,6 @@ const loadPane = () => {
 
 const loaded = (e) => {
   // if (!session.get('stateIds')) {
-  //   console.log('initializing new state ids');
   //   session.set('stateIds', [0]);
   // } else {
   //   const stateIds = session.get('stateIds');
@@ -194,6 +211,7 @@ const loaded = (e) => {
 
   pushSessionState(location.href);
   replaceState(location.href);
+  // updateHistory(location.href);
 }
 
 
@@ -209,7 +227,7 @@ const openPage = ({ method, html, selectors, finalMethod, finalUrl }) => {
   fireRoutes('off', finalUrl, from, method);
 
   swap.to(html, selectors, false, () => {
-    pushState(finalUrl);
+    updateHistory(finalUrl);
     fireRoutes('on', finalUrl, from, finalMethod);
   });
 }
@@ -253,6 +271,11 @@ const popstate = (e) => {
       $html.className = dom.documentElement.className;
       fireRoutes('on', location.href, justAt);
       updateSessionState(location.href);
+
+      if (location.hash) {
+        const params = parseQuery(location.hash.substr(1));
+        if (params.pane) swap.paneUrl = params.pane;
+      }
     });
   }
 }
