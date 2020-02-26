@@ -41,6 +41,8 @@ const layout = (content) => `
 
 app.use(static('cypress/app/dist'));
 
+app.get('/favicon.ico', (req, res) => res.sendStatus(200));
+
 app.get('/', (req, res) => res.send(`
   <html>
     <head>
