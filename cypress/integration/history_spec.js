@@ -130,7 +130,7 @@ describe('Pane History', function() {
     cy.go('forward');
 
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts');
-    cy.get(qsPane).should('not.exist');
+    cy.get(`${qsPane}.is-visible`).should('not.exist');
   });
 
   it('goes backward in history to re-open a pane with retained pane-history', function() {
@@ -144,7 +144,7 @@ describe('Pane History', function() {
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/account');
   });
 
-  it('goes backward in history to re-open a pane with retained pane-history and use pane back button', function() {
+  it('goes backward in history to re-open a pane with retained pane-history and use pane close button', function() {
     cy.visit('http://127.0.0.1:8888/accounts');
     cy.contains('View Account').click();
     cy.contains('View Donation').click();
