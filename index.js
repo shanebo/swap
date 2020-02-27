@@ -156,25 +156,6 @@ swap.closePane = ({ html, finalUrl } = {}) => {
 }
 
 
-// swap.closePane = ({ html, finalUrl } = {}) => {
-//   updateSessionState(location.href);
-//   swap.paneHistory.pop();
-
-//   if (swap.paneHistory.length) {
-//     const { url, edited, selectors } = getPaneState();
-
-//     if (!swap.paneSaved || edited) {
-//       prevPane(url, false, selectors);
-//     } else if (url === getUrl(finalUrl).pathname) {
-//       prevPane(url, html, selectors);
-//     } else {
-//       swap.with(url, selectors, ({ html, finalUrl, selectors }) => prevPane(finalUrl, html, selectors));
-//     }
-//   } else {
-//     closePanes();
-//   }
-// }
-
 const loadPane = () => {
   const params = parseQuery(location.hash.substr(1));
   if (params.pane) {
@@ -211,7 +192,6 @@ const loaded = (e) => {
 
   pushSessionState(location.href);
   replaceState(location.href);
-  // updateHistory(location.href);
 }
 
 
