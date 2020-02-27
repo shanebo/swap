@@ -333,6 +333,7 @@ app.get('/add-relationship', (req, res) => res.send(`
         <span id="tag">${Math.random()}</span><br>
           Add relationship
           <form action="/add-relationship" method="post">
+            <input type="submit" value="Create">
             <button data-swap-continue="true">Save and Continue</button>
           </form>
         </div>

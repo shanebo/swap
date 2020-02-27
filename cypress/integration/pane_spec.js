@@ -68,6 +68,17 @@ describe('Pane functionality', function() {
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/edit-account');
   });
 
+  it('submitting form that redirects to new url stays in same pane', function() {
+    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.contains('Edit Account').click();
+    cy.contains('Add Relationship').click();
+
+    cy.contains('Create').click();
+
+    cy.get(qsPaneContent).should('contain', 'Edit Account');
+    cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/edit-account');
+  });
+
   it('sends a pane-url header on pane form submissions', function() {
     cy.visit('http://127.0.0.1:8888/accounts');
     cy.contains('Edit Donation').click();
