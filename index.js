@@ -389,7 +389,14 @@ module.exports = function (opts = {}) {
   swap.qs.paneDefaultEl = opts.paneDefaultEl || '.Main';
   swap.qs.paneDefaultRenderType = '>>';
 
-  swap.paneDuration = 700;
+  swap.paneTemplate = `
+    <div class="Pane ${opts.paneClass}">
+      <button class="Pane-closeBtn"></button>
+      <a class="Pane-expandBtn"></a>
+      <div class="Pane-content"></div>
+    </div>
+  `;
+  swap.paneDuration = opts.paneDuration || 700;
   swap.paneSelectors = [`${swap.qs.paneDefaultEl} ${swap.qs.paneDefaultRenderType} ${swap.qs.paneContent}`];
   swap.formValidator = opts.formValidator || ((e) => true);
 
