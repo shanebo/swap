@@ -55,6 +55,7 @@ app.get('/', (req, res) => res.send(`
       ${menu}
       ${layout(`
         <h1>Hi</h1>
+        <span id="tag">${Math.random()}</span><br>
         <div class="header">Home Header</div>
         <div class="content">Home Content</div>
       `)}
@@ -332,6 +333,7 @@ app.get('/add-relationship', (req, res) => res.send(`
         <span id="tag">${Math.random()}</span><br>
           Add relationship
           <form action="/add-relationship" method="post">
+            <input type="submit" value="Create">
             <button data-swap-continue="true">Save and Continue</button>
           </form>
         </div>
