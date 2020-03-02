@@ -2,6 +2,7 @@ const {
   qsPane,
   qsPaneContent,
   qsPaneCloseBtn,
+  qsPaneExpandBtn,
   qsPaneIsOpen
 } = require('../support/selectors');
 
@@ -23,6 +24,16 @@ describe('Pane functionality', function() {
     cy.get(qsPaneCloseBtn).click();
 
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts');
+    cy.get(qsPane).should('not.exist');
+  });
+
+  it('expands a pane', function() {
+    cy.visit('http://127.0.0.1:8888/accounts#pane=/account');
+
+    cy.get(qsPaneExpandBtn).click();
+
+    cy.get('body').should('contain', 'Account Info');
+    cy.url().should('eq', 'http://127.0.0.1:8888/account');
     cy.get(qsPane).should('not.exist');
   });
 
