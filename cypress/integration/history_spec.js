@@ -41,6 +41,29 @@ describe('History', function() {
       }, 100);
     });
   });
+  
+  it('goes to the same page multiple times without adding to history', function() {
+    cy.visit('http://127.0.0.1:8888/');
+    cy.contains('About Link').click();
+    cy.contains('About Link').click();
+    cy.contains('Home').click();
+
+    cy.go('back');
+
+    cy.url().then(($url) => {
+      setTimeout(function() {
+        expect($url).to.equal('http://127.0.0.1:8888/about');
+        cy.go('back');
+        
+        cy.url().then(($url) => {
+          setTimeout(function() {
+            expect($url).to.equal('http://127.0.0.1:8888/');
+            done();
+          }, 100);
+        });
+      }, 100);
+    });
+  });
 });
 
 describe('Pane History', function() {
