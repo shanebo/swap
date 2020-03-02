@@ -58,6 +58,17 @@ describe('Pane functionality', function() {
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/account');
   });
 
+  it('closes pane by using escape key', function() {
+    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.contains('View Account').click();
+    cy.contains('View Donation').click();
+
+    cy.get('body').type('{esc}');
+
+    cy.get(qsPaneContent).should('contain', 'Account Info');
+    cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/account');
+  });
+
   it('closes all open panes', function() {
     cy.visit('http://127.0.0.1:8888/accounts');
     cy.contains('View Account').click();
