@@ -195,4 +195,12 @@ describe('Pane functionality', function() {
       cy.get('#tag').invoke('text').should('not.equal', $tag.text());
     });
   });
+
+  it('closes a pane after visiting a pane directly via a url', function() {
+    cy.visit('http://127.0.0.1:8888/accounts#pane=/account');
+    cy.contains('View Donation').click();
+    cy.get(qsPaneCloseBtn).click();
+    cy.get(qsPaneContent).should('contain', 'Account Info');
+    cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/account');
+  });
 });
