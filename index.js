@@ -223,6 +223,9 @@ const popstate = (e) => {
   if (!e.state) return;
 
   const pageState = session.get(e.state.id);
+
+  if (!pageState) return reloadCurrentPage();
+
   const { html, selectors, paneHistory, expires, id } = pageState;
   const forward = id > swap.stateId;
 
