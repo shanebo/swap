@@ -156,11 +156,11 @@ swap.closePane = ({ html, finalUrl } = {}) => {
 }
 
 
-const loadPane = () => {
+const loadPane = (bypass = false) => {
   const params = parseQuery(location.hash.substr(1));
   if (params.pane) {
     swap.paneUrl = params.pane;
-    swap.with(params.pane, swap.paneSelectors, addPane);
+    swap.with(params.pane, swap.paneSelectors, (obj) => addPane(obj, bypass));
   }
 }
 
@@ -188,10 +188,9 @@ const loaded = (e) => {
   } else {
     fireElements('on');
     fireRoutes('on', location.href, null);
+    pushSessionState(location.href);
+    replaceState(location.href);
   }
-
-  pushSessionState(location.href);
-  replaceState(location.href);
 }
 
 
@@ -267,7 +266,7 @@ const reloadCurrentPage = (selectors = []) => {
       $html.className = dom.documentElement.className;
 
       if (location.hash) {
-        loadPane();
+        loadPane(true);
       } else {
         fireRoutes('on', location.href, null);
       }
