@@ -166,15 +166,6 @@ const loadPane = (bypass = false) => {
 
 
 const loaded = (e) => {
-  // if (!session.get('stateIds')) {
-  //   session.set('stateIds', [0]);
-  // } else {
-  //   const stateIds = session.get('stateIds');
-  //   swap.stateId = stateIds[stateIds.length - 1] + 1;
-  //   stateIds.push(swap.stateId);
-  //   session.set('stateIds', stateIds);
-  // }
-
   if (!session.get('stateIds')) {
     session.set('stateIds', []);
     swap.stateId = -1;
