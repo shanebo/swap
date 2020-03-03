@@ -2,6 +2,7 @@ const {
   qsPane,
   qsPaneContent,
   qsPaneCloseBtn,
+  qsPaneExpandBtn,
   qsPaneIsOpen
 } = require('../support/selectors');
 
@@ -26,6 +27,16 @@ describe('Pane functionality', function() {
     cy.get(qsPane).should('not.exist');
   });
 
+  it('expands a pane', function() {
+    cy.visit('http://127.0.0.1:8888/accounts#pane=/account');
+
+    cy.get(qsPaneExpandBtn).click();
+
+    cy.get('body').should('contain', 'Account Info');
+    cy.url().should('eq', 'http://127.0.0.1:8888/account');
+    cy.get(qsPane).should('not.exist');
+  });
+
   it('add a pane while a pane is open', function() {
     cy.visit('http://127.0.0.1:8888/accounts');
     cy.contains('View Account').click();
@@ -47,6 +58,17 @@ describe('Pane functionality', function() {
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/account');
   });
 
+  it('closes pane by using escape key', function() {
+    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.contains('View Account').click();
+    cy.contains('View Donation').click();
+
+    cy.get('body').type('{esc}');
+
+    cy.get(qsPaneContent).should('contain', 'Account Info');
+    cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/account');
+  });
+
   it('closes all open panes', function() {
     cy.visit('http://127.0.0.1:8888/accounts');
     cy.contains('View Account').click();
@@ -63,6 +85,17 @@ describe('Pane functionality', function() {
     cy.contains('Edit Account').click();
 
     cy.get('form').submit();
+
+    cy.get(qsPaneContent).should('contain', 'Edit Account');
+    cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/edit-account');
+  });
+
+  it('submitting form that redirects to new url stays in same pane', function() {
+    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.contains('Edit Account').click();
+    cy.contains('Add Relationship').click();
+
+    cy.contains('Create').click();
 
     cy.get(qsPaneContent).should('contain', 'Edit Account');
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/edit-account');

@@ -41,6 +41,61 @@ describe('History', function() {
       }, 100);
     });
   });
+  
+  it('goes to the same page multiple times without adding to history', function() {
+    cy.visit('http://127.0.0.1:8888/');
+    cy.contains('About Link').click();
+    cy.contains('About Link').click();
+    cy.contains('Home').click();
+
+    cy.go('back');
+
+    cy.url().then(($url) => {
+      setTimeout(function() {
+        expect($url).to.equal('http://127.0.0.1:8888/about');
+        cy.go('back');
+        
+        cy.url().then(($url) => {
+          setTimeout(function() {
+            expect($url).to.equal('http://127.0.0.1:8888/');
+            done();
+          }, 100);
+        });
+      }, 100);
+    });
+  });
+});
+
+describe('Cache expiration', function() {
+  // beforeEach((done) => {
+  //   cy.window().then((win) => {
+  //     win.swap.sessionExpiration = 250;
+  //     done();
+  //   })
+  // });
+
+  it('reloads the page before it expires', function() {
+    cy.visit('http://127.0.0.1:8888/');
+
+    cy.get('#tag').then(($tag) => {
+      cy.contains('About Link').click();
+      cy.go('back');
+
+      cy.get('#tag').invoke('text').should('equal', $tag.text());
+    });
+  });
+
+  it('reloads the page after it expires', function() {
+    cy.visit('http://127.0.0.1:8888/');
+
+    cy.get('#tag').then(($tag) => {
+      cy.contains('About Link').click();
+      cy.wait(6000);
+      cy.go('back');
+
+      cy.get('#tag').invoke('text').should('not.equal', $tag.text());
+    });
+  });
 });
 
 describe('Pane History', function() {
