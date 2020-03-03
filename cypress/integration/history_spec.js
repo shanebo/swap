@@ -66,6 +66,38 @@ describe('History', function() {
   });
 });
 
+describe('Cache expiration', function() {
+  // beforeEach((done) => {
+  //   cy.window().then((win) => {
+  //     win.swap.sessionExpiration = 250;
+  //     done();
+  //   })
+  // });
+
+  it('reloads the page before it expires', function() {
+    cy.visit('http://127.0.0.1:8888/');
+
+    cy.get('#tag').then(($tag) => {
+      cy.contains('About Link').click();
+      cy.go('back');
+
+      cy.get('#tag').invoke('text').should('equal', $tag.text());
+    });
+  });
+
+  it('reloads the page after it expires', function() {
+    cy.visit('http://127.0.0.1:8888/');
+
+    cy.get('#tag').then(($tag) => {
+      cy.contains('About Link').click();
+      cy.wait(6000);
+      cy.go('back');
+
+      cy.get('#tag').invoke('text').should('not.equal', $tag.text());
+    });
+  });
+});
+
 describe('Pane History', function() {
   it('goes backward in history on a pane', function(done) {
     cy.visit('http://127.0.0.1:8888/accounts');

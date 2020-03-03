@@ -55,6 +55,7 @@ app.get('/', (req, res) => res.send(`
       ${menu}
       ${layout(`
         <h1>Hi</h1>
+        <span id="tag">${Math.random()}</span><br>
         <div class="header">Home Header</div>
         <div class="content">Home Content</div>
       `)}
