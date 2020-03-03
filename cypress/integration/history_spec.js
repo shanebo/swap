@@ -51,34 +51,23 @@ describe('History', function() {
     cy.go('back');
 
     cy.url().then(($url) => {
-      setTimeout(function() {
-        expect($url).to.equal('http://127.0.0.1:8888/about');
-        cy.go('back');
-        
-        cy.url().then(($url) => {
-          setTimeout(function() {
-            expect($url).to.equal('http://127.0.0.1:8888/');
-            done();
-          }, 100);
-        });
-      }, 100);
+      expect($url).to.equal('http://127.0.0.1:8888/about');
+      cy.go('back');
+
+      cy.url().then(($url) => {
+        expect($url).to.equal('http://127.0.0.1:8888/');
+      });
     });
   });
 });
 
 describe('Cache expiration', function() {
-  // beforeEach((done) => {
-  //   cy.window().then((win) => {
-  //     win.swap.sessionExpiration = 250;
-  //     done();
-  //   })
-  // });
-
   it('reloads the page before it expires', function() {
     cy.visit('http://127.0.0.1:8888/');
 
     cy.get('#tag').then(($tag) => {
       cy.contains('About Link').click();
+      cy.wait(300);
       cy.go('back');
 
       cy.get('#tag').invoke('text').should('equal', $tag.text());
@@ -90,7 +79,7 @@ describe('Cache expiration', function() {
 
     cy.get('#tag').then(($tag) => {
       cy.contains('About Link').click();
-      cy.wait(6000);
+      cy.wait(600);
       cy.go('back');
 
       cy.get('#tag').invoke('text').should('not.equal', $tag.text());

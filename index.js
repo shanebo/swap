@@ -369,6 +369,7 @@ module.exports = function (opts = {}) {
   swap.paneDuration = opts.paneDuration || 700;
   swap.paneSelectors = [`${swap.qs.paneDefaultEl} ${swap.qs.paneDefaultRenderType} ${swap.qs.paneContent}`];
   swap.formValidator = opts.formValidator || ((e) => true);
+  swap.sessionExpiration = opts.sessionExpiration || 5000;
 
   swap.event('DOMContentLoaded', () => {
     const style = document.createElement('style');
