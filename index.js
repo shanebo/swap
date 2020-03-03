@@ -4,7 +4,7 @@ const { ajax, buildRequest } = require('./lib/request');
 const { getPaneFormsData, replaceState, updateSessionState, pushSessionState, session, getPaneState, updateHistory} = require('./lib/history');
 const { listener, fireElements, fireRoutes, delegateHandle } = require('./lib/events');
 const { prevPane, continuePane, samePane, addPane, closePanes } = require('./lib/pane');
-const { $html, buildUrl, shouldSwap, getUrl, getSelectors, parseQuery, bypassKeyPressed } = require('./lib/utils');
+const { $html, buildUrl, shouldSwap, getUrl, getPath, getSelectors, parseQuery, bypassKeyPressed } = require('./lib/utils');
 
 
 window.swap = {
@@ -145,7 +145,7 @@ swap.closePane = ({ html, finalUrl } = {}) => {
 
     if (!swap.paneSaved || edited) {
       prevPane(url, false, selectors);
-    } else if (url === getUrl(finalUrl).pathname) {
+    } else if (url === getPath(finalUrl)) {
       prevPane(url, html, selectors);
     } else {
       swap.with(url, selectors, ({ html, finalUrl, selectors }) => prevPane(finalUrl, html, selectors));
@@ -369,6 +369,7 @@ module.exports = function (opts = {}) {
   swap.paneDuration = opts.paneDuration || 700;
   swap.paneSelectors = [`${swap.qs.paneDefaultEl} ${swap.qs.paneDefaultRenderType} ${swap.qs.paneContent}`];
   swap.formValidator = opts.formValidator || ((e) => true);
+  swap.sessionExpiration = opts.sessionExpiration || 5000;
 
   swap.event('DOMContentLoaded', () => {
     const style = document.createElement('style');
