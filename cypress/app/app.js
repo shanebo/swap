@@ -428,6 +428,34 @@ app.post('/post-submit', (req, res) => {
 `);
 });
 
+app.get('/asset', (req, res) => res.send(`
+  <html>
+    <head>
+      <title>Asset change</title>
+      <script src="/${frontendJS}" type="application/javascript"></script>
+      <link rel="stylesheet" href="/${mainCSS}">
+      <script src="/asset-${req.query.change ? '456' : '123'}.js" type="application/javascript"></script>
+    </head>
+    <body>
+      ${menu}
+      ${layout(`
+        <h1>Asset Change Page</h1>
+        <span id="tag">${Math.random()}</span><br>
+        <a href="/asset?change=true" data-swap="h1">Change Asset</a>
+      `)}
+    </body>
+  </html>
+`));
+
+app.get('/asset-123.js', (req, res) => {
+  res.set('Content-Type', 'text/javascript');
+  res.send(`console.log('123');`);
+});
+app.get('/asset-456.js', (req, res) => {
+  res.set('Content-Type', 'text/javascript');
+  res.send(`console.log('456');`);
+});
+
 app.listen(8888);
 
 
