@@ -1,5 +1,5 @@
 const css = require('./lib/css');
-const { renderTitle, extractNewAssets, loadAssets, renderBody } = require('./lib/render');
+const { renderTitle, extractNewAssets, assetsChanged, loadAssets, renderBody } = require('./lib/render');
 const { ajax, buildRequest } = require('./lib/request');
 const { getPaneFormsData, replaceState, updateSessionState, pushSessionState, session, getPaneState, updateHistory} = require('./lib/history');
 const { listener, fireElements, fireRoutes, delegateHandle } = require('./lib/events');
@@ -18,6 +18,7 @@ window.swap = {
   on: listener.bind(window.swap, 'on'),
   off: listener.bind(window.swap, 'off'),
   stateId: -1,
+  responseUrl: false
 };
 
 
@@ -27,6 +28,10 @@ swap.to = (html, selectors, inline, callback) => {
   const dom = typeof html === 'string'
     ? new DOMParser().parseFromString(html, 'text/html')
     : html;
+
+  if (swap.responseUrl && assetsChanged(dom)) {
+    location.href = swap.responseUrl;
+  }
 
   const links = extractNewAssets(dom, 'link');
   const scripts = extractNewAssets(dom, 'script');
