@@ -34,4 +34,14 @@ describe('Head', function() {
       }, 100);
     });
   });
+
+  it('does a hard reload if asset hashes changes', function() {
+    cy.visit('http://127.0.0.1:8888/asset');
+
+    cy.get('#tag').then(($tag) => {
+      cy.contains('Change Asset').click(); // link should only swap title, not tag value
+
+      cy.get('#tag').invoke('text').should('not.equal', $tag.text());
+    });
+  });
 });
