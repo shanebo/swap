@@ -1,55 +1,83 @@
+const {
+  qsPane,
+  qsPaneContent,
+  qsPaneCloseBtn,
+  qsPaneExpandBtn,
+  qsPaneIsOpen
+} = require('../support/selectors');
+
+
 describe('Pane functionality', function() {
-  it('opens a pane', function() {
+  it('adds a pane', function() {
     cy.visit('http://127.0.0.1:8888/accounts');
 
     cy.contains('View Account').click();
 
-    cy.get('.PaneContent').should('contain', 'Account Info');
-    cy.get('[swap-pane-is-active]').should('exist');
+    cy.get(qsPaneContent).should('contain', 'Account Info');
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/account');
-    cy.get('.PaneBackBtn').should('be.hidden');
   });
 
   it('closes a pane', function() {
     cy.visit('http://127.0.0.1:8888/accounts');
     cy.contains('View Account').click();
-    // cy.visit('http://127.0.0.1:8888/accounts#pane=/account');
 
-    cy.get('.PaneCloseBtn').click();
+    cy.get(qsPaneCloseBtn).click();
 
-    cy.get('[swap-pane-is-active]').should('not.exist');
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts');
-
-    cy.get('.PanesHolder > div').each((div, d) => {
-      if (d === 0) {
-        cy.get(div).should('have.class', 'PaneContent');
-      } else {
-        cy.get(div).invoke('html').should('equal', '');
-      }
-    });
+    cy.get(qsPane).should('not.exist');
   });
 
-  it('goes to the next pane', function() {
+  it('expands a pane', function() {
+    cy.visit('http://127.0.0.1:8888/accounts#pane=/account');
+
+    cy.get(qsPaneExpandBtn).click();
+
+    cy.get('body').should('contain', 'Account Info');
+    cy.url().should('eq', 'http://127.0.0.1:8888/account');
+    cy.get(qsPane).should('not.exist');
+  });
+
+  it('add a pane while a pane is open', function() {
     cy.visit('http://127.0.0.1:8888/accounts');
     cy.contains('View Account').click();
 
     cy.contains('View Donation').click();
 
-    cy.get('.PaneContent').should('contain', 'Donation Info');
+    cy.get(qsPaneContent).should('contain', 'Donation Info');
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/donation');
-    cy.get('.PaneBackBtn').should('be.visible');
   });
 
-  it('goes to the previous pane', function() {
+  it('closes pane while another pane is open', function() {
     cy.visit('http://127.0.0.1:8888/accounts');
     cy.contains('View Account').click();
     cy.contains('View Donation').click();
 
-    cy.get('.PaneBackBtn').click();
+    cy.get(qsPaneCloseBtn).click();
 
-    cy.get('.PaneContent').should('contain', 'Account Info');
+    cy.get(qsPaneContent).should('contain', 'Account Info');
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/account');
-    cy.get('.PaneBackBtn').should('be.hidden');
+  });
+
+  it('closes pane by using escape key', function() {
+    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.contains('View Account').click();
+    cy.contains('View Donation').click();
+
+    cy.get('body').type('{esc}');
+
+    cy.get(qsPaneContent).should('contain', 'Account Info');
+    cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/account');
+  });
+
+  it('closes all open panes', function() {
+    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.contains('View Account').click();
+    cy.contains('View Donation').click();
+
+    cy.get(qsPaneIsOpen).click();
+
+    cy.get(qsPane).should('not.exist');
+    cy.url().should('eq', 'http://127.0.0.1:8888/accounts');
   });
 
   it('submits a form in a pane', function() {
@@ -58,9 +86,19 @@ describe('Pane functionality', function() {
 
     cy.get('form').submit();
 
-    cy.get('.PaneContent').should('contain', 'Edit Account');
+    cy.get(qsPaneContent).should('contain', 'Edit Account');
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/edit-account');
-    cy.get('.PaneBackBtn').should('be.hidden');
+  });
+
+  it('submitting form that redirects to new url stays in same pane', function() {
+    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.contains('Edit Account').click();
+    cy.contains('Add Relationship').click();
+
+    cy.contains('Create').click();
+
+    cy.get(qsPaneContent).should('contain', 'Edit Account');
+    cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/edit-account');
   });
 
   it('sends a pane-url header on pane form submissions', function() {
@@ -69,9 +107,8 @@ describe('Pane functionality', function() {
 
     cy.contains('Change').click();
 
-    cy.get('.PaneContent').should('contain', 'Donation Editing');
+    cy.get(qsPaneContent).should('contain', 'Donation Editing');
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/edit-donation');
-    cy.get('.PaneBackBtn').should('be.hidden');
   });
 
   it('does not reload form that is not edited when going back to it', function() {
@@ -80,7 +117,7 @@ describe('Pane functionality', function() {
     cy.contains('View Donation').click();
 
     cy.get('#tag').then(($tag) => {
-      cy.get('.PaneBackBtn').click();
+      cy.get(qsPaneCloseBtn).click();
 
       cy.get('#tag').invoke('text').should('equal', $tag.text());
     });
@@ -93,7 +130,7 @@ describe('Pane functionality', function() {
     cy.contains('View Donation').click();
 
     cy.get('#tag').then(($tag) => {
-      cy.get('.PaneBackBtn').click();
+      cy.get(qsPaneCloseBtn).click();
 
       cy.get('#tag').invoke('text').should('equal', $tag.text());
     });
@@ -107,7 +144,7 @@ describe('Pane functionality', function() {
     cy.contains('View Donation').click();
 
     cy.get('#tag').then(($tag) => {
-      cy.get('.PaneBackBtn').click();
+      cy.get(qsPaneCloseBtn).click();
 
       cy.get('#tag').invoke('text').should('equal', $tag.text());
     });
@@ -120,9 +157,21 @@ describe('Pane functionality', function() {
       cy.contains('Modify Donation').click();
       cy.contains('Save and Continue').click();
 
-      cy.get('.PaneContent').should('contain', 'Edit Account');
+      cy.get(qsPaneContent).should('contain', 'Edit Account');
       cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/edit-account');
-      cy.get('.PaneBackBtn').should('be.hidden');
+      cy.get('#tag').invoke('text').should('not.equal', $tag.text());
+    });
+  });
+
+  it('saving and continuing on a successful form goes back to the previous pane and use the redirect html content if prev form is unedited', function() {
+    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.contains('Edit Account').click();
+    cy.get('#tag').then(($tag) => {
+      cy.contains('Add Relationship').click();
+      cy.contains('Save and Continue').click();
+
+      cy.get(qsPaneContent).should('contain', 'Edit Account');
+      cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/edit-account');
       cy.get('#tag').invoke('text').should('not.equal', $tag.text());
     });
   });
@@ -135,9 +184,8 @@ describe('Pane functionality', function() {
       cy.contains('Modify Donation').click();
       cy.contains('Save and Continue').click();
 
-      cy.get('.PaneContent').should('contain', 'Edit Account');
+      cy.get(qsPaneContent).should('contain', 'Edit Account');
       cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/edit-account');
-      cy.get('.PaneBackBtn').should('be.hidden');
       cy.get('#tag').invoke('text').should('equal', $tag.text());
     });
   });
@@ -150,9 +198,8 @@ describe('Pane functionality', function() {
     cy.get('[type="checkbox"]').check(); // makes it so form fails
     cy.contains('Save and Continue').click();
 
-    cy.get('.PaneContent').should('contain', 'Donation Editing');
+    cy.get(qsPaneContent).should('contain', 'Donation Editing');
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/edit-donation');
-    cy.get('.PaneBackBtn').should('be.visible');
   });
 
   it('not saving a form and then clicking the back button does not reload the previous pane', function() {
@@ -162,13 +209,13 @@ describe('Pane functionality', function() {
 
     cy.get('#tag').then(($tag) => {
       cy.get('input[type=text]').clear().type('Shane');
-      cy.get('.PaneBackBtn').click();
+      cy.get(qsPaneCloseBtn).click();
 
       cy.get('#tag').invoke('text').should('equal', $tag.text());
     });
   });
 
-  it('saving a form and then clicking the back button does reload the previous pane', function() {
+  it('saving a form and then clicking the back button reloads the previous pane', function() {
     cy.visit('http://127.0.0.1:8888/accounts');
     cy.contains('View Account').click();
     cy.contains('Modify Account').click();
@@ -176,9 +223,17 @@ describe('Pane functionality', function() {
     cy.get('#tag').then(($tag) => {
       cy.get('input[type=text]').clear().type('Shane');
       cy.get('form').submit();
-      cy.get('.PaneBackBtn').click();
+      cy.get(qsPaneCloseBtn).click();
 
       cy.get('#tag').invoke('text').should('not.equal', $tag.text());
     });
+  });
+
+  it('closes a pane after visiting a pane directly via a url', function() {
+    cy.visit('http://127.0.0.1:8888/accounts#pane=/account');
+    cy.contains('View Donation').click();
+    cy.get(qsPaneCloseBtn).click();
+    cy.get(qsPaneContent).should('contain', 'Account Info');
+    cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/account');
   });
 });

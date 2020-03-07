@@ -1,3 +1,11 @@
+const {
+  qsPane,
+  qsPaneContent,
+  qsPaneCloseBtn,
+  qsPaneIsOpen
+} = require('../support/selectors');
+
+
 describe('History', function() {
   it('goes backward in history', function(done) {
     cy.visit('http://127.0.0.1:8888/');
@@ -33,6 +41,50 @@ describe('History', function() {
       }, 100);
     });
   });
+  
+  it('goes to the same page multiple times without adding to history', function() {
+    cy.visit('http://127.0.0.1:8888/');
+    cy.contains('About Link').click();
+    cy.contains('About Link').click();
+    cy.contains('Home').click();
+
+    cy.go('back');
+
+    cy.url().then(($url) => {
+      expect($url).to.equal('http://127.0.0.1:8888/about');
+      cy.go('back');
+
+      cy.url().then(($url) => {
+        expect($url).to.equal('http://127.0.0.1:8888/');
+      });
+    });
+  });
+});
+
+describe('Cache expiration', function() {
+  it('reloads the page before it expires', function() {
+    cy.visit('http://127.0.0.1:8888/');
+
+    cy.get('#tag').then(($tag) => {
+      cy.contains('About Link').click();
+      cy.wait(300);
+      cy.go('back');
+
+      cy.get('#tag').invoke('text').should('equal', $tag.text());
+    });
+  });
+
+  it('reloads the page after it expires', function() {
+    cy.visit('http://127.0.0.1:8888/');
+
+    cy.get('#tag').then(($tag) => {
+      cy.contains('About Link').click();
+      cy.wait(600);
+      cy.go('back');
+
+      cy.get('#tag').invoke('text').should('not.equal', $tag.text());
+    });
+  });
 });
 
 describe('Pane History', function() {
@@ -43,11 +95,10 @@ describe('Pane History', function() {
 
     cy.go('back');
 
-    cy.get('.PaneContent').then(($el) => {
+    cy.get(qsPaneContent).then(($el) => {
       setTimeout(function() {
         expect($el).to.contain('Account Info');
         cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/account');
-        cy.get('.PaneBackBtn').should('be.hidden');
         done();
       }, 100);
     });
@@ -61,11 +112,10 @@ describe('Pane History', function() {
 
     cy.go('forward');
 
-    cy.get('.PaneContent').then(($el) => {
+    cy.get(qsPaneContent).then(($el) => {
       setTimeout(function() {
         expect($el).to.contain('Donation Info');
         cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/donation');
-        cy.get('.PaneBackBtn').should('be.visible');
         done();
       }, 100);
     });
@@ -76,12 +126,11 @@ describe('Pane History', function() {
     cy.contains('View Account').click();
     cy.contains('View Donation').click();
 
-    cy.get('.PaneBackBtn').click();
+    cy.get(qsPaneCloseBtn).click();
     cy.go('back');
 
-    cy.get('.PaneContent').should('contain', 'Donation Info');
+    cy.get(qsPaneContent).should('contain', 'Donation Info');
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/donation');
-    cy.get('.PaneBackBtn').should('be.visible');
   });
 
   it('goes backward in history to close a pane entirely', function() {
@@ -91,15 +140,7 @@ describe('Pane History', function() {
     cy.go('back');
 
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts');
-    cy.get('[swap-pane-is-active]').should('not.exist');
-
-    cy.get('.PanesHolder > div').each((div, d) => {
-      if (d === 0) {
-        cy.get(div).should('have.class', 'PaneContent');
-      } else {
-        cy.get(div).invoke('html').should('equal', '');
-      }
-    });
+    cy.get(qsPane).should('not.exist');
   });
 
   it('goes backward and then forward in history to open a pane', function() {
@@ -109,70 +150,55 @@ describe('Pane History', function() {
     cy.go('back');
     cy.go('forward');
 
-    cy.get('.PaneContent').should('contain', 'Account Info');
-    cy.get('[swap-pane-is-active]').should('exist');
+    cy.get(qsPaneContent).should('contain', 'Account Info');
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/account');
-    cy.get('.PaneBackBtn').should('be.hidden');
   });
 
   it('goes backward in history to re-open a pane', function() {
     cy.visit('http://127.0.0.1:8888/accounts');
     cy.contains('View Account').click();
-    cy.get('.PaneCloseBtn').click();
+    cy.get(qsPaneCloseBtn).click();
 
     cy.go('back');
 
-    cy.get('.PaneContent').should('contain', 'Account Info');
-    cy.get('[swap-pane-is-active]').should('exist');
+    cy.get(qsPaneContent).should('contain', 'Account Info');
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/account');
-    cy.get('.PaneBackBtn').should('be.hidden');
   });
 
   it('goes backward and forward in history to re-close a pane', function() {
     cy.visit('http://127.0.0.1:8888/accounts');
     cy.contains('View Account').click();
-    cy.get('.PaneCloseBtn').click();
+    cy.get(qsPaneCloseBtn).click();
 
     cy.go('back');
     cy.go('forward');
 
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts');
-    cy.get('[swap-pane-is-active]').should('not.exist');
-
-    cy.get('.PanesHolder > div').each((div, d) => {
-      cy.get(div).invoke('html').should('equal', '');
-
-      if (d === 0) {
-        cy.get(div).should('have.class', 'PaneContent');
-      }
-    });
+    cy.get(`${qsPane}.is-visible`).should('not.exist');
   });
 
   it('goes backward in history to re-open a pane with retained pane-history', function() {
     cy.visit('http://127.0.0.1:8888/accounts');
     cy.contains('View Account').click();
-    cy.get('.PaneCloseBtn').click();
+    cy.get(qsPaneCloseBtn).click();
 
     cy.go('back');
 
-    cy.get('.PaneBackBtn').should('be.hidden');
-    cy.get('.PaneContent').should('contain', 'Account Info');
+    cy.get(qsPaneContent).should('contain', 'Account Info');
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/account');
   });
 
-  it('goes backward in history to re-open a pane with retained pane-history and use pane back button', function() {
+  it('goes backward in history to re-open a pane with retained pane-history and use pane close button', function() {
     cy.visit('http://127.0.0.1:8888/accounts');
     cy.contains('View Account').click();
     cy.contains('View Donation').click();
-    cy.get('.PaneCloseBtn').click();
+    cy.get(qsPaneCloseBtn).click();
 
     cy.go('back');
-    cy.get('.PaneBackBtn').should('be.visible');
-    cy.get('.PaneBackBtn').click();
+    cy.get(qsPaneCloseBtn).click();
 
-    cy.get('.PaneContent').should('contain', 'Account Info');
+    cy.get(qsPaneContent).should('contain', 'Account Info');
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/account');
-    cy.get('.PaneBackBtn').should('be.hidden');
   });
 
 });

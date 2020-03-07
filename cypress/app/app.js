@@ -23,7 +23,7 @@ const menu = `
     <a href="/about" data-swap-inline=".content">Inline About</a>
     <a href="/head">Head Link</a>
     <a href="/delayed">Delayed Link</a>
-    <a href="/delayed" data-swap="false">Hard Delay</a>
+    <a href="/delayed" data-swap-ignore>Hard Delay</a>
     <a href="https://www.desiringgod.org">External Link</a>
     <a href="/arrive">Arrive Link</a>
     <a href="/route-on">Route Link</a>
@@ -39,29 +39,15 @@ const layout = (content) => `
     </div>
   `;
 
-const paneHtml = `
-    <div class="Pane">
-      <div class="PaneHeader">
-        <button class="PaneCloseBtn">Close</button>
-        <button class="PaneBackBtn">Back</button>
-        <a href="url/goes/here">Expand</a>
-      </div>
-      <div class="PaneMask">
-        <div class="PanesHolder">
-          <div class="PaneContent"></div>
-          <div></div>
-          <div></div>
-        </div>
-      </div>
-    </div>
-  `;
-
 app.use(static('cypress/app/dist'));
+
+app.get('/favicon.ico', (req, res) => res.sendStatus(200));
 
 app.get('/', (req, res) => res.send(`
   <html>
     <head>
       <title>Home</title>
+      <meta charset="UTF-8">
       <script src="/${frontendJS}" type="application/javascript"></script>
       <link rel="stylesheet" href="/${mainCSS}">
     </head>
@@ -69,6 +55,7 @@ app.get('/', (req, res) => res.send(`
       ${menu}
       ${layout(`
         <h1>Hi</h1>
+        <span id="tag">${Math.random()}</span><br>
         <div class="header">Home Header</div>
         <div class="content">Home Content</div>
       `)}
@@ -81,6 +68,7 @@ app.get('/about', (req, res) => res.send(`
   <html>
     <head>
       <title>About</title>
+      <meta charset="UTF-8">
       <script src="/${frontendJS}" type="application/javascript"></script>
       <link rel="stylesheet" href="/${mainCSS}">
     </head>
@@ -133,6 +121,7 @@ app.get('/delayed', (req, res) => {
       <html>
         <head>
           <title>Delayed</title>
+          <meta charset="UTF-8">
           <script src="/${frontendJS}" type="application/javascript"></script>
         </head>
         <body>
@@ -154,6 +143,7 @@ app.get('/arrive', (req, res) => res.send(`
   <html>
     <head>
       <title>Elements</title>
+      <meta charset="UTF-8">
       <script src="/${frontendJS}" type="application/javascript"></script>
     </head>
     <body>
@@ -170,6 +160,7 @@ app.get('/leave', (req, res) => res.send(`
   <html>
     <head>
       <title>Elements</title>
+      <meta charset="UTF-8">
       <script src="/${frontendJS}" type="application/javascript"></script>
     </head>
     <body>
@@ -236,17 +227,17 @@ app.get('/accounts', (req, res) => res.send(`
   <html>
     <head>
       <title>Accounts</title>
+      <meta charset="UTF-8">
       <script src="/${frontendJS}" type="application/javascript"></script>
       <link rel="stylesheet" href="/${mainCSS}">
     </head>
     <body>
       ${menu}
       ${layout(`
-        <a href="/account" data-swap-pane=".Main -> .PaneContent">View Account</a>
-        <a href="/edit-account" data-swap-pane=".Main -> .PaneContent">Edit Account</a>
-        <a href="/edit-donation" data-swap-pane=".Main -> .PaneContent">Edit Donation</a>
+        <a href="/account" data-swap-pane=".Main">View Account</a>
+        <a href="/edit-account" data-swap-pane=".Main">Edit Account</a>
+        <a href="/edit-donation" data-swap-pane=".Main">Edit Donation</a>
       `)}
-      ${paneHtml}
     </body>
   </html>
 `));
@@ -255,6 +246,7 @@ app.get('/account', (req, res) => res.send(`
   <html>
     <head>
       <title>Account</title>
+      <meta charset="UTF-8">
       <script src="/${frontendJS}" type="application/javascript"></script>
     </head>
     <body>
@@ -263,11 +255,10 @@ app.get('/account', (req, res) => res.send(`
         <div class="Main">
           <span id="tag">${Math.random()}</span><br>
           Account Info
-          <a href="/donation" data-swap-pane=".Main -> .PaneContent">View Donation</a>
-          <a href="/edit-account" data-swap-pane=".Main -> .PaneContent">Modify Account</a>
+          <a href="/donation" data-swap-pane=".Main">View Donation</a>
+          <a href="/edit-account" data-swap-pane=".Main">Modify Account</a>
         </div>
       `)}
-      ${paneHtml}
     </body>
   </html>
 `));
@@ -284,15 +275,15 @@ app.get('/edit-account', (req, res) => res.send(`
         <div class="Main">
           <span id="tag">${Math.random()}</span><br>
           Edit Account
-          <a href="/donation" data-swap-pane=".Main -> .PaneContent">View Donation</a>
-          <a href="/edit-donation" data-swap-pane=".Main -> .PaneContent">Modify Donation</a>
+          <a href="/add-relationship" data-swap-pane=".Main">Add Relationship</a>
+          <a href="/donation" data-swap-pane=".Main">View Donation</a>
+          <a href="/edit-donation" data-swap-pane=".Main">Modify Donation</a>
           <form action="/edit-account" method="post">
             <input type="text" name="account" value="Joe">
             <input type="submit">
           </form>
         </div>
       `)}
-      ${paneHtml}
     </body>
   </html>
 `));
@@ -314,11 +305,10 @@ app.get('/edit-donation', (req, res) => res.send(`
           <form action="/edit-donation" method="post">
             <input type="submit" value="Change">
             <input type="checkbox" name="fail">
-            <button data-swap-continue="true" type="submit" value="Save and Continue">
+            <button data-swap-continue="true">Save and Continue</button>
           </form>
         </div>
       `)}
-      ${paneHtml}
     </body>
   </html>
 `));
@@ -329,6 +319,32 @@ app.post('/edit-donation', (req, res) => {
   } else {
     res.redirect(req.get('pane-url'));
   }
+});
+
+app.get('/add-relationship', (req, res) => res.send(`
+  <html>
+    <head>
+      <title>Donation</title>
+      <script src="/${frontendJS}" type="application/javascript"></script>
+    </head>
+    <body>
+      ${menu}
+      ${layout(`
+        <div class="Main">
+        <span id="tag">${Math.random()}</span><br>
+          Add relationship
+          <form action="/add-relationship" method="post">
+            <input type="submit" value="Create">
+            <button data-swap-continue="true">Save and Continue</button>
+          </form>
+        </div>
+      `)}
+    </body>
+  </html>
+`));
+
+app.post('/add-relationship', (req, res) => {
+  res.redirect('/edit-account');
 });
 
 app.get('/donation', (req, res) => res.send(`
@@ -344,7 +360,6 @@ app.get('/donation', (req, res) => res.send(`
           Donation Info
         </div>
       `)}
-      ${paneHtml}
     </body>
   </html>
 `));
@@ -411,6 +426,34 @@ app.post('/post-submit', (req, res) => {
   </body>
 </html>
 `);
+});
+
+app.get('/asset', (req, res) => res.send(`
+  <html>
+    <head>
+      <title>Asset change</title>
+      <script src="/${frontendJS}" type="application/javascript"></script>
+      <link rel="stylesheet" href="/${mainCSS}">
+      <script src="/asset-${req.query.change ? '456' : '123'}.js" type="application/javascript"></script>
+    </head>
+    <body>
+      ${menu}
+      ${layout(`
+        <h1>Asset Change Page</h1>
+        <span id="tag">${Math.random()}</span><br>
+        <a href="/asset?change=true" data-swap="h1">Change Asset</a>
+      `)}
+    </body>
+  </html>
+`));
+
+app.get('/asset-123.js', (req, res) => {
+  res.set('Content-Type', 'text/javascript');
+  res.send(`console.log('123');`);
+});
+app.get('/asset-456.js', (req, res) => {
+  res.set('Content-Type', 'text/javascript');
+  res.send(`console.log('456');`);
 });
 
 app.listen(8888);
