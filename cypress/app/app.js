@@ -110,6 +110,7 @@ app.get('/head', (req, res) => res.send(`
         About page
       </div>
       <script>document.querySelector('.change-from-inline-script').innerText = 'changed';</script>
+    `)}
     </body>
   </html>
 `));
