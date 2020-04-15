@@ -1,0 +1,51 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  display: grid;
+  grid-template-columns: auto 1fr 1fr;
+  grid-gap: 100px;
+  padding: 30px;
+  font-family: -apple-system;
+  font-size: 14px;
+}
+
+html[swap-pane-is-active]::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 50;
+  background-color: black;
+  opacity: 0.5;
+}
+
+.PaneContent {
+  background-color: tomato;
+}
+
+.Pane {
+  position: relative;
+  z-index: 1000;
+  background-color: #aea;
+}
+
+a:link,
+a:visited {
+  color: blue;
+  text-decoration: none;
+}
+
+nav {
+  display: grid;
+  grid-auto-flow: row;
+  grid-gap: 8px;
+}
+
+nav a {
+  display: block;
+}
