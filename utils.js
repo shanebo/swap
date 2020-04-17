@@ -126,7 +126,7 @@ const buildUrl = (source) => {
 }
 
 
-const getSelectors = (el) => (el.dataset.swap || el.dataset.swapPane || '').split(',').map(selector => selector.trim()).filter(selector => selector);
+const getSelectors = (el) => (el.dataset.swap || el.dataset.swapPane || el.dataset.swapInline || '').split(',').map(selector => selector.trim()).filter(selector => selector);
 // const getSelectors = (el) => (el.dataset.swap || '').split(',').map(selector => selector.trim()).filter(selector => selector);
 
 
