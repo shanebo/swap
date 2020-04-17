@@ -16,39 +16,39 @@ let paneUrl;
 let isFormSubmit;
 let paneHistory = [];
 
+const swap = {};
 
-const swap = {
-  routes: {
-    before: [],
-    on: [],
-    off: []
-  },
-  elements: {
-    on: [],
-    off: []
-  }
+const routes = {
+  before: [],
+  on: [],
+  off: []
+};
+
+const elements = {
+  on: [],
+  off: []
 };
 
 
-swap.listener = function(when, pattern, handle) {
+const listener = function(when, pattern, handle) {
   if (typeof pattern === 'string') {
     if (pattern.startsWith('/') || pattern === '*') {
       if (pattern === '*') pattern = '.*';
-      swap.routes[when].push(buildRoute(when, 'get', pattern, handle));
+      routes[when].push(buildRoute(when, 'get', pattern, handle));
     } else {
-      swap.elements[when].push({ selector: pattern, handle });
+      elements[when].push({ selector: pattern, handle });
     }
   } else {
-    swap.routes[when].push(buildRoute(when, pattern.method, pattern.route, handle));
+    routes[when].push(buildRoute(when, pattern.method, pattern.route, handle));
   }
 
   return swap;
 }
 
 
-swap.before = swap.listener.bind(swap, 'before');
-swap.on = swap.listener.bind(swap, 'on');
-swap.off = swap.listener.bind(swap, 'off');
+swap.before = listener.bind(swap, 'before');
+swap.on = listener.bind(swap, 'on');
+swap.off = listener.bind(swap, 'off');
 
 
 const innerHtmlRender = (oldEl, newEl) => {
@@ -162,7 +162,7 @@ swap.event = function(name, delegate, fn) {
 }
 
 
-swap.click = function(e, selectors) {
+const click = function(e, selectors) {
   const link = this;
 
   if (!shouldSwap(buildUrl(link))) return;
@@ -180,7 +180,7 @@ swap.click = function(e, selectors) {
 }
 
 
-swap.submit = function(e, selectors) {
+const submit = function(e, selectors) {
   const form = e.target;
   const { action: url, method } = form;
 
@@ -258,7 +258,7 @@ const keyDownUp = (e) => {
 
 
 const fireElements = (when) => {
-  swap.elements[when].forEach((el) => {
+  elements[when].forEach((el) => {
     const target = document.querySelector(el.selector);
     if (target) {
       el.handle({ target });
@@ -270,7 +270,7 @@ const fireElements = (when) => {
 const fireRoutes = (when, url, method = 'get') => {
   const event = buildEvent(when, url, method);
 
-  swap.routes[when].forEach((route) => {
+  routes[when].forEach((route) => {
     const found = findRoute(event, route);
     if (found) {
       route.handle({...event, ...{ route }});
@@ -351,8 +351,8 @@ module.exports = function (opts = {}) {
   window.addEventListener('popstate', popstate);
   window.addEventListener('keydown', keyDownUp);
   window.addEventListener('keyup', keyDownUp);
-  window.addEventListener('click', delegateHandle(clickSelector, swap.click));
-  window.addEventListener('submit', delegateHandle(formSelector, swap.submit));
+  window.addEventListener('click', delegateHandle(clickSelector, click));
+  window.addEventListener('submit', delegateHandle(formSelector, submit));
 
   swap.event('click', swap.pane.backButton, swap.backPane);
   swap.event('click', swap.pane.closeButton, swap.closePane);
