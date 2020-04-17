@@ -150,6 +150,14 @@ const getHeaders = (str) => {
 }
 
 
+const removeEmptyProps = (obj) =>
+  Object.fromEntries(
+    Object.entries(obj)
+      .filter(([k, v]) => v != null)
+      .map(([k, v]) => (typeof v === "object" ? [k, removeEmptyProps(v)] : [k, v]))
+  );
+
+
 export {
   talk,
   findRoute,
@@ -161,5 +169,6 @@ export {
   getUrl,
   shouldSwap,
   delegateHandle,
+  removeEmptyProps,
   getHeaders
 };

@@ -8,7 +8,8 @@ const {
   getUrl,
   delegateHandle,
   getSelectors,
-  getHeaders
+  getHeaders,
+  removeEmptyProps
 } = require('./utils');
 
 
@@ -99,6 +100,9 @@ swap.with = (options, selectors = []) => {
 
   swap.fire('before', url, method); // before is the only when where method matters
 
+  // console.log({ selectors });
+
+
   talk(opts, (xhr, res, html) => {
     const wasRedirected = url !== xhr.responseURL;
     const finalUrl = wasRedirected ? xhr.responseURL : url;
@@ -168,23 +172,48 @@ swap.click = function(e, selectors) {
   }
 }
 
+/*
+.Main -> .PaneContent
+*/
+
+
+
 
 swap.submit = function(e, selectors) {
-  const form = this;
+  const form = e.target;
   const { action: url, method } = form;
 
   if (!shouldSwap(getUrl(url))) return;
 
+  if (!swap.formValidator(e)) return;
+
   e.preventDefault();
 
-  swap.with({
-    url,
-    method,
-    body: new URLSearchParams(new FormData(form)).toString(),
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    }
-  }, selectors || getSelectors(form));
+  if (method.toLowerCase() === 'get') {
+    // const obj = removeEmptyProps(new FormData(form));
+    // const query = new URLSearchParams(obj).toString();
+    // const search = query ? '?' + query : query;
+    // const urlWithParams = `${url}${search}`;
+
+    const query = new URLSearchParams(new FormData(form)).toString();
+    // const cleanQuery = query.replace(/[^=&]+=(&|$)/g, '').replace(/&$/, '');
+    const cleanQuery = decodeURIComponent(query).replace(/[^=&]+=(&|$)/g, '').replace(/&$/, '');
+    const search = cleanQuery ? '?' + encodeURI(cleanQuery) : cleanQuery;
+    const urlWithParams = `${url}${search}`;
+
+
+    console.log({ urlWithParams });
+    swap.with(urlWithParams, selectors || getSelectors(form));
+  } else {
+    swap.with({
+      url,
+      method,
+      body: new URLSearchParams(new FormData(form)).toString(),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    }, selectors || getSelectors(form));
+  }
 }
 
 
