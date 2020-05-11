@@ -43,11 +43,6 @@ swap.to = (html, selectors, inline, callback) => {
   loadAssets(scripts.concat(links), () => {
     fireElements('on');
     if (callback) callback();
-
-    // if (!selectors.length) {
-    //   // make this smarter where it only scrolls to top on different urls?
-    //   window.scrollTo(0, 0);
-    // }
   });
 
   return swap;
