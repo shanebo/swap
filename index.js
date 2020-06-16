@@ -6,6 +6,8 @@ const { listener, fireElements, fireRoutes, delegateHandle } = require('./lib/ev
 const { prevPane, continuePane, samePane, addPane, closePanes } = require('./lib/pane');
 const { $html, buildUrl, shouldSwap, getUrl, getPath, getSelectors, parseQuery, bypassKeyPressed } = require('./lib/utils');
 
+require('./lib/component');
+
 
 window.swap = {
   sessionExpiration: 5000,
