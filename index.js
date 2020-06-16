@@ -118,8 +118,9 @@ swap.inline = (options, selectors = []) => {
 
 swap.submit = function(e, selectors) {
   const form = e.target;
+  const action = form.action || form.href || form.dataset.swapAction;
 
-  if (!shouldSwap(getUrl(form.action))) return;
+  if (!shouldSwap(getUrl(action))) return;
   if (!swap.formValidator(e)) return;
 
   e.preventDefault();
@@ -348,6 +349,7 @@ const reloadCurrentPage = (selectors = []) => {
 module.exports = function (opts = {}) {
   swap.qs = {};
   swap.qs.link = 'a:not([target="_blank"]):not([data-swap-ignore])';
+  swap.qs.button = 'button[data-swap-method], a[data-swap-method]';
   swap.qs.form = 'form:not([data-swap-ignore])';
   swap.qs.continue = '[data-swap-continue]';
   swap.qs.pane = '.Pane';
@@ -392,6 +394,8 @@ module.exports = function (opts = {}) {
       swap.metaKeyOn = false;
     }
   });
+
+  swap.event('click', swap.qs.button, swap.submit);
 
   swap.event('click', swap.qs.link, swap.click);
 
