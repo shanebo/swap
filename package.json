@@ -14,7 +14,9 @@
     "test:dev": "npm run dev & npm run cypress:open",
     "clean": "rm -r cypress/app/dist/*"
   },
-  "dependencies": {},
+  "dependencies": {
+    "nanomorph": "~5.4.1"
+  },
   "devDependencies": {
     "@dylan/parser": "github:dylanjs/parser#0.1.0",
     "@dylan/static": "github:dylanjs/static#0.1.0",
