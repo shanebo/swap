@@ -29,6 +29,7 @@ const menu = `
     <a href="/route-on">Route Link</a>
     <a href="/events">Events Link</a>
     <a href="/about#layout">Anchor Link</a>
+    <a href="/notice">Notice Link</a>
     <a>Nothing Link</a>
   </nav>
 `;
@@ -423,6 +424,62 @@ app.post('/post-submit', (req, res) => {
   </head>
   <body>
     ${JSON.stringify(req.body)}
+  </body>
+</html>
+`);
+});
+
+app.get('/notice', (req, res) => {
+  res.send(`
+<html>
+  <head>
+    <title>Notice Page</title>
+    <script src="/${frontendJS}" type="application/javascript"></script>
+  </head>
+  <body>
+    <div class="Notice">
+      A notice message
+    </div>
+    <div class="content">
+      Notice Page
+    </div>
+    <a href="/update-notice" data-swap=".content">Update Content</a>
+  </body>
+</html>
+`);
+});
+
+app.get('/no-notice', (req, res) => {
+  res.send(`
+<html>
+  <head>
+    <title>Notice Page</title>
+    <script src="/${frontendJS}" type="application/javascript"></script>
+  </head>
+  <body>
+    <div class="content">
+      No Notice Page
+    </div>
+    <a href="/notice" data-swap=".content">Update Content and Add Notice</a>
+  </body>
+</html>
+`);
+});
+
+app.get('/update-notice', (req, res) => {
+  res.send(`
+<html>
+  <head>
+    <title>Info Page</title>
+    <script src="/${frontendJS}" type="application/javascript"></script>
+  </head>
+  <body>
+    <div class="Notice">
+      Notice message updated
+    </div>
+    <div class="content">
+      Content Updated
+    </div>
   </body>
 </html>
 `);
