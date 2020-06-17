@@ -1,24 +1,26 @@
-describe('Flash',() => {
-  it('replaces the flash content if new flash content comes in', function() {
-    cy.visit('http://127.0.0.1:8888/flash');
+describe('Notice',() => {
+  it('replaces the notice content if new notice content comes in', function() {
+    cy.visit('http://127.0.0.1:8888/notice');
 
-    cy.get('.content').should('contain', 'Flash Page');
-    cy.get('.Flash').should('contain', 'A flash message');
+    cy.get('.content').should('contain', 'Notice Page');
+    cy.get('.Notice').should('contain', 'A notice message');
 
     cy.contains('Update Content').click();
 
     cy.get('.content').should('contain', 'Content Updated');
-    cy.get('.Flash').should('contain', 'Flash message updated');
+    cy.get('.Notice').should('contain', 'Notice message updated');
   });
 
-  it("loads the whole page if new flash content comes in and there isn't existing flash content", function() {
-    cy.visit('http://127.0.0.1:8888/no-flash');
+  it("loads the whole page if new notice content comes in and there isn't existing notice content", function() {
+    cy.visit('http://127.0.0.1:8888/no-notice');
 
-    cy.get('.content').should('contain', 'No Flash Page');
+    cy.get('.content').should('contain', 'No Notice Page');
 
-    cy.contains('Update Content and Add Flash').click();
+    cy.contains('Update Content and Add Notice').click();
 
-    cy.get('.content').should('contain', 'Flash Page');
-    cy.get('.Flash').should('contain', 'A flash message');
+    cy.get('.content').should('contain', 'Notice Page');
+    cy.get('.Notice').should('contain', 'A notice message');
   });
+  
+  
 });

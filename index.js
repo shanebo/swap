@@ -354,7 +354,7 @@ module.exports = function (opts = {}) {
   swap.qs.button = 'button[data-swap-method], a[data-swap-method]';
   swap.qs.form = 'form:not([data-swap-ignore])';
   swap.qs.continue = '[data-swap-continue]';
-  swap.qs.flash = '.Flash';
+  swap.qs.notice = '.Notice';
   swap.qs.pane = '.Pane';
   swap.qs.paneActive = '.Pane.is-active';
   swap.qs.paneForms = `${swap.qs.paneActive} ${swap.qs.form}`;

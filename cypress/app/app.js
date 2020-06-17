@@ -29,7 +29,7 @@ const menu = `
     <a href="/route-on">Route Link</a>
     <a href="/events">Events Link</a>
     <a href="/about#layout">Anchor Link</a>
-    <a href="/flash">Flash Link</a>
+    <a href="/notice">Notice Link</a>
     <a>Nothing Link</a>
   </nav>
 `;
@@ -429,44 +429,44 @@ app.post('/post-submit', (req, res) => {
 `);
 });
 
-app.get('/flash', (req, res) => {
+app.get('/notice', (req, res) => {
   res.send(`
 <html>
   <head>
-    <title>Flash Page</title>
+    <title>Notice Page</title>
     <script src="/${frontendJS}" type="application/javascript"></script>
   </head>
   <body>
-    <div class="Flash">
-      A flash message
+    <div class="Notice">
+      A notice message
     </div>
     <div class="content">
-      Flash Page
+      Notice Page
     </div>
-    <a href="/update-flash" data-swap=".content">Update Content</a>
+    <a href="/update-notice" data-swap=".content">Update Content</a>
   </body>
 </html>
 `);
 });
 
-app.get('/no-flash', (req, res) => {
+app.get('/no-notice', (req, res) => {
   res.send(`
 <html>
   <head>
-    <title>Flash Page</title>
+    <title>Notice Page</title>
     <script src="/${frontendJS}" type="application/javascript"></script>
   </head>
   <body>
     <div class="content">
-      No Flash Page
+      No Notice Page
     </div>
-    <a href="/flash" data-swap=".content">Update Content and Add Flash</a>
+    <a href="/notice" data-swap=".content">Update Content and Add Notice</a>
   </body>
 </html>
 `);
 });
 
-app.get('/update-flash', (req, res) => {
+app.get('/update-notice', (req, res) => {
   res.send(`
 <html>
   <head>
@@ -474,8 +474,8 @@ app.get('/update-flash', (req, res) => {
     <script src="/${frontendJS}" type="application/javascript"></script>
   </head>
   <body>
-    <div class="Flash">
-      Flash message updated
+    <div class="Notice">
+      Notice message updated
     </div>
     <div class="content">
       Content Updated
