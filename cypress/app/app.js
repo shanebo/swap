@@ -29,6 +29,7 @@ const menu = `
     <a href="/route-on">Route Link</a>
     <a href="/events">Events Link</a>
     <a href="/about#layout">Anchor Link</a>
+    <a href="/flash">Flash Link</a>
     <a>Nothing Link</a>
   </nav>
 `;
@@ -423,6 +424,62 @@ app.post('/post-submit', (req, res) => {
   </head>
   <body>
     ${JSON.stringify(req.body)}
+  </body>
+</html>
+`);
+});
+
+app.get('/flash', (req, res) => {
+  res.send(`
+<html>
+  <head>
+    <title>Flash Page</title>
+    <script src="/${frontendJS}" type="application/javascript"></script>
+  </head>
+  <body>
+    <div class="Flash">
+      A flash message
+    </div>
+    <div class="content">
+      Flash Page
+    </div>
+    <a href="/update-flash" data-swap=".content">Update Content</a>
+  </body>
+</html>
+`);
+});
+
+app.get('/no-flash', (req, res) => {
+  res.send(`
+<html>
+  <head>
+    <title>Flash Page</title>
+    <script src="/${frontendJS}" type="application/javascript"></script>
+  </head>
+  <body>
+    <div class="content">
+      No Flash Page
+    </div>
+    <a href="/flash" data-swap=".content">Update Content and Add Flash</a>
+  </body>
+</html>
+`);
+});
+
+app.get('/update-flash', (req, res) => {
+  res.send(`
+<html>
+  <head>
+    <title>Info Page</title>
+    <script src="/${frontendJS}" type="application/javascript"></script>
+  </head>
+  <body>
+    <div class="Flash">
+      Flash message updated
+    </div>
+    <div class="content">
+      Content Updated
+    </div>
   </body>
 </html>
 `);
