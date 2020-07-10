@@ -92,6 +92,17 @@ describe('Full Page Swaps', function() {
       cy.get('.content').should('contain', 'About page');
     });
   });
+
+  context('link returns non-2xx result', function() {
+    it('swaps the full page', function() {
+      cy.visit('http://127.0.0.1:8888/');
+      cy.contains('Error page').click();
+      cy.url().should('include', '/error');
+      cy.title().should('equal', '500 Error');
+      cy.get('.header').should('contain', '500 Error');
+      cy.get('.content').should('contain', 'An Error Occurred');
+    });
+  });
 });
 
 describe('Swapping specific elements', function() {

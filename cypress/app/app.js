@@ -30,6 +30,7 @@ const menu = `
     <a href="/events">Events Link</a>
     <a href="/about#layout">Anchor Link</a>
     <a href="/notice">Notice Link</a>
+    <a href="/error" data-swap=".content">Error page</a>
     <a>Nothing Link</a>
   </nav>
 `;
@@ -80,6 +81,26 @@ app.get('/about', (req, res) => res.send(`
       <div class="header">Header</div>
       <div class="content">
         About page
+      </div>
+    `)}
+    </body>
+  </html>
+`));
+
+
+app.get('/error', (req, res) => res.status(500).send(`
+  <html>
+    <head>
+      <title>500 Error</title>
+      <meta charset="UTF-8">
+      <script src="/${frontendJS}" type="application/javascript"></script>
+      <link rel="stylesheet" href="/${mainCSS}">
+    </head>
+    <body>
+    ${layout(`
+      <div class="header">500 Error</div>
+      <div class="content">
+        An Error Occurred
       </div>
     `)}
     </body>
