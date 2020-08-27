@@ -101,7 +101,7 @@ describe('Pane functionality', function() {
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/edit-account');
   });
 
-  it('sends a pane-url header on pane form submissions', function() {
+  it('sends a Pane-Url header on pane form submissions', function() {
     cy.visit('http://127.0.0.1:8888/accounts');
     cy.contains('Edit Donation').click();
 

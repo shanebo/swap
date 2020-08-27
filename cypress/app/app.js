@@ -318,7 +318,7 @@ app.post('/edit-donation', (req, res) => {
   if (req.body && req.body.fail) {
     res.sendStatus(403);
   } else {
-    res.redirect(req.get('pane-url'));
+    res.redirect(req.get('Pane-Url'));
   }
 });
 
