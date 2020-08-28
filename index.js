@@ -122,7 +122,19 @@ swap.submit = function(e, selectors) {
   const form = e.target;
   const action = form.action || form.href || form.dataset.swapAction;
 
-  if (!shouldSwap(getUrl(action))) return;
+  if (!shouldSwap(getUrl(action))) {
+    if (form.href || form.dataset.swapAction || form.dataset.swapMethod) {
+      e.preventDefault();
+      const shadowForm = document.createElement('form');
+      shadowForm.method = form.dataset.swapMethod;
+      shadowForm.action = action;
+      document.body.appendChild(shadowForm);
+      shadowForm.submit();
+    }
+
+    return;
+  };
+
   if (!swap.formValidator(e)) return;
 
   e.preventDefault();
