@@ -11,6 +11,14 @@ const headCSS = files.find(file => /^head\..+\.css$/.test(file));
 
 app.use(parser());
 
+// enable _method override
+app.use((req, res, next) => {
+  if (req.body && req.body._method) {
+    req.method = req.body._method.toUpperCase();
+  }
+
+  next();
+});
 
 const menu = `
   <nav>
