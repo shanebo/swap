@@ -1,7 +1,7 @@
 const css = require('./lib/css');
 const { renderTitle, extractNewAssets, assetsChanged, loadAssets, renderBody } = require('./lib/render');
 const { ajax, buildRequest } = require('./lib/request');
-const { getPaneFormsData, replaceState, updateSessionState, pushSessionState, session, getPaneState, updateHistory} = require('./lib/history');
+const { getPaneFormsData, replaceState, updateSessionState, pushSessionState, session, getPaneState, updateHistory } = require('./lib/history');
 const { listener, fireElements, fireRoutes, delegateHandle } = require('./lib/events');
 const { prevPane, continuePane, samePane, addPane, closePanes } = require('./lib/pane');
 const { $html, buildUrl, shouldSwap, getUrl, getPath, getSelectors, parseQuery, bypassKeyPressed } = require('./lib/utils');
@@ -124,6 +124,7 @@ swap.submit = function(e, selectors) {
 
   if (!shouldSwap(getUrl(action))) {
     if (form.href || form.dataset.swapAction || form.dataset.swapMethod) {
+      // this is when action is on a different hostname than location.hostname
       e.preventDefault();
       const shadowForm = document.createElement('form');
       shadowForm.method = form.dataset.swapMethod;
