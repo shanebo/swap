@@ -1,5 +1,6 @@
 const {
-  qsIsLoading
+  qsIsLoading,
+  qsPaneContent
 } = require('../support/selectors');
 
 
@@ -122,5 +123,78 @@ describe('Inline swapping', function() {
     cy.title().should('not.equal', 'About');
     cy.get('.content').should('contain', 'About page');
     cy.get('.header').should('contain', 'Home Header');
+  });
+});
+
+describe('swap methods', function() {
+  it('Posts data on buttons', function() {
+    cy.visit('http://127.0.0.1:8888/swap-method');
+    cy.contains('Post Data').click();
+
+    cy.get('.content').should('contain', 'Posted name = charles');
+  });
+
+  it('posts data on links', function() {
+    cy.visit('http://127.0.0.1:8888/swap-method');
+    cy.contains('Link Data').click();
+
+    cy.get('.content').should('contain', 'Posted name = charles');
+  });
+
+  it('can use other methods besides post', function() {
+    cy.visit('http://127.0.0.1:8888/swap-method');
+    cy.contains('Put Data').click();
+
+    cy.get('.content').should('contain', 'Put name = john');
+  });
+
+  it('swaps elements on buttons', function() {
+    cy.visit('http://127.0.0.1:8888/swap-method');
+    cy.contains('Swap Data').click();
+
+    cy.get('.content').should('contain', 'Posted name = martin');
+    cy.get('h1').should('contain', 'Button links');
+  });
+
+  it('swaps elements on links', function() {
+    cy.visit('http://127.0.0.1:8888/swap-method');
+    cy.contains('Swap Link Data').click();
+
+    cy.get('.content').should('contain', 'Posted name = augustine');
+    cy.get('h1').should('contain', 'Button links');
+  });
+
+  it('does a full page load on different domain', function() {
+    cy.visit('http://127.0.0.1:8888/swap-method');
+    cy.contains('Swap Other Domain').click();
+
+    cy.get('.content').should('contain', 'Other domain');
+    cy.get('h1').should('not.exist');
+  });
+
+  it('swaps inline', function() {
+    cy.visit('http://127.0.0.1:8888/swap-method');
+    cy.contains('Swap Data Inline').click();
+
+    cy.get('.content').should('contain', 'Posted name = jones');
+    cy.get('h1').should('contain', 'Button links');
+    cy.url().should('include', '/swap-method');
+  });
+
+  it('swaps in a pane', function() {
+    cy.visit('http://127.0.0.1:8888/swap-method');
+    cy.contains('Pane').click();
+    cy.contains('Pane Post Data').click();
+
+    cy.get(qsPaneContent).should('contain', 'Posted name = charles');
+  });
+
+  it('swaps in a save and continue', function() {
+    cy.visit('http://127.0.0.1:8888/swap-method');
+    cy.contains('Pane').click();
+    cy.contains('Edit Account').click();
+    cy.contains('Save and Continue').click();
+
+    cy.get(qsPaneContent).should('contain', 'Account Info');
   });
 });

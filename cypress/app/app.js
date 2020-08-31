@@ -521,6 +521,95 @@ app.get('/asset-456.js', (req, res) => {
   res.send(`console.log('456');`);
 });
 
+app.get('/swap-method', (req, res) => res.send(`
+  <html>
+    <head>
+      <title>Button links</title>
+      <script src="/${frontendJS}" type="application/javascript"></script>
+      <link rel="stylesheet" href="/${mainCSS}">
+    </head>
+    <body>
+      ${menu}
+      ${layout(`
+        <h1>Button links</h1>
+        <div class="content">Not swapped</div>
+        <button data-swap-action="/swap-method-post" data-swap-method="post" data-swap-body='{"name":"charles"}'>Post Data</button>
+        <button data-swap-action="/swap-method-put" data-swap-method="put" data-swap-body='{"name":"john"}'>Put Data</button>
+        <button data-swap-action="/swap-method-post" data-swap-method="post" data-swap-body='{"name": "martin"}' data-swap=".content">Swap Data</button>
+        <button data-swap-action="http://localhost:8888/swap-method-other" data-swap-method="post" data-swap=".content">Swap Other Domain</button>
+        <button data-swap-action="/swap-method-post" data-swap-method="post" data-swap-body='{"name":"jones"}' data-swap-inline=".content">Swap Data Inline</button>
+        <a data-swap-action="/swap-method-post" data-swap-method="post" data-swap-body='{"name":"charles"}'>Link Data</a>
+        <a data-swap-action="/swap-method-post" data-swap-method="post" data-swap-body='{"name":"augustine"}' data-swap=".content">Swap Link Data</a>
+        <a href="/swap-method-account" data-swap-pane=".Main">Pane</a>
+      `)}
+    </body>
+  </html>
+`));
+
+app.put('/swap-method-put', (req, res) => {
+  res.send(`<div class="content">Put name = ${req.body.name}</div>`);
+});
+
+app.post('/swap-method-post', (req, res) => {
+  res.send(`<div class="content">Posted name = ${req.body.name}</div>`);
+});
+
+app.post('/swap-method-other', (req, res) => {
+  res.send(`<div class="content">Other domain</div>`);
+});
+
+app.get('/swap-method-account', (req, res) => res.send(`
+  <html>
+    <head>
+      <title>Account</title>
+      <meta charset="UTF-8">
+      <script src="/${frontendJS}" type="application/javascript"></script>
+    </head>
+    <body>
+      ${menu}
+      ${layout(`
+        <div class="Main">
+        <button data-swap-action="/swap-method-pane-post" data-swap-method="post" data-swap-pane=".Main" data-swap-body='{"name":"charles"}'>Pane Post Data</button>
+          Account Info
+          <a href="/swap-method-edit-account" data-swap-pane=".Main">Edit Account</a>
+        </div>
+      `)}
+    </body>
+  </html>
+`));
+
+app.get('/swap-method-edit-account', (req, res) => res.send(`
+  <html>
+    <head>
+      <title>Account</title>
+      <script src="/${frontendJS}" type="application/javascript"></script>
+    </head>
+    <body>
+      ${menu}
+      ${layout(`
+        <div class="Main">
+          <div class="content">Not Swapped</div>
+          Edit Account
+          <input type="text" name="account" value="Joe">
+          <button data-swap-action="/swap-action-edit-account" data-swap-method="post" data-swap-body='{"name":"charles"}' data-swap-pane-continue>Save and Continue</button>
+        </div>
+      `)}
+    </body>
+  </html>
+`));
+
+app.post('/swap-method-pane-post', (req, res) => {
+  res.send(`<div class="Main">Posted name = ${req.body.name}</div>`);
+});
+
+app.post('/swap-action-edit-account', (req, res) => {
+  if (req.body.name == 'charles') {
+    res.redirect('/swap-method-edit-account');
+  } else {
+    res.sendStatus(500);
+  }
+});
+
 app.listen(8888);
 
 

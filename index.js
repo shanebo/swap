@@ -140,12 +140,12 @@ swap.submit = function(e, selectors) {
 
   e.preventDefault();
   const sels = selectors || getSelectors(form);
-  const { swapInline, swapPaneContinue } = form.dataset;
+  const { swapInline } = form.dataset;
 
   if (swapInline) {
     swap.inline(form, sels);
   } else {
-    const callback = swapPaneContinue
+    const callback = form.hasAttribute('data-swap-pane-continue')
       ? continuePane
       : $html.classList.contains(swap.qs.paneIsOpen)
         ? samePane
