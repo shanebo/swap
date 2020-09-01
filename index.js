@@ -415,7 +415,10 @@ module.exports = function (opts = {}) {
   swap.event('click', swap.qs.link, swap.click);
 
   swap.event('click', swap.qs.paneContinue, (e) => {
-    e.target.closest('form').dataset.swapPaneContinue = 'true';
+    const form = e.target.closest('form');
+    if (form) {
+      form.dataset.swapPaneContinue = 'true';
+    }
   });
 
   swap.event('input', swap.qs.paneForms, (e) => {
