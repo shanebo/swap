@@ -314,7 +314,7 @@ app.get('/edit-donation', (req, res) => res.send(`
           <form action="/edit-donation" method="post">
             <input type="submit" value="Change">
             <input type="checkbox" name="fail">
-            <button data-swap-continue="true">Save and Continue</button>
+            <button data-swap-pane-continue>Save and Continue</button>
           </form>
         </div>
       `)}
@@ -344,7 +344,7 @@ app.get('/add-relationship', (req, res) => res.send(`
           Add relationship
           <form action="/add-relationship" method="post">
             <input type="submit" value="Create">
-            <button data-swap-continue="true">Save and Continue</button>
+            <button data-swap-pane-continue>Save and Continue</button>
           </form>
         </div>
       `)}

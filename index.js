@@ -139,12 +139,12 @@ swap.submit = function(e, selectors) {
 
   e.preventDefault();
   const sels = selectors || getSelectors(form);
-  const { swapInline, swapContinue } = form.dataset;
+  const { swapInline, swapPaneContinue } = form.dataset;
 
   if (swapInline) {
     swap.inline(form, sels);
   } else {
-    const callback = swapContinue
+    const callback = swapPaneContinue
       ? continuePane
       : $html.classList.contains(swap.qs.paneIsOpen)
         ? samePane
@@ -365,7 +365,6 @@ module.exports = function (opts = {}) {
   swap.qs.link = 'a:not([target="_blank"]):not([data-swap-ignore])';
   swap.qs.button = 'button[data-swap-method], a[data-swap-method]';
   swap.qs.form = 'form:not([data-swap-ignore])';
-  swap.qs.continue = '[data-swap-continue]';
   swap.qs.notice = '.Notice';
   swap.qs.pane = '.Pane';
   swap.qs.paneActive = '.Pane.is-active';
@@ -375,6 +374,7 @@ module.exports = function (opts = {}) {
   swap.qs.paneIsOpen = 'swap-pane-is-open';
   swap.qs.paneDefaultEl = opts.paneDefaultEl || '.Main';
   swap.qs.paneDefaultRenderType = '>>';
+  swap.qs.paneContinue = '[data-swap-pane-continue]';
 
   swap.paneTemplate = `
     <div class="Pane ${opts.paneClass}">
@@ -414,8 +414,8 @@ module.exports = function (opts = {}) {
 
   swap.event('click', swap.qs.link, swap.click);
 
-  swap.event('click', swap.qs.continue, (e) => {
-    e.target.closest('form').dataset.swapContinue = 'true';
+  swap.event('click', swap.qs.paneContinue, (e) => {
+    e.target.closest('form').dataset.swapPaneContinue = 'true';
   });
 
   swap.event('input', swap.qs.paneForms, (e) => {
