@@ -1,7 +1,7 @@
 const css = require('./lib/css');
 const { renderTitle, extractNewAssets, assetsChanged, loadAssets, renderBody } = require('./lib/render');
 const { ajax, buildRequest } = require('./lib/request');
-const { getPaneFormsData, replaceState, updateSessionState, pushSessionState, session, getPaneState, updateHistory} = require('./lib/history');
+const { getPaneFormsData, replaceState, updateSessionState, pushSessionState, session, getPaneState, updateHistory } = require('./lib/history');
 const { listener, fireElements, fireRoutes, delegateHandle } = require('./lib/events');
 const { prevPane, continuePane, samePane, addPane, closePanes } = require('./lib/pane');
 const { $html, buildUrl, shouldSwap, getUrl, getPath, getSelectors, parseQuery, bypassKeyPressed } = require('./lib/utils');
@@ -124,6 +124,7 @@ swap.submit = function(e, selectors) {
 
   if (!shouldSwap(getUrl(action))) {
     if (form.href || form.dataset.swapAction || form.dataset.swapMethod) {
+      // this is when action is on a different hostname than location.hostname
       e.preventDefault();
       const shadowForm = document.createElement('form');
       shadowForm.method = form.dataset.swapMethod;
@@ -139,12 +140,12 @@ swap.submit = function(e, selectors) {
 
   e.preventDefault();
   const sels = selectors || getSelectors(form);
-  const { swapInline, swapContinue } = form.dataset;
+  const { swapInline } = form.dataset;
 
   if (swapInline) {
     swap.inline(form, sels);
   } else {
-    const callback = swapContinue
+    const callback = form.hasAttribute('data-swap-pane-continue')
       ? continuePane
       : $html.classList.contains(swap.qs.paneIsOpen)
         ? samePane
@@ -365,7 +366,6 @@ module.exports = function (opts = {}) {
   swap.qs.link = 'a:not([target="_blank"]):not([data-swap-ignore])';
   swap.qs.button = 'button[data-swap-method], a[data-swap-method]';
   swap.qs.form = 'form:not([data-swap-ignore])';
-  swap.qs.continue = '[data-swap-continue]';
   swap.qs.notice = '.Notice';
   swap.qs.pane = '.Pane';
   swap.qs.paneActive = '.Pane.is-active';
@@ -375,6 +375,7 @@ module.exports = function (opts = {}) {
   swap.qs.paneIsOpen = 'swap-pane-is-open';
   swap.qs.paneDefaultEl = opts.paneDefaultEl || '.Main';
   swap.qs.paneDefaultRenderType = '>>';
+  swap.qs.paneContinue = '[data-swap-pane-continue]';
 
   swap.paneTemplate = `
     <div class="Pane ${opts.paneClass}">
@@ -414,8 +415,11 @@ module.exports = function (opts = {}) {
 
   swap.event('click', swap.qs.link, swap.click);
 
-  swap.event('click', swap.qs.continue, (e) => {
-    e.target.closest('form').dataset.swapContinue = 'true';
+  swap.event('click', swap.qs.paneContinue, (e) => {
+    const form = e.target.closest('form');
+    if (form) {
+      form.dataset.swapPaneContinue = 'true';
+    }
   });
 
   swap.event('input', swap.qs.paneForms, (e) => {
