@@ -102,7 +102,7 @@ swap.click = function(e, selectors) {
     if (swapInline) {
       swap.inline(link, sels);
     } else {
-      swap.with(link, sels, link.dataset.hasOwnProperty('swapPane') ? addPane : openPage);
+      swap.with(link, sels, link.hasAttribute('data-swap-pane') ? addPane : openPage);
     }
   }
 }
