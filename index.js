@@ -97,8 +97,6 @@ swap.click = function(e, selectors) {
   if (!swap.metaKeyOn) {
     e.preventDefault();
     const sels = selectors || getSelectors(link);
-    console.log({ sels });
-
     const { swapInline } = link.dataset;
 
     if (swapInline) {
