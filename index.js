@@ -4,7 +4,8 @@ const { ajax, buildRequest } = require('./lib/request');
 const { getPaneFormsData, replaceState, updateSessionState, pushSessionState, session, getPaneState, updateHistory } = require('./lib/history');
 const { listener, fireElements, fireRoutes, delegateHandle } = require('./lib/events');
 const { prevPane, continuePane, samePane, addPane, closePanes } = require('./lib/pane');
-const { $html, buildUrl, shouldSwap, getUrl, getPath, getSelectors, parseQuery, bypassKeyPressed } = require('./lib/utils');
+const { $html, htmlToElement, buildUrl, shouldSwap, getUrl, getPath, getSelectors, parseQuery, bypassKeyPressed } = require('./lib/utils');
+
 
 require('./lib/component');
 
@@ -361,10 +362,12 @@ const reloadCurrentPage = (selectors = []) => {
 
 module.exports = function (opts = {}) {
   swap.qs = {};
-  swap.qs.link = 'a:not([target="_blank"]):not([data-swap-ignore])';
-  swap.qs.button = 'button[data-swap-method], a[data-swap-method]';
+  swap.qs.link = 'a:not([target="_blank"]):not([data-swap-ignore]):not([data-swap-confirm])';
+  swap.qs.button = 'button[data-swap-method]:not([data-swap-confirm]), a[data-swap-method]:not([data-swap-confirm])';
   swap.qs.form = 'form:not([data-swap-ignore])';
   swap.qs.notice = '.Notice';
+  swap.qs.confirmTrigger = 'button[data-swap-confirm], a[data-swap-confirm]';
+  swap.qs.confirm = '.Confirm';
   swap.qs.pane = '.Pane';
   swap.qs.paneActive = '.Pane.is-active';
   swap.qs.paneForms = `${swap.qs.paneActive} ${swap.qs.form}`;
@@ -387,6 +390,51 @@ module.exports = function (opts = {}) {
   swap.formValidator = opts.formValidator || ((e) => true);
   swap.sessionExpiration = opts.sessionExpiration || 5000;
 
+  swap.confirmTemplate = `
+    <div class="Confirm light-mode">
+      <h2 class="c2 bold" data-swap-model-confirm-title></h2>
+      <div class="Confirm-actions">
+        <button
+          data-swap-model-confirm-cancel
+          class="Button Button--subtle Button--radius Button--medium"
+          >
+        </button>
+
+        <button
+          data-swap-model-confirm-ok
+          class="Button Button--danger Button--radius Button--medium"
+          >
+        </button>
+      </div>
+    </div>
+  `;
+
+  swap.confirmMap = {
+    // deleteLayer: {
+    //   title: "Delete this layer?",
+    //   cancel: "Cancel",
+    //   ok: "Yes, delete"
+    // },
+    // deleteLayerAndDescendants: {
+    //   title: "Delete this layer and all it's descendants?",
+    //   cancel: "Cancel",
+    //   ok: "Yes, delete"
+    // },
+  };
+
+  swap.configConfirm = (name, values) => {
+    swap.confirmMap[name] = values;
+  }
+
+  swap.on('body', () => {
+    const confirm = htmlToElement(swap.confirmTemplate);
+    if (!document.querySelector(swap.qs.confirm)) {
+      document.body.appendChild(confirm);
+    }
+  });
+
+
+
   swap.event('DOMContentLoaded', () => {
     const style = document.createElement('style');
     style.type = 'text/css';
@@ -407,6 +455,53 @@ module.exports = function (opts = {}) {
     if (bypassKeyPressed(e.key)) {
       swap.metaKeyOn = false;
     }
+  });
+
+  swap.event('click', swap.qs.confirmTrigger, (e) => {
+    e.preventDefault();
+
+    const {
+      swapConfirm,
+      swapConfirmTitle,
+      swapConfirmCancel,
+      swapConfirmOk,
+    } = e.target.dataset;
+
+    const renderConfirm = ({ title, cancel, ok }) => {
+      document.querySelector('[data-swap-model-confirm-title]').innerText = title;
+      document.querySelector('[data-swap-model-confirm-cancel]').innerText = cancel;
+      document.querySelector('[data-swap-model-confirm-ok]').innerText = ok;
+      document.querySelector('[data-swap-model-confirm-ok]').focus();
+    }
+
+    if (swapConfirm) {
+      renderConfirm(swap.confirmMap[swapConfirm]);
+    } else {
+      renderConfirm({
+        title: swapConfirmTitle,
+        cancel: swapConfirmCancel,
+        ok: swapConfirmOk,
+      });
+    }
+
+    document.querySelector(swap.qs.confirm).classList.add('is-active');
+    swap.confirmEvent = e;
+  });
+
+  swap.event('click', '[data-swap-model-confirm-cancel]', (e) => {
+    document.querySelector(swap.qs.confirm).classList.remove('is-active');
+    delete swap.confirmEvent;
+  });
+
+  swap.event('click', '[data-swap-model-confirm-ok]', (e) => {
+    if (swap.confirmEvent.target.dataset.swapMethod) {
+      swap.submit.call(swap.confirmEvent.target, swap.confirmEvent);
+    } else {
+      swap.click.call(swap.confirmEvent.target, swap.confirmEvent);
+    }
+
+    document.querySelector(swap.qs.confirm).classList.remove('is-active');
+    delete swap.confirmEvent;
   });
 
   swap.event('click', swap.qs.button, swap.submit);
@@ -441,7 +536,10 @@ module.exports = function (opts = {}) {
   });
 
   swap.event('click', `.${swap.qs.paneIsOpen}`, (e) => {
-    if (!e.target.closest(swap.qs.pane)) {
+    const notConfirmOrInsideConfirm = (e.target !== document.querySelector(swap.qs.confirm)
+      && !e.target.closest(swap.qs.confirm));
+
+    if (!e.target.closest(swap.qs.pane) && notConfirmOrInsideConfirm) {
       updateSessionState(location.href);
       closePanes();
     }

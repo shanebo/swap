@@ -74,3 +74,12 @@ form {
   align-content: start;
   grid-gap: 8px;
 }
+
+.Confirm {
+  display: none;
+}
+
+.Confirm.is-active {
+  display: block;
+  background-color: #aea;
+}

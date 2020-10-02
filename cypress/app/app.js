@@ -38,6 +38,7 @@ const menu = `
     <a href="/events">Events Link</a>
     <a href="/about#layout">Anchor Link</a>
     <a href="/notice">Notice Link</a>
+    <a href="/confirm">Confirm</a>
     <a>Nothing Link</a>
   </nav>
 `;
@@ -609,6 +610,54 @@ app.post('/swap-action-edit-account', (req, res) => {
     res.sendStatus(500);
   }
 });
+
+app.get('/confirm', (req, res) => res.send(`
+  <html>
+    <head>
+      <title>Confirm</title>
+      <meta charset="UTF-8">
+      <script src="/${frontendJS}" type="application/javascript"></script>
+      <link rel="stylesheet" href="/${mainCSS}">
+    </head>
+    <body>
+      ${menu}
+      ${layout(`
+        <div class="Main">
+
+          <button
+            data-swap-confirm
+            data-swap-confirm-title="Are you sure you'd like to cancel this partnership?"
+            data-swap-confirm-cancel="Never mind"
+            data-swap-confirm-ok="Yes, cancel"
+            data-swap-action="/confirm/cancel"
+            data-swap-method="post"
+            data-close
+            >
+              Cancel Subscription
+          </button>
+
+        </div>
+      `)}
+    </body>
+  </html>
+`));
+
+app.post('/confirm/cancel', (req, res) => res.send(`
+  <html>
+    <head>
+      <title>Confirm Cancel</title>
+      <meta charset="UTF-8">
+      <script src="/${frontendJS}" type="application/javascript"></script>
+      <link rel="stylesheet" href="/${mainCSS}">
+    </head>
+    <body>
+      ${menu}
+      ${layout(`
+        <div class="Main">Canceled!</div>
+      `)}
+    </body>
+  </html>
+`));
 
 app.listen(8888);
 

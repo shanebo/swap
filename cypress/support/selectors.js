@@ -4,5 +4,6 @@ module.exports = {
   qsPaneCloseBtn: '.Pane.is-active .Pane-closeBtn',
   qsPaneExpandBtn: '.Pane.is-active .Pane-expandBtn',
   qsPaneIsOpen: '.swap-pane-is-open',
-  qsIsLoading: '.swap-is-loading'
+  qsIsLoading: '.swap-is-loading',
+  qsConfirm: '.Confirm'
 };
