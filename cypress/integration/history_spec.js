@@ -41,7 +41,7 @@ describe('History', function() {
       }, 100);
     });
   });
-  
+
   it('goes to the same page multiple times without adding to history', function() {
     cy.visit('http://127.0.0.1:8888/');
     cy.contains('About Link').click();
