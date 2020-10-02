@@ -369,7 +369,7 @@ module.exports = function (opts = {}) {
   swap.qs.paneActive = '.Pane.is-active';
   swap.qs.paneForms = `${swap.qs.paneActive} ${swap.qs.form}`;
   swap.qs.paneContent = `${swap.qs.paneActive} .Pane-content`;
-  swap.qs.paneCloseBtn = '.Pane-closeBtn';
+  swap.qs.paneCloseBtn = '.Pane-closeBtn, [data-swap-close-pane]';
   swap.qs.paneIsOpen = 'swap-pane-is-open';
   swap.qs.paneDefaultEl = opts.paneDefaultEl || '.Main';
   swap.qs.paneDefaultRenderType = '>>';
