@@ -247,7 +247,6 @@ const popstate = (e) => {
   fireRoutes('off', location.href, justAt);
 
   if (expires < Date.now()) {
-    console.log('reloading...');
     reloadCurrentPage(selectors);
   } else {
     const dom = new DOMParser().parseFromString(html, 'text/html');
@@ -285,80 +284,6 @@ const reloadCurrentPage = (selectors = []) => {
   });
 }
 
-
-// const popstate = (e) => {
-//   /*
-//     - check if headers determine it should be cached or not
-//     - if not cached then ajax request
-//     - if cached then return state
-//     - check headers on whether to cache or not
-//   */
-
-//   if (!e.state) return;
-
-//   const { html, selectors, paneHistory, expires, id } = session.get(e.state.id);
-//   const forward = id > swap.stateId;
-//   const justAtId = session.get('stateIds').indexOf(id) + (forward ? -1 : 1);
-//   console.log({justAtId});
-//   const justAt = session.get(justAtId).url;
-
-//   updateSessionState(justAt);
-
-//   swap.stateId = id;
-//   swap.paneHistory = paneHistory;
-
-//   fireRoutes('off', location.href, justAt);
-
-//   if (expires < Date.now()) {
-//     console.log('reloading...');
-//     const opts = { url: location.href, method: 'get' };
-//     ajax(opts, (xhr, res, html) => {
-//       const dom = new DOMParser().parseFromString(html, 'text/html');
-
-//       swap.to(dom, selectors, false, () => {
-//         $html.className = dom.documentElement.className;
-
-//         if (location.hash) {
-//           loadPane();
-//         } else {
-//           fireRoutes('on', location.href, null);
-//         }
-//       });
-//     });
-//   } else {
-//     const dom = new DOMParser().parseFromString(html, 'text/html');
-
-//     swap.to(dom, selectors, false, () => {
-//       $html.className = dom.documentElement.className;
-//       fireRoutes('on', location.href, justAt);
-//     });
-//   }
-
-
-  // if (expires < Date.now()) {
-  //   console.log('reloading...');
-  //   const opts = { url: location.href, method: 'get' };
-  //   ajax(opts, (xhr, res, html) => {
-  //     const dom = new DOMParser().parseFromString(html, 'text/html');
-
-  //     swap.to(dom, selectors, false, () => {
-  //       $html.className = dom.documentElement.className;
-
-  //       if (location.hash) {
-  //         loadPane();
-  //       } else {
-  //         fireRoutes('on', location.href, null);
-  //       }
-  //     });
-  //   });
-  // } else {
-  //   const dom = new DOMParser().parseFromString(html, 'text/html');
-
-  //   swap.to(dom, selectors, false, () => {
-  //     $html.className = dom.documentElement.className;
-  //     fireRoutes('on', location.href, justAt);
-  //   });
-  // }
 
 module.exports = function (opts = {}) {
   swap.qs = {};
