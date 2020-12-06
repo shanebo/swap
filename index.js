@@ -7,9 +7,6 @@ const { prevPane, continuePane, samePane, addPane, closePanes } = require('./lib
 const { $html, htmlToElement, buildUrl, shouldSwap, getUrl, getPath, getSelectors, parseQuery, bypassKeyPressed } = require('./lib/utils');
 
 
-require('./lib/component');
-
-
 window.swap = {
   sessionExpiration: 5000,
   request: false,
