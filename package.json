@@ -18,7 +18,7 @@
   "devDependencies": {
     "@dylan/parser": "github:dylanjs/parser#0.1.0",
     "@dylan/static": "github:dylanjs/static#0.1.0",
-    "cypress": "~6.0.1",
+    "cypress": "^6.1.0",
     "dylan": "github:dylanjs/dylan#0.2.0",
     "nodemon": "~2.0.6",
     "parcel-bundler": "1.12.4"
