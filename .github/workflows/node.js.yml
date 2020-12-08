@@ -1,0 +1,29 @@
+name: UI CI
+
+on: [pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    env:
+      CYPRESS_RETRIES: 3
+
+    steps:
+
+    ##############################
+    #
+    # INSTALL AND RUN THE UI TESTS
+    #
+    - uses: actions/checkout@v2
+
+    - name: Install Node.js 12.9.0
+      uses: actions/setup-node@v1
+      with:
+        node-version: 12.9.0
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Run tests
+      run: npm test
