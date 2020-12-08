@@ -415,13 +415,10 @@ module.exports = function (opts = {}) {
     delete swap.confirmEvent;
   });
 
-  swap.event('click', '[data-swap-model-confirm-ok]', (e) => {
-    if (swap.confirmEvent.target.dataset.swapMethod) {
-      swap.submit.call(swap.confirmEvent.target, swap.confirmEvent);
-    } else {
-      swap.click.call(swap.confirmEvent.target, swap.confirmEvent);
-    }
-
+  swap.event('click', '[data-swap-model-confirm-ok]', () => {
+    const e = swap.confirmEvent;
+    const handle = e.target.dataset.swapMethod ? 'submit' : 'click';
+    swap[handle].call(e.target, e);
     document.querySelector(swap.qs.confirm).classList.remove('is-active');
     delete swap.confirmEvent;
   });
