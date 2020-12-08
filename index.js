@@ -301,7 +301,7 @@ module.exports = function (opts = {}) {
   swap.qs.paneContinue = '[data-swap-pane-continue]';
 
   swap.paneTemplate = `
-    <div class="Pane ${opts.paneClass}">
+    <div class="Pane ${opts.paneClass || ''}">
       <button class="Pane-closeBtn"></button>
       <a class="Pane-expandBtn"></a>
       <div class="Pane-content"></div>
