@@ -114,39 +114,46 @@ swap.inline = (options, selectors = []) => {
 }
 
 
+const createAndTriggerButtonForm = (btn, action) => {
+  const form = document.createElement('form');
+  form.method = btn.method || btn.dataset.swapMethod;
+  form.action = action;
+  document.body.appendChild(form);
+  form.submit();
+}
+
+
 swap.submit = function(e, selectors) {
-  const form = e.target;
-  const action = form.action || form.href || form.dataset.swapAction;
+  const target = e.target; // form, submit button, or swap button form
+  const action = target.hasAttribute('formAction')
+    ? target.formAction
+    : target.action || target.href || target.dataset.swapAction;
 
   if (!shouldSwap(getUrl(action))) {
-    if (form.href || form.dataset.swapAction || form.dataset.swapMethod) {
-      // this is when action is on a different hostname than location.hostname
+    // when action is on different hostname than location.hostname
+    const swapAction = target.dataset.swapAction;
+    if (swapAction) {
       e.preventDefault();
-      const shadowForm = document.createElement('form');
-      shadowForm.method = form.dataset.swapMethod;
-      shadowForm.action = action;
-      document.body.appendChild(shadowForm);
-      shadowForm.submit();
+      createAndTriggerButtonForm(target, swapAction);
     }
-
     return;
-  };
+  }
 
   if (!swap.formValidator(e)) return;
 
   e.preventDefault();
-  const sels = selectors || getSelectors(form);
-  const { swapInline } = form.dataset;
+  const sels = selectors || getSelectors(target);
+  const { swapInline } = target.dataset;
 
   if (swapInline) {
-    swap.inline(form, sels);
+    swap.inline(target, sels);
   } else {
-    const callback = form.hasAttribute('data-swap-pane-continue')
+    const callback = target.hasAttribute('data-swap-pane-continue')
       ? continuePane
       : $html.classList.contains(swap.qs.paneIsOpen)
         ? samePane
         : openPage;
-    swap.with(form, sels, callback);
+    swap.with(target, sels, callback);
   }
 }
 
@@ -285,6 +292,7 @@ const reloadCurrentPage = (selectors = []) => {
 module.exports = function (opts = {}) {
   swap.qs = {};
   swap.qs.link = 'a:not([target="_blank"]):not([data-swap-ignore]):not([data-swap-confirm])';
+  swap.qs.formSubmitButton = 'button[formaction], input[formaction]';
   swap.qs.button = 'button[data-swap-method]:not([data-swap-confirm]), a[data-swap-method]:not([data-swap-confirm])';
   swap.qs.form = 'form:not([data-swap-ignore])';
   swap.qs.notice = '.Notice';
@@ -301,7 +309,7 @@ module.exports = function (opts = {}) {
   swap.qs.paneContinue = '[data-swap-pane-continue]';
 
   swap.paneTemplate = `
-    <div class="Pane ${opts.paneClass}">
+    <div class="Pane ${opts.paneClass || ''}">
       <button class="Pane-closeBtn"></button>
       <a class="Pane-expandBtn"></a>
       <div class="Pane-content"></div>
@@ -415,18 +423,17 @@ module.exports = function (opts = {}) {
     delete swap.confirmEvent;
   });
 
-  swap.event('click', '[data-swap-model-confirm-ok]', (e) => {
-    if (swap.confirmEvent.target.dataset.swapMethod) {
-      swap.submit.call(swap.confirmEvent.target, swap.confirmEvent);
-    } else {
-      swap.click.call(swap.confirmEvent.target, swap.confirmEvent);
-    }
-
+  swap.event('click', '[data-swap-model-confirm-ok]', () => {
+    const e = swap.confirmEvent;
+    const handle = e.target.dataset.swapMethod ? 'submit' : 'click';
+    swap[handle].call(e.target, e);
     document.querySelector(swap.qs.confirm).classList.remove('is-active');
     delete swap.confirmEvent;
   });
 
   swap.event('click', swap.qs.button, swap.submit);
+
+  swap.event('click', swap.qs.formSubmitButton, swap.submit);
 
   swap.event('click', swap.qs.link, swap.click);
 
