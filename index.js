@@ -410,7 +410,7 @@ module.exports = function (opts = {}) {
       renderConfirm({
         title: swapConfirmTitle,
         cancel: swapConfirmCancel,
-        ok: swapConfirmOk,
+        ok: swapConfirmOk
       });
     }
 
