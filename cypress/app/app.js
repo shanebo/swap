@@ -522,7 +522,7 @@ app.get('/asset-456.js', (req, res) => {
   res.send(`console.log('456');`);
 });
 
-app.get('/swap-method', (req, res) => res.send(`
+app.get('/form-method', (req, res) => res.send(`
   <html>
     <head>
       <title>Button links</title>
@@ -534,32 +534,32 @@ app.get('/swap-method', (req, res) => res.send(`
       ${layout(`
         <h1>Button links</h1>
         <div class="content">Not swapped</div>
-        <button data-swap-action="/swap-method-post" data-swap-method="post" data-swap-body='{"name":"charles"}'>Post Data</button>
-        <button data-swap-action="/swap-method-put" data-swap-method="put" data-swap-body='{"name":"john"}'>Put Data</button>
-        <button data-swap-action="/swap-method-post" data-swap-method="post" data-swap-body='{"name": "martin"}' data-swap=".content">Swap Data</button>
-        <button data-swap-action="http://localhost:8888/swap-method-other" data-swap-method="post" data-swap=".content">Swap Other Domain</button>
-        <button data-swap-action="/swap-method-post" data-swap-method="post" data-swap-body='{"name":"jones"}' data-swap-inline=".content">Swap Data Inline</button>
-        <a data-swap-action="/swap-method-post" data-swap-method="post" data-swap-body='{"name":"charles"}'>Link Data</a>
-        <a data-swap-action="/swap-method-post" data-swap-method="post" data-swap-body='{"name":"augustine"}' data-swap=".content">Swap Link Data</a>
-        <a href="/swap-method-account" data-swap-pane=".Main">Pane</a>
+        <button formaction="/form-method-post" formmethod="post" formbody='{"name":"charles"}'>Post Data</button>
+        <button formaction="/form-method-put" formmethod="put" formbody='{"name":"john"}'>Put Data</button>
+        <button formaction="/form-method-post" formmethod="post" formbody='{"name": "martin"}' data-swap=".content">Swap Data</button>
+        <button formaction="http://localhost:8888/form-method-other" formmethod="post" data-swap=".content">Swap Other Domain</button>
+        <button formaction="/form-method-post" formmethod="post" formbody='{"name":"jones"}' data-swap-inline=".content">Swap Data Inline</button>
+        <a formaction="/form-method-post" formmethod="post" formbody='{"name":"charles"}'>Link Data</a>
+        <a formaction="/form-method-post" formmethod="post" formbody='{"name":"augustine"}' data-swap=".content">Swap Link Data</a>
+        <a href="/form-method-account" data-swap-pane=".Main">Pane</a>
       `)}
     </body>
   </html>
 `));
 
-app.put('/swap-method-put', (req, res) => {
+app.put('/form-method-put', (req, res) => {
   res.send(`<div class="content">Put name = ${req.body.name}</div>`);
 });
 
-app.post('/swap-method-post', (req, res) => {
+app.post('/form-method-post', (req, res) => {
   res.send(`<div class="content">Posted name = ${req.body.name}</div>`);
 });
 
-app.post('/swap-method-other', (req, res) => {
+app.post('/form-method-other', (req, res) => {
   res.send(`<div class="content">Other domain</div>`);
 });
 
-app.get('/swap-method-account', (req, res) => res.send(`
+app.get('/form-method-account', (req, res) => res.send(`
   <html>
     <head>
       <title>Account</title>
@@ -570,16 +570,16 @@ app.get('/swap-method-account', (req, res) => res.send(`
       ${menu}
       ${layout(`
         <div class="Main">
-        <button data-swap-action="/swap-method-pane-post" data-swap-method="post" data-swap-pane=".Main" data-swap-body='{"name":"charles"}'>Pane Post Data</button>
+        <button formaction="/form-method-pane-post" formmethod="post" data-swap-pane=".Main" formbody='{"name":"charles"}'>Pane Post Data</button>
           Account Info
-          <a href="/swap-method-edit-account" data-swap-pane=".Main">Edit Account</a>
+          <a href="/form-method-edit-account" data-swap-pane=".Main">Edit Account</a>
         </div>
       `)}
     </body>
   </html>
 `));
 
-app.get('/swap-method-edit-account', (req, res) => res.send(`
+app.get('/form-method-edit-account', (req, res) => res.send(`
   <html>
     <head>
       <title>Account</title>
@@ -592,20 +592,20 @@ app.get('/swap-method-edit-account', (req, res) => res.send(`
           <div class="content">Not Swapped</div>
           Edit Account
           <input type="text" name="account" value="Joe">
-          <button data-swap-action="/swap-action-edit-account" data-swap-method="post" data-swap-body='{"name":"charles"}' data-swap-pane-continue>Save and Continue</button>
+          <button formaction="/form-action-edit-account" formmethod="post" formbody='{"name":"charles"}' data-swap-pane-continue>Save and Continue</button>
         </div>
       `)}
     </body>
   </html>
 `));
 
-app.post('/swap-method-pane-post', (req, res) => {
+app.post('/form-method-pane-post', (req, res) => {
   res.send(`<div class="Main">Posted name = ${req.body.name}</div>`);
 });
 
-app.post('/swap-action-edit-account', (req, res) => {
+app.post('/form-action-edit-account', (req, res) => {
   if (req.body.name == 'charles') {
-    res.redirect('/swap-method-edit-account');
+    res.redirect('/form-method-edit-account');
   } else {
     res.sendStatus(500);
   }
@@ -629,8 +629,8 @@ app.get('/confirm', (req, res) => res.send(`
             data-swap-confirm-title="Are you sure you'd like to cancel this partnership?"
             data-swap-confirm-cancel="Never mind"
             data-swap-confirm-ok="Yes, cancel"
-            data-swap-action="/confirm/cancel"
-            data-swap-method="post"
+            formaction="/confirm/cancel"
+            formmethod="post"
             data-close
             >
               Cancel Subscription
