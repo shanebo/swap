@@ -116,7 +116,7 @@ swap.inline = (options, selectors = []) => {
 
 const createAndTriggerButtonForm = (btn, action) => {
   const form = document.createElement('form');
-  form.method = btn.method || btn.dataset.swapMethod;
+  form.method = btn.getAttribute('formmethod');
   form.action = action;
   document.body.appendChild(form);
   form.submit();
@@ -125,16 +125,15 @@ const createAndTriggerButtonForm = (btn, action) => {
 
 swap.submit = function(e, selectors) {
   const target = e.target; // form, submit button, or swap button form
-  const action = target.hasAttribute('formAction')
-    ? target.formAction
-    : target.action || target.href || target.dataset.swapAction;
+  const formaction = target.getAttribute('formaction');
+  const action = formaction || target.action || target.href;
 
   if (!shouldSwap(getUrl(action))) {
     // when action is on different hostname than location.hostname
-    const swapAction = target.dataset.swapAction;
-    if (swapAction) {
+    if (formaction) {
+      // this is a buttonForm use case
       e.preventDefault();
-      createAndTriggerButtonForm(target, swapAction);
+      createAndTriggerButtonForm(target, formaction);
     }
     return;
   }
@@ -292,8 +291,8 @@ const reloadCurrentPage = (selectors = []) => {
 module.exports = function (opts = {}) {
   swap.qs = {};
   swap.qs.link = 'a:not([target="_blank"]):not([data-swap-ignore]):not([data-swap-confirm])';
-  swap.qs.formSubmitButton = 'button[formaction], input[formaction]';
-  swap.qs.button = 'button[data-swap-method]:not([data-swap-confirm]), a[data-swap-method]:not([data-swap-confirm])';
+  swap.qs.formSubmitButton = 'form button[formaction]:not([data-swap-confirm]), form input[formaction][type="submit"]:not([data-swap-confirm])';
+  swap.qs.button = 'button[formmethod]:not([data-swap-confirm]), a[formmethod]:not([data-swap-confirm])';
   swap.qs.form = 'form:not([data-swap-ignore])';
   swap.qs.notice = '.Notice';
   swap.qs.confirmTrigger = 'button[data-swap-confirm], a[data-swap-confirm]';
@@ -410,7 +409,7 @@ module.exports = function (opts = {}) {
       renderConfirm({
         title: swapConfirmTitle,
         cancel: swapConfirmCancel,
-        ok: swapConfirmOk,
+        ok: swapConfirmOk
       });
     }
 
@@ -425,7 +424,7 @@ module.exports = function (opts = {}) {
 
   swap.event('click', '[data-swap-model-confirm-ok]', () => {
     const e = swap.confirmEvent;
-    const handle = e.target.dataset.swapMethod ? 'submit' : 'click';
+    const handle = e.target.hasAttribute('formmethod') ? 'submit' : 'click';
     swap[handle].call(e.target, e);
     document.querySelector(swap.qs.confirm).classList.remove('is-active');
     delete swap.confirmEvent;
