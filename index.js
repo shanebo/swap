@@ -14,6 +14,18 @@ window.swap = {
   paneUrl: false,
   paneHistory: [],
   paneSaved: false,
+  confirmMap: {
+    // deleteLayer: {
+    //   title: "Delete this layer?",
+    //   cancel: "Cancel",
+    //   ok: "Yes, delete"
+    // },
+    // deleteLayerAndDescendants: {
+    //   title: "Delete this layer and all it's descendants?",
+    //   cancel: "Cancel",
+    //   ok: "Yes, delete"
+    // },
+  },
   before: listener.bind(window.swap, 'before'),
   on: listener.bind(window.swap, 'on'),
   off: listener.bind(window.swap, 'off'),
@@ -171,6 +183,11 @@ swap.closePane = ({ html, finalUrl } = {}) => {
   } else {
     closePanes();
   }
+}
+
+
+swap.configConfirm = (name, values) => {
+  swap.confirmMap[name] = values;
 }
 
 
@@ -340,22 +357,6 @@ module.exports = function (opts = {}) {
     </div>
   `;
 
-  swap.confirmMap = {
-    // deleteLayer: {
-    //   title: "Delete this layer?",
-    //   cancel: "Cancel",
-    //   ok: "Yes, delete"
-    // },
-    // deleteLayerAndDescendants: {
-    //   title: "Delete this layer and all it's descendants?",
-    //   cancel: "Cancel",
-    //   ok: "Yes, delete"
-    // },
-  };
-
-  swap.configConfirm = (name, values) => {
-    swap.confirmMap[name] = values;
-  }
 
   swap.on('body', () => {
     const confirm = htmlToElement(swap.confirmTemplate);
