@@ -3,7 +3,7 @@ const { renderTitle, extractNewAssets, assetsChanged, loadAssets, renderBody } =
 const { ajax, buildRequest } = require('./lib/request');
 const { getPaneFormsData, replaceState, updateSessionState, pushSessionState, session, getPaneState, updateHistory } = require('./lib/history');
 const { listener, fireElements, fireRoutes, delegateHandle } = require('./lib/events');
-const { prevPane, continuePane, samePane, addPane, closePanes } = require('./lib/pane');
+const { loadPane, prevPane, continuePane, samePane, addPane, closePanes } = require('./lib/pane');
 const { $html, htmlToElement, buildUrl, shouldSwap, getUrl, getPath, getSelectors, parseQuery, bypassKeyPressed } = require('./lib/utils');
 
 
@@ -188,15 +188,6 @@ swap.closePane = ({ html, finalUrl } = {}) => {
 
 swap.configConfirm = (name, values) => {
   swap.confirmMap[name] = values;
-}
-
-
-const loadPane = (bypass = false) => {
-  const params = parseQuery(location.hash.substr(1));
-  if (params.pane) {
-    swap.paneUrl = params.pane;
-    swap.with(params.pane, swap.paneSelectors, (obj) => addPane(obj, bypass));
-  }
 }
 
 
