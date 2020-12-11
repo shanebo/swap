@@ -290,8 +290,11 @@ const reloadCurrentPage = (selectors = []) => {
 module.exports = function (opts = {}) {
   swap.qs = {};
   swap.qs.link = 'a:not([target="_blank"]):not([data-swap-ignore]):not([data-swap-confirm])';
-  swap.qs.formSubmitButton = 'form button[formaction]:not([data-swap-confirm]), form input[formaction][type="submit"]:not([data-swap-confirm])';
-  swap.qs.button = 'button[formmethod]:not([data-swap-confirm]), a[formmethod]:not([data-swap-confirm])';
+  swap.qs.button = `
+    a[formmethod]:not([data-swap-confirm]),
+    button[formaction]:not([data-swap-confirm]),
+    input[formaction][type="submit"]:not([data-swap-confirm])
+  `;
   swap.qs.form = 'form:not([data-swap-ignore])';
   swap.qs.notice = '.Notice';
   swap.qs.confirmTrigger = 'button[data-swap-confirm], a[data-swap-confirm]';
@@ -430,8 +433,6 @@ module.exports = function (opts = {}) {
   });
 
   swap.event('click', swap.qs.button, swap.submit);
-
-  swap.event('click', swap.qs.formSubmitButton, swap.submit);
 
   swap.event('click', swap.qs.link, swap.click);
 
