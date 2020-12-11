@@ -226,7 +226,6 @@ const popstate = (e) => {
     - check if headers determine it should be cached or not
     - if not cached then ajax request
     - if cached then return state
-    - check headers on whether to cache or not
   */
 
   if (!e.state) return;
