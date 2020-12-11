@@ -304,7 +304,8 @@ const reloadCurrentPage = (selectors = []) => {
 }
 
 
-module.exports = function (opts = {}) {
+exports.config = function (opts = {}) {
+  swap.opts = opts;
   swap.qs = {};
   swap.qs.link = 'a:not([target="_blank"]):not([data-swap-ignore]):not([data-swap-confirm])';
   swap.qs.button = `
@@ -356,8 +357,10 @@ module.exports = function (opts = {}) {
       </div>
     </div>
   `;
+}
 
 
+exports.listen = function () {
   swap.on('body', () => {
     const confirm = htmlToElement(swap.confirmTemplate);
     if (!document.querySelector(swap.qs.confirm)) {
@@ -365,12 +368,10 @@ module.exports = function (opts = {}) {
     }
   });
 
-
-
   swap.event('DOMContentLoaded', () => {
     const style = document.createElement('style');
     style.type = 'text/css';
-    style.appendChild(document.createTextNode(css(opts)));
+    style.appendChild(document.createTextNode(css(swap.opts)));
     document.head.appendChild(style);
     loaded();
   });
