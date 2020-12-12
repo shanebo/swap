@@ -1,4 +1,4 @@
-import '../../lib/swap.js';
+import swap from '../../lib/swap.js';
 
 swap.config({
   color: '#c6000e',
