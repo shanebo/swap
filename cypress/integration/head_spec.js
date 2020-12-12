@@ -1,11 +1,14 @@
 describe('Head', function() {
-  it('runs inline scripts', function() {
+  it('runs inline scripts', function(done) {
     cy.visit('http://127.0.0.1:8888/');
 
     cy.contains('Head Link').click();
 
     cy.get('.change-from-inline-script').then(($el) => {
-      expect($el).to.have.text('changed');
+      setTimeout(function(){
+        expect($el).to.have.text('changed');
+        done();
+      }, 100);
     });
   });
 

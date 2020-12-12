@@ -113,8 +113,8 @@ app.get('/head', (req, res) => res.send(`
     <body>
     ${menu}
     ${layout(`
-      <div class="change-from-remote-script">Should change</div>
-      <div class="change-from-inline-script">Should change</div>
+      <div class="change-from-remote-script">Should change from remote script</div>
+      <div class="change-from-inline-script">Should change from inline script</div>
       <div class="header">Header</div>
       <div class="content">
         About page
