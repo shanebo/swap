@@ -1,6 +1,6 @@
-import Swap from '../../index.js';
+import '../../index.js';
 
-Swap.config({
+swap.config({
   color: '#c6000e',
   paneDuration: 300,
   sessionExpiration: 500
@@ -34,5 +34,4 @@ swap.off('/events', (e) => {
   alert(`Off from: ${e.from.href}, to: ${e.to.href}`);
 });
 
-
-Swap.listen();
+swap.listen();
