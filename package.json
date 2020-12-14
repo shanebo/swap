@@ -1,9 +1,9 @@
 {
   "name": "swap",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Server side apps that feel client side.",
   "repository": "git://github.com/shanebo/swap.git",
-  "main": "./index",
+  "main": "./lib/swap",
   "scripts": {
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",

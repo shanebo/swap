@@ -1,11 +1,10 @@
-import swapConfig from '../../index.js';
+import swap from '../../lib/swap.js';
 
-swapConfig({
+swap.config({
   color: '#c6000e',
   paneDuration: 300,
   sessionExpiration: 500
 });
-
 
 swap.on('.arrive', (e) => {
   alert('Arrived');
@@ -34,3 +33,5 @@ swap.on('/events', (e) => {
 swap.off('/events', (e) => {
   alert(`Off from: ${e.from.href}, to: ${e.to.href}`);
 });
+
+swap.listen();
