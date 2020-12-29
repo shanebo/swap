@@ -38,6 +38,19 @@ describe('Head', function() {
     });
   });
 
+  it('injects inline styles', function(done) {
+    cy.visit('http://127.0.0.1:8888/');
+
+    cy.contains('Head Link').click();
+
+    cy.get('body').then(($el) => {
+      setTimeout(function(){
+        expect($el).to.have.css('background-color', 'rgb(200, 12, 12)');
+        done();
+      }, 100);
+    });
+  });
+
   it('does a hard reload if asset hashes changes', function() {
     cy.visit('http://127.0.0.1:8888/asset');
 

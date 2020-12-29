@@ -109,6 +109,11 @@ app.get('/head', (req, res) => res.send(`
       <script src="/${headJS}" type="application/javascript"></script>
       <link rel="stylesheet" href="/${mainCSS}">
       <link rel="stylesheet" href="/${headCSS}">
+      <style>
+        body {
+          background-color: rgb(200, 12, 12);
+        }
+      </style>
     </head>
     <body>
     ${menu}
