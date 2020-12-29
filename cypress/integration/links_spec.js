@@ -16,10 +16,26 @@ describe('Full Page Swaps', function() {
 
   it('does nothing on a link with no href', function() {
     cy.visit('http://127.0.0.1:8888/');
+    cy.intercept('GET', '/', {
+      statusCode: 400,
+      body: 'Swap fired'
+    });
     cy.contains('Nothing Link').click();
     cy.get(qsIsLoading).should('not.exist');
     cy.url().should('equal', 'http://127.0.0.1:8888/');
-    cy.title().should('equal', 'Home');
+    cy.contains('Swap fired').should('not.exist');
+  });
+
+  it('does nothing on a link a blank # href', function() {
+    cy.visit('http://127.0.0.1:8888/');
+    cy.intercept('GET', '/', {
+      statusCode: 400,
+      body: 'Swap fired'
+    });
+    cy.contains('Blank Anchor Link').click();
+    cy.get(qsIsLoading).should('not.exist');
+    cy.url().should('equal', 'http://127.0.0.1:8888/#');
+    cy.contains('Swap fired').should('not.exist');
   });
 
   it('goes to anchor link on another page', function() {

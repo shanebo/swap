@@ -40,6 +40,7 @@ const menu = `
     <a href="/notice">Notice Link</a>
     <a href="/confirm">Confirm</a>
     <a>Nothing Link</a>
+    <a href="#">Blank Anchor Link</a>
   </nav>
 `;
 
