@@ -99,6 +99,9 @@ describe('Pane functionality', function() {
 
     cy.get(qsPaneContent).should('contain', 'Edit Account');
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/edit-account');
+
+    cy.get(qsPaneExpandBtn).click();
+    cy.url().should('eq', 'http://127.0.0.1:8888/edit-account');
   });
 
   it('sends a Pane-Url header on pane form submissions', function() {
