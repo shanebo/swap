@@ -61,6 +61,17 @@ describe('Events', function() {
     });
   });
 
+  it('Sets event to and from to null when firing on for loaded with pane url', function() {
+    const stub = cy.stub();
+    cy.on('window:alert', stub)
+
+    cy
+    .visit('/events#pane=/account')
+    .then(() => {
+      expect(stub.getCall(0)).to.be.calledWith('On from: null, to: http://127.0.0.1:8888/events#pane=/account');
+    });
+  });
+
   it('Sets off and on event to and from to when popstate fires', function() {
     const stub = cy.stub();
     cy.on('window:alert', stub)
