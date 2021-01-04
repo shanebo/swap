@@ -50,6 +50,17 @@ describe('Events', function() {
     });
   });
 
+  it('Sets event to and from to null when firing on for loaded with anchor tag', function() {
+    const stub = cy.stub();
+    cy.on('window:alert', stub)
+
+    cy
+    .visit('/events#anchor')
+    .then(() => {
+      expect(stub.getCall(0)).to.be.calledWith('On from: null, to: http://127.0.0.1:8888/events#anchor');
+    });
+  });
+
   it('Sets off and on event to and from to when popstate fires', function() {
     const stub = cy.stub();
     cy.on('window:alert', stub)
@@ -60,6 +71,19 @@ describe('Events', function() {
     .go('back')
     .then(() => {
       expect(stub.getCall(2)).to.be.calledWith('Off from: http://127.0.0.1:8888/events, to: http://127.0.0.1:8888/');
+    });
+  });
+
+  it('Sets off and on event to and from to when popstate fires with anchor in url', function() {
+    const stub = cy.stub();
+    cy.on('window:alert', stub)
+    cy.visit('/');
+    cy.contains('Anchor Events Link').click();
+
+    cy
+    .go('back')
+    .then(() => {
+      expect(stub.getCall(2)).to.be.calledWith('Off from: http://127.0.0.1:8888/events#anchor, to: http://127.0.0.1:8888/');
     });
   });
 });
