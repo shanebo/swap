@@ -36,6 +36,7 @@ const menu = `
     <a href="/arrive">Arrive Link</a>
     <a href="/route-on">Route Link</a>
     <a href="/events">Events Link</a>
+    <a href="/events#anchor">Anchor Events Link</a>
     <a href="/about#layout">Anchor Link</a>
     <a href="/notice">Notice Link</a>
     <a href="/confirm">Confirm</a>

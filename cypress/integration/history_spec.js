@@ -7,8 +7,12 @@ const {
 
 
 describe('History', function() {
+  before(function() {
+    Cypress.config('baseUrl', 'http://127.0.0.1:8888/');
+  });
+
   it('goes backward in history', function(done) {
-    cy.visit('http://127.0.0.1:8888/');
+    cy.visit('/');
     cy.contains('About Link').click();
 
     cy.go('back');
@@ -25,7 +29,7 @@ describe('History', function() {
   });
 
   it('goes forward in history', function(done) {
-    cy.visit('http://127.0.0.1:8888/');
+    cy.visit('/');
     cy.contains('About Link').click();
     cy.go('back');
 
@@ -43,7 +47,7 @@ describe('History', function() {
   });
 
   it('goes to the same page multiple times without adding to history', function() {
-    cy.visit('http://127.0.0.1:8888/');
+    cy.visit('/');
     cy.contains('About Link').click();
     cy.contains('About Link').click();
     cy.contains('Home').click();
@@ -63,7 +67,7 @@ describe('History', function() {
 
 describe('Cache expiration', function() {
   it('reloads the page before it expires', function() {
-    cy.visit('http://127.0.0.1:8888/');
+    cy.visit('/');
 
     cy.get('#tag').then(($tag) => {
       cy.contains('About Link').click();
@@ -75,7 +79,7 @@ describe('Cache expiration', function() {
   });
 
   it('reloads the page after it expires', function() {
-    cy.visit('http://127.0.0.1:8888/');
+    cy.visit('/');
 
     cy.get('#tag').then(($tag) => {
       cy.contains('About Link').click();
@@ -89,7 +93,7 @@ describe('Cache expiration', function() {
 
 describe('Pane History', function() {
   it('goes backward in history on a pane', function(done) {
-    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.visit('/accounts');
     cy.contains('View Account').click();
     cy.contains('View Donation').click();
 
@@ -105,7 +109,7 @@ describe('Pane History', function() {
   });
 
   it('goes forward in history on a pane', function(done) {
-    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.visit('/accounts');
     cy.contains('View Account').click();
     cy.contains('View Donation').click();
     cy.go('back');
@@ -122,7 +126,7 @@ describe('Pane History', function() {
   });
 
   it('goes backward in history on a pane after using the pane back button', function() {
-    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.visit('/accounts');
     cy.contains('View Account').click();
     cy.contains('View Donation').click();
 
@@ -134,7 +138,7 @@ describe('Pane History', function() {
   });
 
   it('goes backward in history to close a pane entirely', function() {
-    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.visit('/accounts');
     cy.contains('View Account').click();
 
     cy.go('back');
@@ -144,7 +148,7 @@ describe('Pane History', function() {
   });
 
   it('goes backward and then forward in history to open a pane', function() {
-    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.visit('/accounts');
     cy.contains('View Account').click();
 
     cy.go('back');
@@ -155,7 +159,7 @@ describe('Pane History', function() {
   });
 
   it('goes backward in history to re-open a pane', function() {
-    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.visit('/accounts');
     cy.contains('View Account').click();
     cy.get(qsPaneCloseBtn).click();
 
@@ -166,7 +170,7 @@ describe('Pane History', function() {
   });
 
   it('goes backward and forward in history to re-close a pane', function() {
-    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.visit('/accounts');
     cy.contains('View Account').click();
     cy.get(qsPaneCloseBtn).click();
 
@@ -178,7 +182,7 @@ describe('Pane History', function() {
   });
 
   it('goes backward in history to re-open a pane with retained pane-history', function() {
-    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.visit('/accounts');
     cy.contains('View Account').click();
     cy.get(qsPaneCloseBtn).click();
 
@@ -189,7 +193,7 @@ describe('Pane History', function() {
   });
 
   it('goes backward in history to re-open a pane with retained pane-history and use pane close button', function() {
-    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.visit('/accounts');
     cy.contains('View Account').click();
     cy.contains('View Donation').click();
     cy.get(qsPaneCloseBtn).click();

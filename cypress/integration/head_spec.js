@@ -1,6 +1,10 @@
 describe('Head', function() {
+  before(function() {
+    Cypress.config('baseUrl', 'http://127.0.0.1:8888/');
+  });
+
   it('runs inline scripts', function(done) {
-    cy.visit('http://127.0.0.1:8888/');
+    cy.visit('/');
 
     cy.contains('Head Link').click();
 
@@ -13,7 +17,7 @@ describe('Head', function() {
   });
 
   it('inserts new js scripts', function(done) {
-    cy.visit('http://127.0.0.1:8888/');
+    cy.visit('/');
 
     cy.contains('Head Link').click();
 
@@ -26,7 +30,7 @@ describe('Head', function() {
   });
 
   it('inserts new css files', function(done) {
-    cy.visit('http://127.0.0.1:8888/');
+    cy.visit('/');
 
     cy.contains('Head Link').click();
 
@@ -39,7 +43,7 @@ describe('Head', function() {
   });
 
   it('injects inline styles', function(done) {
-    cy.visit('http://127.0.0.1:8888/');
+    cy.visit('/');
 
     cy.contains('Head Link').click();
 
@@ -52,7 +56,7 @@ describe('Head', function() {
   });
 
   it('does a hard reload if asset hashes changes', function() {
-    cy.visit('http://127.0.0.1:8888/asset');
+    cy.visit('/asset');
 
     cy.get('#tag').then(($tag) => {
       cy.contains('Change Asset').click(); // link should only swap title, not tag value

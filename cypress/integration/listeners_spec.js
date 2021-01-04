@@ -1,9 +1,13 @@
 describe('Element listeners', function() {
+  before(function() {
+    Cypress.config('baseUrl', 'http://127.0.0.1:8888/');
+  });
+
   it('swaps on an element', function() {
     const stub = cy.stub();
     cy.on('window:alert', stub)
 
-    cy.visit('http://127.0.0.1:8888/');
+    cy.visit('/');
     cy
     .contains('Arrive Link').click()
     .then(() => {
@@ -14,7 +18,7 @@ describe('Element listeners', function() {
   it('swaps off an element', function() {
     const stub = cy.stub();
     cy.on('window:alert', stub)
-    cy.visit('http://127.0.0.1:8888/leave');
+    cy.visit('/leave');
 
     cy
     .contains('About').click()
@@ -28,7 +32,7 @@ describe('Route listeners', function() {
   it('swaps on a route', function() {
     const stub = cy.stub();
     cy.on('window:alert', stub);
-    cy.visit('http://127.0.0.1:8888/');
+    cy.visit('/');
 
     cy
     .contains('Route Link').click()
@@ -41,7 +45,7 @@ describe('Route listeners', function() {
     const stub = cy.stub();
     cy.on('window:alert', stub);
 
-    cy.visit('http://127.0.0.1:8888/route-off');
+    cy.visit('/route-off');
 
     cy
     .contains('Home').click()
