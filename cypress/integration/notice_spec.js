@@ -1,6 +1,10 @@
 describe('Notice',() => {
+  before(function() {
+    Cypress.config('baseUrl', 'http://127.0.0.1:8888/');
+  });
+
   it('replaces the notice content if new notice content comes in', function() {
-    cy.visit('http://127.0.0.1:8888/notice');
+    cy.visit('/notice');
 
     cy.get('.content').should('contain', 'Notice Page');
     cy.get('.Notice').should('contain', 'A notice message');
@@ -12,7 +16,7 @@ describe('Notice',() => {
   });
 
   it("loads the whole page if new notice content comes in and there isn't existing notice content", function() {
-    cy.visit('http://127.0.0.1:8888/no-notice');
+    cy.visit('/no-notice');
 
     cy.get('.content').should('contain', 'No Notice Page');
 
@@ -21,6 +25,6 @@ describe('Notice',() => {
     cy.get('.content').should('contain', 'Notice Page');
     cy.get('.Notice').should('contain', 'A notice message');
   });
-  
-  
+
+
 });

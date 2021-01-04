@@ -8,8 +8,12 @@ const {
 
 
 describe('Pane functionality', function() {
+  before(function() {
+    Cypress.config('baseUrl', 'http://127.0.0.1:8888/');
+  });
+
   it('adds a pane', function() {
-    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.visit('/accounts');
 
     cy.contains('View Account').click();
 
@@ -18,7 +22,7 @@ describe('Pane functionality', function() {
   });
 
   it('closes a pane', function() {
-    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.visit('/accounts');
     cy.contains('View Account').click();
 
     cy.get(qsPaneCloseBtn).click();
@@ -28,7 +32,7 @@ describe('Pane functionality', function() {
   });
 
   it('expands a pane', function() {
-    cy.visit('http://127.0.0.1:8888/accounts#pane=/account');
+    cy.visit('/accounts#pane=/account');
 
     cy.get(qsPaneExpandBtn).click();
 
@@ -38,7 +42,7 @@ describe('Pane functionality', function() {
   });
 
   it('add a pane while a pane is open', function() {
-    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.visit('/accounts');
     cy.contains('View Account').click();
 
     cy.contains('View Donation').click();
@@ -48,7 +52,7 @@ describe('Pane functionality', function() {
   });
 
   it('closes pane while another pane is open', function() {
-    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.visit('/accounts');
     cy.contains('View Account').click();
     cy.contains('View Donation').click();
 
@@ -59,7 +63,7 @@ describe('Pane functionality', function() {
   });
 
   it('closes pane by using escape key', function() {
-    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.visit('/accounts');
     cy.contains('View Account').click();
     cy.contains('View Donation').click();
 
@@ -70,7 +74,7 @@ describe('Pane functionality', function() {
   });
 
   it('closes all open panes', function() {
-    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.visit('/accounts');
     cy.contains('View Account').click();
     cy.contains('View Donation').click();
 
@@ -81,7 +85,7 @@ describe('Pane functionality', function() {
   });
 
   it('submits a form in a pane', function() {
-    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.visit('/accounts');
     cy.contains('Edit Account').click();
 
     cy.get('form').submit();
@@ -91,7 +95,7 @@ describe('Pane functionality', function() {
   });
 
   it('submitting form that redirects to new url stays in same pane', function() {
-    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.visit('/accounts');
     cy.contains('Edit Account').click();
     cy.contains('Add Relationship').click();
 
@@ -105,7 +109,7 @@ describe('Pane functionality', function() {
   });
 
   it('sends a Pane-Url header on pane form submissions', function() {
-    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.visit('/accounts');
     cy.contains('Edit Donation').click();
 
     cy.contains('Change').click();
@@ -115,7 +119,7 @@ describe('Pane functionality', function() {
   });
 
   it('does not reload form that is not edited when going back to it', function() {
-    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.visit('/accounts');
     cy.contains('Edit Account').click();
     cy.contains('View Donation').click();
 
@@ -127,7 +131,7 @@ describe('Pane functionality', function() {
   });
 
   it('does not reload form that is edited when going back to it', function() {
-    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.visit('/accounts');
     cy.contains('Edit Account').click();
     cy.get('input[type=text]').type('Shane');
     cy.contains('View Donation').click();
@@ -140,7 +144,7 @@ describe('Pane functionality', function() {
   });
 
   it('does not reload form that is edited but changed back to default value when going back to it', function() {
-    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.visit('/accounts');
     cy.contains('Edit Account').click();
     cy.get('input[type=text]').type('Shane').clear();
     cy.get('input[type=text]').type('Joe');
@@ -154,7 +158,7 @@ describe('Pane functionality', function() {
   });
 
   it('saving and continuing on a successful form goes back to the previous pane and reloads it if unedited', function() {
-    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.visit('/accounts');
     cy.contains('Edit Account').click();
     cy.get('#tag').then(($tag) => {
       cy.contains('Modify Donation').click();
@@ -167,7 +171,7 @@ describe('Pane functionality', function() {
   });
 
   it('saving and continuing on a successful form goes back to the previous pane and use the redirect html content if prev form is unedited', function() {
-    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.visit('/accounts');
     cy.contains('Edit Account').click();
     cy.get('#tag').then(($tag) => {
       cy.contains('Add Relationship').click();
@@ -180,7 +184,7 @@ describe('Pane functionality', function() {
   });
 
   it('saving and continuing on a successful form goes back to the previous pane and does not reload it if edited', function() {
-    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.visit('/accounts');
     cy.contains('Edit Account').click();
     cy.get('input[type=text]').type('Shane');
     cy.get('#tag').then(($tag) => {
@@ -194,7 +198,7 @@ describe('Pane functionality', function() {
   });
 
   it('saving and continuing on an unsuccessful form stays on the same pane', function() {
-    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.visit('/accounts');
     cy.contains('Edit Account').click();
     cy.contains('Modify Donation').click();
 
@@ -206,7 +210,7 @@ describe('Pane functionality', function() {
   });
 
   it('saving and continuing on successful form with no pane history on the same pane', function() {
-    cy.visit('http://127.0.0.1:8888/accounts#pane=/edit-donation');
+    cy.visit('/accounts#pane=/edit-donation');
 
     cy.contains('Save and Continue').click();
 
@@ -215,7 +219,7 @@ describe('Pane functionality', function() {
   });
 
   it('not saving a form and then clicking the back button does not reload the previous pane', function() {
-    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.visit('/accounts');
     cy.contains('View Account').click();
     cy.contains('Modify Account').click();
 
@@ -228,7 +232,7 @@ describe('Pane functionality', function() {
   });
 
   it('saving a form and then clicking the back button reloads the previous pane', function() {
-    cy.visit('http://127.0.0.1:8888/accounts');
+    cy.visit('/accounts');
     cy.contains('View Account').click();
     cy.contains('Modify Account').click();
 
@@ -242,7 +246,7 @@ describe('Pane functionality', function() {
   });
 
   it('closes a pane after visiting a pane directly via a url', function() {
-    cy.visit('http://127.0.0.1:8888/accounts#pane=/account');
+    cy.visit('/accounts#pane=/account');
     cy.contains('View Donation').click();
     cy.get(qsPaneCloseBtn).click();
     cy.get(qsPaneContent).should('contain', 'Account Info');

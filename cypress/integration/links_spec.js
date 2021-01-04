@@ -5,8 +5,12 @@ const {
 
 
 describe('Full Page Swaps', function() {
+  before(function() {
+    Cypress.config('baseUrl', 'http://127.0.0.1:8888/');
+  });
+
   it('swaps a full page', function() {
-    cy.visit('http://127.0.0.1:8888/');
+    cy.visit('/');
     cy.contains('About Link').click();
     cy.url().should('include', '/about');
     cy.title().should('equal', 'About');
@@ -15,7 +19,7 @@ describe('Full Page Swaps', function() {
   });
 
   it('does nothing on a link with no href', function() {
-    cy.visit('http://127.0.0.1:8888/');
+    cy.visit('/');
     cy.intercept('GET', '/', {
       statusCode: 400,
       body: 'Swap fired'
@@ -27,7 +31,7 @@ describe('Full Page Swaps', function() {
   });
 
   it('does nothing on a link a blank # href', function() {
-    cy.visit('http://127.0.0.1:8888/');
+    cy.visit('/');
     cy.intercept('GET', '/', {
       statusCode: 400,
       body: 'Swap fired'
@@ -39,14 +43,14 @@ describe('Full Page Swaps', function() {
   });
 
   it('goes to anchor link on another page', function() {
-    cy.visit('http://127.0.0.1:8888/');
+    cy.visit('/');
     cy.contains('Anchor Link').click();
     cy.url().should('equal', 'http://127.0.0.1:8888/about#layout');
     cy.title().should('equal', 'About');
   });
 
   it('goes to anchor link on same page', function() {
-    cy.visit('http://127.0.0.1:8888/about');
+    cy.visit('/about');
 
     cy.get('#tag').then(($tag) => {
       cy.contains('Anchor Link').click();
@@ -57,12 +61,12 @@ describe('Full Page Swaps', function() {
   });
 
   // it('does a normal network request with meta (cmd, ctrl) clicks', function() {
-  //   // cy.visit('http://127.0.0.1:8888/', {
+  //   // cy.visit('/', {
   //   //   onBeforeLoad: (win) => {
   //   //     cy.stub(win, 'open')
   //   //   }
   //   // });
-  //   cy.visit('http://127.0.0.1:8888/');
+  //   cy.visit('/');
 
   //   Cypress.on('window:after:load', (win) => {
   //     cy.stub(win, 'open');
@@ -73,13 +77,13 @@ describe('Full Page Swaps', function() {
   // });
 
   // it('hard refreshes on links to external domains', function() {
-  //   cy.visit('http://127.0.0.1:8888/');
+  //   cy.visit('/');
   //   cy.contains('External Link').click();
   //   cy.get(qsIsLoading).should('not.exist');
   // });
 
   it('hard refreshes with data-swap=false', function() {
-    cy.visit('http://127.0.0.1:8888/');
+    cy.visit('/');
     cy.contains('Hard Delay').click();
     cy.get(qsIsLoading).should('not.exist');
     cy.url().should('include', '/delayed');
@@ -90,7 +94,7 @@ describe('Full Page Swaps', function() {
 
   context("data-swap elements don't exist", function() {
     it('swaps the full page', function() {
-      cy.visit('http://127.0.0.1:8888/');
+      cy.visit('/');
       cy.contains('About Header').click();
       cy.url().should('include', '/about');
       cy.title().should('equal', 'About');
@@ -101,7 +105,7 @@ describe('Full Page Swaps', function() {
 
   context("some data-swap elements exist but some don't", function() {
     it('swaps the full page', function() {
-      cy.visit('http://127.0.0.1:8888/');
+      cy.visit('/');
       cy.contains('About Elements').click();
       cy.url().should('include', '/about');
       cy.title().should('equal', 'About');
@@ -113,7 +117,7 @@ describe('Full Page Swaps', function() {
 
 describe('Swapping specific elements', function() {
   it('swaps a specific element', function() {
-    cy.visit('http://127.0.0.1:8888/');
+    cy.visit('/');
     cy.contains('About Body').click();
     cy.url().should('include', '/about');
     cy.title().should('equal', 'About');
@@ -122,7 +126,7 @@ describe('Swapping specific elements', function() {
   });
 
   it('swaps a specific elements', function() {
-    cy.visit('http://127.0.0.1:8888/');
+    cy.visit('/');
     cy.contains('About Header and Body').click();
     cy.url().should('include', '/about');
     cy.title().should('equal', 'About');
@@ -133,7 +137,7 @@ describe('Swapping specific elements', function() {
 
 describe('Inline swapping', function() {
   it('swaps content without changing the url', function() {
-    cy.visit('http://127.0.0.1:8888/');
+    cy.visit('/');
     cy.contains('Inline About').click();
     cy.url().should('not.include', '/about');
     cy.title().should('not.equal', 'About');
@@ -144,28 +148,28 @@ describe('Inline swapping', function() {
 
 describe('swap methods', function() {
   it('Posts data on buttons', function() {
-    cy.visit('http://127.0.0.1:8888/form-method');
+    cy.visit('/form-method');
     cy.contains('Post Data').click();
 
     cy.get('.content').should('contain', 'Posted name = charles');
   });
 
   it('posts data on links', function() {
-    cy.visit('http://127.0.0.1:8888/form-method');
+    cy.visit('/form-method');
     cy.contains('Link Data').click();
 
     cy.get('.content').should('contain', 'Posted name = charles');
   });
 
   it('can use other methods besides post', function() {
-    cy.visit('http://127.0.0.1:8888/form-method');
+    cy.visit('/form-method');
     cy.contains('Put Data').click();
 
     cy.get('.content').should('contain', 'Put name = john');
   });
 
   it('swaps elements on buttons', function() {
-    cy.visit('http://127.0.0.1:8888/form-method');
+    cy.visit('/form-method');
     cy.contains('Swap Data').click();
 
     cy.get('.content').should('contain', 'Posted name = martin');
@@ -173,7 +177,7 @@ describe('swap methods', function() {
   });
 
   it('swaps elements on links', function() {
-    cy.visit('http://127.0.0.1:8888/form-method');
+    cy.visit('/form-method');
     cy.contains('Swap Link Data').click();
 
     cy.get('.content').should('contain', 'Posted name = augustine');
@@ -181,7 +185,7 @@ describe('swap methods', function() {
   });
 
   it('does a full page load on different domain', function() {
-    cy.visit('http://127.0.0.1:8888/form-method');
+    cy.visit('/form-method');
     cy.contains('Swap Other Domain').click();
 
     cy.get('.content').should('contain', 'Other domain');
@@ -189,7 +193,7 @@ describe('swap methods', function() {
   });
 
   it('swaps inline', function() {
-    cy.visit('http://127.0.0.1:8888/form-method');
+    cy.visit('/form-method');
     cy.contains('Swap Data Inline').click();
 
     cy.get('.content').should('contain', 'Posted name = jones');
@@ -198,7 +202,7 @@ describe('swap methods', function() {
   });
 
   it('swaps in a pane', function() {
-    cy.visit('http://127.0.0.1:8888/form-method');
+    cy.visit('/form-method');
     cy.contains('Pane').click();
     cy.contains('Pane Post Data').click();
 
@@ -206,7 +210,7 @@ describe('swap methods', function() {
   });
 
   it('swaps in a save and continue', function() {
-    cy.visit('http://127.0.0.1:8888/form-method');
+    cy.visit('/form-method');
     cy.contains('Pane').click();
     cy.contains('Edit Account').click();
     cy.contains('Save and Continue').click();
