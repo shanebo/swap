@@ -55,6 +55,19 @@ describe('Head', function() {
     });
   });
 
+  it('replaces all non-asset head elements', function() {
+    cy.visit('/');
+    cy.get('title').should('contain', 'Home');
+    cy.get('[property="og:type"]').should('has.attr', 'content', 'article');
+    cy.get('[property="og:url"]').should('has.attr', 'content', 'http://127.0.0.1:8888/');
+    cy.get('[property="og:title"]').should('has.attr', 'content', 'Swap');
+    cy.contains('About Link').click();
+    cy.get('title').should('contain', 'About');
+    cy.get('[property="og:type"]').should('not.exist');
+    cy.get('[property="og:url"]').should('has.attr', 'content', 'http://127.0.0.1:8888/about');
+    cy.get('[property="og:title"]').should('has.attr', 'content', 'About | Swap');
+  });
+
   it('does a hard reload if asset hashes changes', function() {
     cy.visit('/asset');
 
