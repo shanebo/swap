@@ -59,6 +59,9 @@ app.get('/', (req, res) => res.send(`
   <html>
     <head>
       <title>Home</title>
+      <meta property="og:type" content="article">
+      <meta property="og:url" content="http://127.0.0.1:8888/">
+      <meta property="og:title" content="Swap">
       <meta charset="UTF-8">
       <script src="/${frontendJS}" type="application/javascript"></script>
       <link rel="stylesheet" href="/${mainCSS}">
@@ -80,6 +83,8 @@ app.get('/about', (req, res) => res.send(`
   <html>
     <head>
       <title>About</title>
+      <meta property="og:url" content="http://127.0.0.1:8888/about">
+      <meta property="og:title" content="About | Swap">
       <meta charset="UTF-8">
       <script src="/${frontendJS}" type="application/javascript"></script>
       <link rel="stylesheet" href="/${mainCSS}">
