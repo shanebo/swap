@@ -239,6 +239,7 @@ app.get('/events', (req, res) => res.send(`
     ${layout(`
       <div>Events</div>
       <a href="/">Home</a>
+      <div class="content">Unset</div>
       <form action="/events-submit" method="post"><input type="submit" value="Submit"></form>
       <a formaction="/events-submit" formmethod="post">Formaction</a>
     `)}
