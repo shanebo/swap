@@ -239,6 +239,24 @@ app.get('/events', (req, res) => res.send(`
     ${layout(`
       <div>Events</div>
       <a href="/">Home</a>
+      <form action="/events-submit" method="post"><input type="submit" value="Submit"></form>
+      <a formaction="/events-submit" formmethod="post">Formaction</a>
+    `)}
+    </body>
+  </html>
+`));
+
+
+app.post('/events-submit', (req, res) => res.send(`
+  <html>
+    <head>
+      <title>Events</title>
+      <script src="/${frontendJS}" type="application/javascript"></script>
+    </head>
+    <body>
+    ${menu}
+    ${layout(`
+      <div>Events Submit</div>
     `)}
     </body>
   </html>

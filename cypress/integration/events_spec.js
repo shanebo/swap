@@ -15,6 +15,30 @@ describe('Events', function() {
     });
   });
 
+  it('fires off events when going to post form', function() {
+    const stub = cy.stub();
+    cy.on('window:alert', stub)
+    cy.visit('/events');
+
+    cy
+    .contains('Submit').click()
+    .then(() => {
+      expect(stub.getCall(2)).to.be.calledWith('Off from: http://127.0.0.1:8888/events, to: http://127.0.0.1:8888/events-submit');
+    });
+  });
+
+  it('fires off events when going to post form using formaction', function() {
+    const stub = cy.stub();
+    cy.on('window:alert', stub)
+    cy.visit('/events');
+
+    cy
+    .contains('Formaction').click()
+    .then(() => {
+      expect(stub.getCall(2)).to.be.calledWith('Off from: http://127.0.0.1:8888/events, to: http://127.0.0.1:8888/events-submit');
+    });
+  });
+
   it('Sets event to and from when firing on', function() {
     const stub = cy.stub();
     cy.on('window:alert', stub)
