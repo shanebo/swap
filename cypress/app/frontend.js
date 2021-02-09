@@ -27,7 +27,7 @@ swap.before('/events', (e) => {
 });
 
 swap.on('/events', (e) => {
-  alert(`On from: ${e.from ? e.from.href : 'null'}, to: ${e.to.href}`);
+  document.querySelector('.content').innerText = `On from: ${e.from ? e.from.href : 'null'}, to: ${e.to.href}`;
 });
 
 swap.off('/events', (e) => {
