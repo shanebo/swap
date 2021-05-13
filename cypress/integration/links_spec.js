@@ -135,6 +135,35 @@ describe('Links', function() {
     });
   });
 
+  describe('Links with operators', function() {
+    it('innerHtml swap', function() {
+      cy.visit('/operators');
+      cy.get('.content').should('contain', 'Content');
+      cy.get('.content').should('not.contain', 'Header');
+      cy.contains('InnerHtml Swap').click();
+      cy.get('.content').should('not.contain', 'Content');
+      cy.get('.content').should('contain', 'Header');
+    });
+
+    it('append swap', function() {
+      cy.visit('/operators');
+      cy.get('.content').should('exist');
+      cy.get('.header').should('not.exist');
+      cy.contains('Append Swap').click();
+      cy.get('.content').should('exist')
+      cy.get('.header').should('exist');
+    });
+
+    it('replace adjacent swap', function() {
+      cy.visit('/operators');
+      cy.get('.content').should('exist');
+      cy.get('.header').should('not.exist');
+      cy.contains('Replace Adjacent Swap').click();
+      cy.get('.content').should('not.exist')
+      cy.get('.header').should('exist');
+    });
+  });
+
   describe('Inline swapping', function() {
     it('swaps content without changing the url', function() {
       cy.visit('/');
