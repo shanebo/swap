@@ -103,6 +103,31 @@ app.get('/about', (req, res) => res.send(`
 `));
 
 
+app.get('/operators', (req, res) => res.send(`
+  <html>
+    <head>
+      <title>Elements Swap</title>
+      <meta property="og:url" content="http://127.0.0.1:8888/about">
+      <meta property="og:title" content="Elements | Swap">
+      <meta charset="UTF-8">
+      <script src="/${frontendJS}" type="application/javascript"></script>
+      <link rel="stylesheet" href="/${mainCSS}">
+    </head>
+    <body>
+    ${menu}
+    ${layout(`
+      <a href="/about" data-swap=".header >> .content">InnerHtml Swap</a>
+      <a href="/about" data-swap=".header -> .content">Append Swap</a>
+      <a href="/about" data-swap=".header <> .content">Replace Adjacent Swap</a>
+      <div class="content">
+        Content
+      </div>
+    `)}
+    </body>
+  </html>
+`));
+
+
 app.get('/head', (req, res) => res.send(`
   <html>
     <head>
