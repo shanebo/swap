@@ -1,6 +1,6 @@
 {
   "name": "swap",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "description": "Server side apps that feel client side.",
   "repository": "git://github.com/shanebo/swap.git",
   "main": "./lib/swap",
