@@ -108,7 +108,7 @@ describe('Pane functionality', function() {
     cy.url().should('eq', 'http://127.0.0.1:8888/edit-account');
   });
 
-  it('sends a Pane-Url header on pane form submissions', function() {
+  it('sends a Swap-Directive-Url header on pane form submissions', function() {
     cy.visit('/accounts');
     cy.contains('Edit Donation').click();
 
@@ -209,13 +209,10 @@ describe('Pane functionality', function() {
     cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/edit-donation');
   });
 
-  it('saving and continuing on successful form with no pane history on the same pane', function() {
+  it('saving and continuing on successful form with no pane history closes pane', function() {
     cy.visit('/accounts#pane=/edit-donation');
-
     cy.contains('Save and Continue').click();
-
-    cy.get(qsPaneContent).should('contain', 'Donation Editing');
-    cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/edit-donation');
+    cy.url().should('eq', 'http://127.0.0.1:8888/accounts');
   });
 
   it('not saving a form and then clicking the back button does not reload the previous pane', function() {
