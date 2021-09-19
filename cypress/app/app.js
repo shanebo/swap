@@ -371,7 +371,7 @@ app.get('/edit-donation', (req, res) => res.send(`
           <form action="/edit-donation" method="post">
             <input type="submit" value="Change">
             <input type="checkbox" name="fail">
-            <button data-swap-pane-continue>Save and Continue</button>
+            <button data-swap-continue>Save and Continue</button>
           </form>
         </div>
       `)}
@@ -383,7 +383,7 @@ app.post('/edit-donation', (req, res) => {
   if (req.body && req.body.fail) {
     res.sendStatus(403);
   } else {
-    res.redirect(req.get('Pane-Url'));
+    res.redirect(req.get('Swap-Directive-Url'));
   }
 });
 
@@ -401,7 +401,7 @@ app.get('/add-relationship', (req, res) => res.send(`
           Add relationship
           <form action="/add-relationship" method="post">
             <input type="submit" value="Create">
-            <button data-swap-pane-continue>Save and Continue</button>
+            <button data-swap-continue>Save and Continue</button>
           </form>
         </div>
       `)}
@@ -648,7 +648,7 @@ app.get('/form-method-edit-account', (req, res) => res.send(`
           <div class="content">Not Swapped</div>
           Edit Account
           <input type="text" name="account" value="Joe">
-          <button formaction="/form-action-edit-account" formmethod="post" formbody='{"name":"charles"}' data-swap-pane-continue>Save and Continue</button>
+          <button formaction="/form-action-edit-account" formmethod="post" formbody='{"name":"charles"}' data-swap-continue>Save and Continue</button>
         </div>
       `)}
     </body>
