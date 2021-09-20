@@ -1,90 +1,111 @@
 # Swap
 
-link has a pane flag
-swap ajax requests url in href
-swap puts element that matches selector from pane flag in pane element
-url/state/history/etc doesn't changes
+Turn your links and forms into dynamic ajax requests which can swap specific returned html elements with your dom all while updating your browser history. This enables you to write dumb HTML websites but with the feel of single page app performance.
 
-before = the event that fires before the ajax request is sent
-ajax = gets new state in html
-off = after the new html is in hand but before the swap happens
-on is after the swapping has updated the page to the latest state
-fire (off/on/before) should only fire route things when ajax is used
-elements should fire (off/on/before) when ajax or render is used
-pane use case = all the ajax workflow but a different swapping function (which handles popstate and swapping differently)
+Swap provides:
 
-swap.click -> with / pane
-swap.submit -> with
-swap.with(opts, selectors); // ajax
-swap.to(html, selectors);
-swap.to = calling off, swapping, on;
+- HTML directives for common interactions
+- Route and element listeners for before/off/on requests
+- Direct methods for more complex JS needs
+- Event delegation
+- Browser history management
 
 
+## Example
+`<a href="/foo" data-swap=".test">Foo</a>`
 
 
-INLINE = don't update browser history or change url location or hash location
-PAGE = changes browser history and therefore url location both hash and non-hash
-PANE = PAGE but loaded in a certain pane container
+## Directives
+HTML attributes that unlock swap features.
 
 
+### Pages
+`data-swap="<selectors>"`
 
-click
-  pane
-    with closed pane
-    with open pane
-
-  inline
-    with closed pane
-    with open pane
-
-  page
+This will open the link but swap elements given your selectors. This will result in you being at the url the link specified. For full page swaps with no selector swapping no directive on links or forms needed.
 
 
-submit
-  inline
-    with closed pane
-    with open pane
+### Fragments
+`data-swap-inline="<optional selectors>"`
 
-  pane
-    with open pane
-
-  page
-    
+This will swap elements given your selectors but not change your url. This is good for loading up things like popovers.
 
 
+### Panes
+`data-swap-pane="<optional selectors>"`
 
-<a href="#" data-swap="selectors">
-<a href="#" data-swap-pane="selectors">
+This will open the link in a pane and update your url with the pane's url at the `#pane=<url>`.
 
+Open links in a pane interaction via `[data-swap-pane]`. Great for quick nested interactions like opening an account quickly without losing the page you're on. Panes which contain pane links will open new panes on top of the pane you're on and manage the history in the url.
 
-
-
-
-
-
+`<a href="/accounts/1234" data-swap-pane>Account #1234</a>`
 
 
-/*
-TRIGGERS
-- click
-- submit
+### Confirmations
+Before running the link, form, or formbutton, the `data-swap-confirm` directive will trigger a confirm modal. If user clicks the `[data-swap-confirm-ok]` button the element will run.
 
-AJAX
-this runs ajax from the options the user either manually calls, or that the click or submit methods build
-- with
+```
+swap.setConfirmation('deleteLayer', {
+  title: "Delete this layer?",
+  cancel: "Cancel",
+  ok: "Yes, delete"
+});
+```
 
-with could call
-- off
-- before
-- on
+`<button data-swap-confirm="deleteLayer" formaction="/layers/123/delete" formmethod="post">Delete Layer</button>`
 
 
-EVENTS (for elements and routes)
-- off
-- before
-- on
-*/
+## Event Delegation
+```
+swap.event(name, selector, fn);
+swap.event('resize', fn);
+swap.event('click', '.btn', fn);
+```
 
+<!--
+swap.on('mouseover', '.btn', fn);
+swap.off('mouseover', '.btn', fn);
+
+swap.on(name, selector, fn);
+swap.off(name, selector, fn);
+swap.emit(name);
+
+swap.on('click', '.btn', fn);
+swap.off('click', '.btn', fn);
+
+swap.add('click', '.btn', fn);
+swap.remove('click', '.btn', fn);
+swap.emit('click', '.btn', arg1, arg2, arg3);
+
+swap.delegate('.btn').off('click', fn);
+
+swap[event](type, fn);
+swap[when](type, [scope], fn);
+swap[event](type)[when](fn);
+-->
+
+
+## Route / Element Listeners
+How will you know when you're on a route or when an element is on the page you're on if swap is all ajax based? Listeners!
+
+routes
+- every route fires when it matches
+- every route fires off when page state change
+
+elements
+- has checks run on every page transition
+- not fires if it was on previous page
+
+swap.before(route || selector, fn);
+swap.on(route || selector, fn);
+swap.off(route || selector, fn);
+
+swap.from('/foo').to('/joe')
+  .off(fn)
+  .before(fn)
+  .on(fn);
+
+### Event
 
 before
 {
@@ -105,660 +126,22 @@ on
 }
 
 
-swap.off('/from').on('/to', fn);
-
-swap.from('/foo').to('/joe').off(fn);
-
-swap.from('/foo').to('/joe')
-    .off(fn)
-    .before(fn)
-    .on(fn);
-
-swap.when('/foo', '/joe').off(fn);
-swap.when('/foo', '/joe').on(fn);
-swap.when('/foo', '/joe').before(fn);
-
-swap.when(fn).off();
-
-swap.from('/foo').on('/joe', fn);
-swap.from('/foo').before('/joe', fn);
-swap.to('/joe').off('/foo', fn);
-
-swap.on('/joe', fn).from('/foo');
-swap.before('/joe', fn).from('/foo');
-swap.off('/foo', fn).to('/joe');
-
-swap
-  .on('/uno', uno)
-  .on('/dos', dos)
-  .on('/tres', tres)
-  .on('/quatro', quatro)
-  .off('/tres', tres);
-
-
-/*
-- before and on use whatever triggered the change method wise
-- off uses whatever the current location is (regardless of method)
-- before and on get fired on the the first url, not on redirects
-*/
-
-
-swap.on('/tasks/:id/move', (e) => {
-
-});
-
-swap.on({
-  method: 'post',
-  route: '/tasks/:id/move'
-}, (e) => {
-
-});
-
-
-routes
-- every route fires when it matches
-- every route fires off when page state change
-
-components
-- has checks run on every page transition
-- not fires if it was on previous page
-
-
-
-app.before(route, fn);
-app.on(route, fn);
-app.off(route, fn);
-
-app.before(selector, fn);
-app.on(selector, fn);
-app.off(selector, fn);
-
-app.event(name, selector, fn);
-// app.off(name, selector, fn);
-
-
-
-app.on(name, selector, fn);
-app.off(name, selector, fn);
-app.emit(name, selector, fn);
-
-app.before(route, fn);
-app.on(route, fn);
-app.off(route, fn);
-app.emit(route);
-
-app.before(selector, fn);
-app.on(selector, fn);
-app.off(selector, fn);
-
-
-app.get('/foo', middleware);
-app.use('/foo', middleware);
-app.use(handle);
-app.use('/foo', handle, handle);
-app.get('/foo', handle, handle);
-app.use('/foo', handle, handle);
-app.use('*', handle, handle);
-app.all('/foo', handle, handle);
-app.use(handle, handle);
-app.get('/foo', handle);
-
-
-
-
-
-
-
-app.click('.ApjNav a', fn);
-
-
-app.on('click', '.ApjNav a', fn);
-app.on('.ApjNav', fn);
-
-app.on('/ask-pastor-john', fn);
-app.on('.ApjNav', fn);
-
-app.on('route', '/ask-pastor-john', fn);
-app.on('route', '.ApjNav', fn);
-
-app.on(name, selector, fn);
-app.off(name, selector, fn);
-
-app.before('route', route, fn);
-app.on('route', route, fn);
-app.off('route', route, fn);
-
-app.before('element', selector, fn);
-app.on('element', selector, fn);
-app.off('element', selector, fn);
-
-app.event('resize', fn);
-app.event('click', '.btn', fn);
-
-
-swap.on('*', () => {
-  let timeout = 0;
-  swap.event('input', '.ApjSearchInput', (e) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => {
-      const value = e.target.value;
-      const url = `${location.origin + location.pathname}?q=${value}`;
-      swap.with(url, ['.ApjResources']);
-    }, 10);
-  });
-});
-
-
-app.globalEvent('input', '.ApjSearchInput', (e) => {
-
-});
-
-
-swap.has('.ApjSearchInput', () => {
-  let timeout = 0;
-  swap.event('input', '.ApjSearchInput', (e) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => {
-      const value = e.target.value;
-      const url = `${location.origin + location.pathname}?q=${value}`;
-      swap.with(url, ['.ApjResources']);
-    }, 10);
-  });
-});
-
-const scroll = (e) => 'doin something';
-
-app.on('.btn', (e) => {
-  btn.addEventListener('scroll', scroll);
-});
-
-app.off('.btn', (e) => {
-  btn.removeEventListener('scroll', scroll);
-});
-
-app.on('/foo', (e) => {
-  btn.addEventListener('scroll', scroll);
-  window.addEventListener('resize', resize);
-});
-
-app.off('/foo', (e) => {
-  btn.removeEventListener('scroll', scroll);
-});
-
-app.on('/foo', (e) => {
-  btn.addEventListener('scroll', scroll);
-  app.event('resize', resize);
-});
-
-
-
-
-
-
-
-/////////////////
-
-
-swap.off('/from').on('/to', fn);
-
-
-swap.from('/foo').to('/joe').off(fn);
-
-swap.from('/foo').to('/joe')
-  .off(fn)
-  .before(fn)
-  .on(fn);
-
-
-swap.when('/foo', '/joe').off(fn);
-swap.when('/foo', '/joe').on(fn);
-swap.when('/foo', '/joe').before(fn);
-
-swap.when(fn).off();
-
-
-swap.from('/foo').on('/joe', fn);
-swap.from('/foo').before('/joe', fn);
-swap.to('/joe').off('/foo', fn);
-
-
-swap.on('/joe', fn).from('/foo');
-swap.before('/joe', fn).from('/foo');
-swap.off('/foo', fn).to('/joe');
-
-
-
-
-swap
-  .on('/uno', uno)
-  .on('/dos', dos)
-  .on('/tres', tres)
-  .on('/quatro', quatro)
-  .off('/tres', tres);
-
-swap.from('')
-
-
-
-
-// First arg is the event
-app.on('.btn', handle);
-app.on('/foo', handle);
-app.on('atelunch', handle);
-app.on('click', '.btn', handle);
-app.on('click(.btn)', handle);
-app.emit('atelunch', arg1, arg2, arg3);
-app.off('.btn', handle);
-app.off('/foo', handle);
-app.off('atelunch', handle);
-app.off('click', '.btn', handle);
-app.off('click(.btn)', handle);
-
-
-
-// Joe's ideal
-app.on('has', '.btn', handle);
-app.on('matches', '/foo', handle);
-app.on('click', '.btn', handle);
-app.on('atelunch', handle);
-app.off('element', '.btn', handle);
-app.off('route', '/foo', handle);
-app.off('click', '.btn', handle);
-app.off('atelunch', handle);
-
-
-
-
-app.on('element(.btn)', handle);
-app.on('route(/foo/:id/project/:projectId)', handle);
-app.on('click(.btn)', handle);
-app.on('atelunch', handle);
-app.off('element(.btn)', handle);
-app.off('route(/foo/:id/project/:projectId)', handle);
-app.off('click(.btn)', handle);
-app.off('atelunch', handle);
-app.emit('atelunch', arg1, arg2, arg3);
-
-
-
-
-
-// Event delegation
-app.on('click', '.btn', handle);
-app.off('click', '.btn', handle);
-app.emit('click', '.btn', arg1, arg2, arg3);
-
-
-app[event](type, handle);
-app[when](type, [scope], handle);
-app[event](type)[when](handle);
-
-app.on(route).atPage(handle);
-app.on(selector).atPage(handle);
-
-
-
-// elements
-app.has('.btn').beforeRoute(handle);
-app.has('.btn').onRoute(handle);
-app.has('.btn').offRoute(handle);
-
-app.has('.btn').before(handle);
-app.has('.btn').on(handle);
-app.has('.btn').off(handle);
-
-app.has('.btn').before(handle);
-app.has('.btn').at(handle);
-app.has('.btn').out(handle);
-
-app.has('.btn').loading(handle);
-app.has('.btn').loaded(handle);
-app.has('.btn').unloading(handle);
-
-app.has('.btn').loading(handle);
-app.has('.btn').loaded(handle);
-
-app.has('.btn').loading(handle);
-app.has('.btn').arrived(handle);
-app.has('.btn').leaving(handle);
-
-
-
-
-
-app.has('.btn').before(handle);
-app.has('.btn').on(handle);
-app.has('.btn').off(handle);
-
-app.route('/foo/:id').before(handle);
-app.route('/foo/:id').on(handle);
-app.route('/foo/:id').off(handle);
-
-
-app.on('click', '.btn', handle);
-app.off('click', '.btn', handle);
-app.emit('click', '.btn', arg1, arg2);
-app.on('atepizza', handle);
-app.off('atepizza', handle);
-
-
-
-
-
-
-
-app.route('/foo/:id').before(handle);
-app.route('/foo/:id').at(handle);
-app.route('/foo/:id').from(handle);
-
-app.has('.btn').before(handle);
-app.has('.btn').at(handle);
-app.has('.btn').from(handle);
-
-app.route('/foo/:id').to(handle);
-app.route('/foo/:id').at(handle);
-app.route('/foo/:id').from(handle);
-
-app.on('click', '.btn', handle);
-app.off('click', '.btn', handle);
-app.emit('click', '.btn', arg1, arg2);
-app.on('atepizza', handle);
-app.off('atepizza', handle);
-
-
-
-
-
-
-app.has('.btn').to(handle);
-app.has('.btn').at(handle);
-app.has('.btn').from(handle);
-
-app.to('/foo/:id', handle);
-app.at('/foo/:id', handle);
-app.from('/foo/:id', handle);
-
-
-app.matches('/foo/:id').to(handle);
-app.matches('/foo/:id').at(handle);
-app.matches('/foo/:id').from(handle);
-
-app.matches('/foo/:id', 'on', handle);
-app.matches({
-  route: '/foo/:id',
-  when: 'on',
-  handle: handle
-});
-
-
-
-app.on('mouseover').for('.btn').do(handle);
-app.on('mouseover', '.btn', handle);
-app.off('mouseover', '.btn', handle);
-app.on('pizza', '.btn', handle);
-
-
-app.has('.btn').toPage(handle);
-app.has('.btn').atPage(handle);
-app.has('.btn').fromPage(handle);
-
-app.matches('/foo/:id').toPage(handle);
-app.matches('/foo/:id').atPage(handle);
-app.matches('/foo/:id').fromPage(handle);
-
-
-app.has('.btn').before(handle);
-app.has('.btn').on(handle);
-app.has('.btn').off(handle);
-
-app.remove('route', when, route, handle);
-
-app.matches('/foo/:id').before(handle);
-app.matches('/foo/:id').on(handle);
-app.matches('/foo/:id').off(handle);
-
-
-app.to('.btn', handle);
-
-app.to('/foo', handle);
-app.at('/foo', handle);
-app.from('/foo', handle);
-
-app.on('click', '.btn', handle);
-app.off('click', '.btn', handle);
-app.emit('click', '.btn', arg1, arg2);
-app.on('atepizza', handle);
-app.off('atepizza', handle);
-
-
-
-app.on('at', '.btn', handle);
-app.on('at', '/foo', handle);
-app.off('at', '/foo', handle);
-
-
-
-
-app.matches('/foo/:id').before(handle);
-app.matches('/foo/:id').on(handle);
-app.matches('/foo/:id').off(handle);
-
-app.route('/foo/:id').before(handle);
-app.route('/foo/:id').at(handle);
-app.route('/foo/:id').after(handle);
-
-app.event('atepizza').on(handle);
-app.event('click').for('.btn', handle);
-
-
-qs(document).on('click', '.btn', handle);
-qs(document).off('click', '.btn', handle);
-
-qsa(document).forEach(item => item.on('click', handle));
-qsa(document).off('click', '.btn', handle);
-
-
-app.route.before('.btn', handle);
-app.route.on('.btn', handle);
-app.route.off('.btn', handle);
-
-app.route.before('/foo/:id', handle);
-app.route.on('/foo/:id', handle);
-app.route.off('/foo', handle);
-
-
-
-
-page.before('.btn', handle);
-page.on('.btn', handle);
-page.off('.btn', handle);
-
-page.before('/foo', handle);
-page.on('/foo', handle);
-page.off('/foo', handle);
-
-page.before('/foo', handle);
-page.on('/foo', handle);
-page.off('/foo', handle);
-
-// app.has('.btn').in(handle);
-// app.has('.btn').on(handle);
-// app.has('.btn').out(handle);
-
-app.has('.btn')
-  .in(handle)
-  .at(handle)
-  .out(handle);
-
-app.has('.btn')
-  .before(handle)
-  .on(handle)
-  .off(handle);
-
-app.has('.btn')
-  .beforeRoute(handle)
-  .onRoute(handle)
-  .offRoute(handle);
-
-// routes
-app.route('/foo/:id')
-  .before(handle)
-  .on(handle)
-  .off(handle);
-
-app.for('.btn').on('click', handle);
-app.for('.btn').off('click', handle);
-app.for('.btn').emit(arg1, arg2, arg3);
-
-app.on('atepizza', handle);
-app.off('atepizza', handle);
-app.emit('atepizza', arg1, arg2);
-
-
-
-
-// API to load a url programmatically
-app.to('/foo/57').swap(selectors);
-app.to('/foo/57', selectors);
-
-// event delegation
-app.add('click', '.btn', handle);
-app.remove('click', '.btn', handle);
-app.emit('click', '.btn', arg1, arg2, arg3);
-
-app.on('click', '.btn', handle);
-app.for('.btn').on('click', handle);
-app.delegate('.btn').off('click', handle);
-app.emit('click', '.btn', arg1, arg2, arg3);
-
-app.on('click', '.btn', handle);
-app.off('click', '.btn', handle);
-app.emit('click', '.btn', arg1, arg2, arg3);
-
-
-
-app.for('.btn').on('click', handle);
-app.for('.btn').off('click', handle);
-
-app.for('.btn').click(handle);
-app.for('.btn').unclick(handle);
-app.for('.btn').remove('click', handle);
-
-
-
-app.click('.btn', handle);
-app.remove('click', '.btn', handle);
-
-// $('.btn').on('click', handle);
-// $(document).on('click', '.btn', handle);
-app.off('click', '.btn', handle);
-
-
-
-
-
-
-
-
-app.pageIs('/foo/:id').on(handle);
-app.pageIs('/foo/:id').off(handle);
-app.pageHas('.btn').on(handle);
-app.pageHas('.btn').off(handle);
-
-app.url('/foo/:id').on(handle);
-app.url('/foo/:id').off(handle);
-app.url('.btn').on(handle);
-app.url('.btn').off(handle);
-
-app.route('/foo/:id').on(handle);
-app.route('/foo/:id').off(handle);
-app.route('.btn').on(handle);
-app.route('.btn').off(handle);
-
-app.element('.btn').on(handle);
-app.element('.btn').off(handle);
-
-app.click('.btn').on(handle);
-app.click('.btn').off(handle);
-
-
-
-
-// routes
-// - every route fires when it matches
-// - every route fires off when page state change
-
-// components
-// - has checks run on every page transition
-// - not fires if it was on previous page
-
-
-
-
-
-// app.event('resize', fn);
-// app.event('click', '.btn', fn);
-
-
-// swap.on('*', () => {
-//   let timeout = 0;
-//   swap.event('input', '.ApjSearchInput', (e) => {
-//     clearTimeout(timeout);
-//     timeout = setTimeout(() => {
-//       const value = e.target.value;
-//       const url = `${location.origin + location.pathname}?q=${value}`;
-//       swap.with(url, ['.ApjResources']);
-//     }, 10);
-//   });
-// });
-
-
-// app.globalEvent('input', '.ApjSearchInput', (e) => {
-
-// });
-
-
-// swap.has('.ApjSearchInput', () => {
-//   let timeout = 0;
-//   swap.event('input', '.ApjSearchInput', (e) => {
-//     clearTimeout(timeout);
-//     timeout = setTimeout(() => {
-//       const value = e.target.value;
-//       const url = `${location.origin + location.pathname}?q=${value}`;
-//       swap.with(url, ['.ApjResources']);
-//     }, 10);
-//   });
-// });
-
-// const scroll = (e) => 'doin something';
-
-// app.on('.btn', (e) => {
-//   btn.addEventListener('scroll', scroll);
-// });
-
-// app.off('.btn', (e) => {
-//   btn.removeEventListener('scroll', scroll);
-// });
-
-// app.on('/foo', (e) => {
-//   btn.addEventListener('scroll', scroll);
-//   window.addEventListener('resize', resize);
-// });
-
-// app.off('/foo', (e) => {
-//   btn.removeEventListener('scroll', scroll);
-// });
-
-// app.on('/foo', (e) => {
-//   btn.addEventListener('scroll', scroll);
-//   app.event('resize', resize);
-// });
-
-
-// explored API rejected
-app.on('has:beforeRoute', '.btn', handle);
-app.on('has:onRoute', '.btn', handle);
-app.on('has:offRoute', '.btn', handle);
-app.on('route', '/foo', handle);
-app.on('click', '.btn', handle);
-app.on('atelunch', handle);
+## Methods
+
+If you need to write some custom interactions, you can call on the swap methods directly in JS.
+
+swap.click -> with / pane
+swap.inline -> with
+swap.submit -> with
+swap.with(opts, selectors); // ajax
+swap.to(html, selectors);
+
+Swap provides route and element listeners `before`, `off`, and `on` fnd requests.
+
+before = the event that fires before the ajax request is sent
+ajax = gets new state in html
+off = after the new html is in hand but before the swap happens
+on is after the swapping has updated the page to the latest state
+fire (off/on/before) should only fire route things when ajax is used
+elements should fire (off/on/before) when ajax or render is used
+pane use case = all the ajax workflow but a different swapping function (which fns popstate and swapping differently)
