@@ -108,7 +108,7 @@ describe('Pane functionality', function() {
     cy.url().should('eq', 'http://127.0.0.1:8888/edit-account');
   });
 
-  it('sends a Swap-Directive-Url header on pane form submissions', function() {
+  it('sends a Swap-Referer-Url header on pane form submissions', function() {
     cy.visit('/accounts');
     cy.contains('Edit Donation').click();
 
