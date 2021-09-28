@@ -383,7 +383,7 @@ app.post('/edit-donation', (req, res) => {
   if (req.body && req.body.fail) {
     res.sendStatus(403);
   } else {
-    res.redirect(req.get('Swap-Directive-Url'));
+    res.redirect(req.get('Swap-Referer-Url'));
   }
 });
 
