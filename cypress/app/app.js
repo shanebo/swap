@@ -411,8 +411,30 @@ app.get('/add-relationship', (req, res) => res.send(`
 `));
 
 app.post('/add-relationship', (req, res) => {
-  res.redirect('/edit-account');
+  const toUrl = req.get('Swap-Directive-Url') || '/relationship-details'
+  res.redirect(toUrl);
 });
+
+app.get('/relationship-details', (req, res) => res.send(`
+  <html>
+    <head>
+      <title>Donation</title>
+      <script src="/${frontendJS}" type="application/javascript"></script>
+    </head>
+    <body>
+      ${menu}
+      ${layout(`
+        <div class="Main">
+        <span class="tag">${Math.random()}</span><br>
+          Relationship details
+          <div>
+            A relationship on an account
+          </div>
+        </div>
+      `)}
+    </body>
+  </html>
+`));
 
 app.get('/donation', (req, res) => res.send(`
   <html>
