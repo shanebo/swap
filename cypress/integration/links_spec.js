@@ -1,6 +1,7 @@
 const {
   qsIsLoading,
-  qsPaneContent
+  qsPaneContent,
+  qsPaneTag
 } = require('../support/selectors');
 
 describe('Links', function() {
@@ -52,11 +53,11 @@ describe('Links', function() {
     it('goes to anchor link on same page', function() {
       cy.visit('/about');
 
-      cy.get('#tag').then(($tag) => {
+      cy.get(qsPaneTag).then(($tag) => {
         cy.contains('Anchor Link').click();
 
         cy.url().should('equal', 'http://127.0.0.1:8888/about#layout');
-        cy.get('#tag').invoke('text').should('equal', $tag.text());
+        cy.get(qsPaneTag).invoke('text').should('equal', $tag.text());
       });
     });
 
