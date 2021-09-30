@@ -1,3 +1,5 @@
+const { qsPaneTag } = require('../support/selectors');
+
 describe('Head', function() {
   before(function() {
     Cypress.config('baseUrl', 'http://127.0.0.1:8888/');
@@ -71,10 +73,10 @@ describe('Head', function() {
   it('does a hard reload if asset hashes changes', function() {
     cy.visit('/asset');
 
-    cy.get('#tag').then(($tag) => {
+    cy.get(qsPaneTag).then(($tag) => {
       cy.contains('Change Asset').click(); // link should only swap title, not tag value
 
-      cy.get('#tag').invoke('text').should('not.equal', $tag.text());
+      cy.get(qsPaneTag).invoke('text').should('not.equal', $tag.text());
     });
   });
 });

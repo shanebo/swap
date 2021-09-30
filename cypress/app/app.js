@@ -70,7 +70,7 @@ app.get('/', (req, res) => res.send(`
       ${menu}
       ${layout(`
         <h1>Hi</h1>
-        <span id="tag">${Math.random()}</span><br>
+        <span class="tag">${Math.random()}</span><br>
         <div class="header">Home Header</div>
         <div class="content">Home Content</div>
       `)}
@@ -92,7 +92,7 @@ app.get('/about', (req, res) => res.send(`
     <body>
     ${menu}
     ${layout(`
-      <span id="tag">${Math.random()}</span><br>
+      <span class="tag">${Math.random()}</span><br>
       <div class="header">Header</div>
       <div class="content">
         About page
@@ -319,7 +319,7 @@ app.get('/account', (req, res) => res.send(`
       ${menu}
       ${layout(`
         <div class="Main">
-          <span id="tag">${Math.random()}</span><br>
+          <span class="tag">${Math.random()}</span><br>
           Account Info
           <a href="/donation" data-swap-pane=".Main">View Donation</a>
           <a href="/edit-account" data-swap-pane=".Main">Modify Account</a>
@@ -339,7 +339,7 @@ app.get('/edit-account', (req, res) => res.send(`
       ${menu}
       ${layout(`
         <div class="Main">
-          <span id="tag">${Math.random()}</span><br>
+          <span class="tag">${Math.random()}</span><br>
           Edit Account
           <a href="/add-relationship" data-swap-pane=".Main">Add Relationship</a>
           <a href="/donation" data-swap-pane=".Main">View Donation</a>
@@ -366,7 +366,7 @@ app.get('/edit-donation', (req, res) => res.send(`
       ${menu}
       ${layout(`
         <div class="Main">
-        <span id="tag">${Math.random()}</span><br>
+        <span class="tag">${Math.random()}</span><br>
           Donation Editing
           <form action="/edit-donation" method="post">
             <input type="submit" value="Change">
@@ -397,11 +397,12 @@ app.get('/add-relationship', (req, res) => res.send(`
       ${menu}
       ${layout(`
         <div class="Main">
-        <span id="tag">${Math.random()}</span><br>
+        <span class="tag">${Math.random()}</span><br>
           Add relationship
           <form action="/add-relationship" method="post">
             <input type="submit" value="Create">
             <button data-swap-continue>Save and Continue</button>
+            <button data-swap-repeat>Save and Repeat</button>
           </form>
         </div>
       `)}
@@ -410,8 +411,30 @@ app.get('/add-relationship', (req, res) => res.send(`
 `));
 
 app.post('/add-relationship', (req, res) => {
-  res.redirect('/edit-account');
+  const toUrl = req.get('Swap-Directive-Url') || '/relationship-details'
+  res.redirect(toUrl);
 });
+
+app.get('/relationship-details', (req, res) => res.send(`
+  <html>
+    <head>
+      <title>Donation</title>
+      <script src="/${frontendJS}" type="application/javascript"></script>
+    </head>
+    <body>
+      ${menu}
+      ${layout(`
+        <div class="Main">
+        <span class="tag">${Math.random()}</span><br>
+          Relationship details
+          <div>
+            A relationship on an account
+          </div>
+        </div>
+      `)}
+    </body>
+  </html>
+`));
 
 app.get('/donation', (req, res) => res.send(`
   <html>
@@ -562,7 +585,7 @@ app.get('/asset', (req, res) => res.send(`
       ${menu}
       ${layout(`
         <h1>Asset Change Page</h1>
-        <span id="tag">${Math.random()}</span><br>
+        <span class="tag">${Math.random()}</span><br>
         <a href="/asset?change=true" data-swap="h1">Change Asset</a>
       `)}
     </body>
