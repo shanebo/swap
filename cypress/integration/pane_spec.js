@@ -184,6 +184,18 @@ describe('Pane functionality', function() {
     });
   });
 
+  it('saving and repeating on a form stays on the same form', function() {
+    cy.visit('/accounts');
+    cy.contains('Edit Account').click();
+    cy.get(`${qsPaneContent} .tag`).then(($tag) => {
+      cy.contains('Add Relationship').click();
+      cy.contains('Save and Repeat').click();
+
+      cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/add-relationship');
+      cy.get(qsPaneTag).invoke('text').should('not.equal', $tag.text());
+    });
+  });
+
   it('saving and continuing on a successful form goes back to the previous pane and does not reload it if edited', function() {
     cy.visit('/accounts');
     cy.contains('Edit Account').click();
