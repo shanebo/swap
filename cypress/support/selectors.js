@@ -6,5 +6,6 @@ module.exports = {
   qsPaneIsOpen: '.swap-pane-is-open',
   qsIsLoading: '.swap-is-loading',
   qsConfirm: '.Confirm',
-  qsPaneTag: '.Pane.is-active .Pane-content .tag'
+  qsActivePaneUid: '.Pane.is-active .Pane-content .uid',
+  qsPageUid: '.uid'
 };

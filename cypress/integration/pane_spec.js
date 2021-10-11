@@ -4,7 +4,7 @@ const {
   qsPaneCloseBtn,
   qsPaneExpandBtn,
   qsPaneIsOpen,
-  qsPaneTag
+  qsActivePaneUid
 } = require('../support/selectors');
 
 
@@ -122,12 +122,12 @@ describe('Pane functionality', function() {
   it('does not reload form that is not edited when going back to it', function() {
     cy.visit('/accounts');
     cy.contains('Edit Account').click();
-    cy.contains('View Donation').click();
 
-    cy.get(qsPaneTag).then(($tag) => {
+    cy.get(qsActivePaneUid).then(($tag) => {
+      cy.contains('View Donation').click();
       cy.get(qsPaneCloseBtn).click();
 
-      cy.get(qsPaneTag).invoke('text').should('equal', $tag.text());
+      cy.get(qsActivePaneUid).invoke('text').should('equal', $tag.text());
     });
   });
 
@@ -135,12 +135,12 @@ describe('Pane functionality', function() {
     cy.visit('/accounts');
     cy.contains('Edit Account').click();
     cy.get('input[type=text]').type('Shane');
-    cy.contains('View Donation').click();
 
-    cy.get(qsPaneTag).then(($tag) => {
+    cy.get(qsActivePaneUid).then(($tag) => {
+      cy.contains('View Donation').click();
       cy.get(qsPaneCloseBtn).click();
 
-      cy.get(qsPaneTag).invoke('text').should('equal', $tag.text());
+      cy.get(qsActivePaneUid).invoke('text').should('equal', $tag.text());
     });
   });
 
@@ -149,50 +149,50 @@ describe('Pane functionality', function() {
     cy.contains('Edit Account').click();
     cy.get('input[type=text]').type('Shane').clear();
     cy.get('input[type=text]').type('Joe');
-    cy.contains('View Donation').click();
 
-    cy.get(qsPaneTag).then(($tag) => {
+    cy.get(qsActivePaneUid).then(($tag) => {
+      cy.contains('View Donation').click();
       cy.get(qsPaneCloseBtn).click();
 
-      cy.get(qsPaneTag).invoke('text').should('equal', $tag.text());
+      cy.get(qsActivePaneUid).invoke('text').should('equal', $tag.text());
     });
   });
 
   it('saving and continuing on a successful form goes back to the previous pane and reloads it if unedited', function() {
     cy.visit('/accounts');
     cy.contains('Edit Account').click();
-    cy.get(qsPaneTag).then(($tag) => {
+    cy.get(qsActivePaneUid).then(($tag) => {
       cy.contains('Modify Donation').click();
       cy.contains('Save and Continue').click();
 
       cy.get(qsPaneContent).should('contain', 'Edit Account');
       cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/edit-account');
-      cy.get(qsPaneTag).invoke('text').should('not.equal', $tag.text());
+      cy.get(qsActivePaneUid).invoke('text').should('not.equal', $tag.text());
     });
   });
 
   it('saving and continuing on a successful form goes back to the previous pane and use the redirect html content if prev form is unedited', function() {
     cy.visit('/accounts');
     cy.contains('Edit Account').click();
-    cy.get(qsPaneTag).then(($tag) => {
+    cy.get(qsActivePaneUid).then(($tag) => {
       cy.contains('Add Relationship').click();
       cy.contains('Save and Continue').click();
 
       cy.get(qsPaneContent).should('contain', 'Edit Account');
       cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/edit-account');
-      cy.get(qsPaneTag).invoke('text').should('not.equal', $tag.text());
+      cy.get(qsActivePaneUid).invoke('text').should('not.equal', $tag.text());
     });
   });
 
   it('saving and repeating on a form stays on the same form', function() {
     cy.visit('/accounts');
     cy.contains('Edit Account').click();
-    cy.get(`${qsPaneContent} .tag`).then(($tag) => {
+    cy.get(qsActivePaneUid).then(($tag) => {
       cy.contains('Add Relationship').click();
       cy.contains('Save and Repeat').click();
 
       cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/add-relationship');
-      cy.get(qsPaneTag).invoke('text').should('not.equal', $tag.text());
+      cy.get(qsActivePaneUid).invoke('text').should('not.equal', $tag.text());
     });
   });
 
@@ -200,13 +200,13 @@ describe('Pane functionality', function() {
     cy.visit('/accounts');
     cy.contains('Edit Account').click();
     cy.get('input[type=text]').type('Shane');
-    cy.get(qsPaneTag).then(($tag) => {
+    cy.get(qsActivePaneUid).then(($tag) => {
       cy.contains('Modify Donation').click();
       cy.contains('Save and Continue').click();
 
       cy.get(qsPaneContent).should('contain', 'Edit Account');
       cy.url().should('eq', 'http://127.0.0.1:8888/accounts#pane=/edit-account');
-      cy.get(qsPaneTag).invoke('text').should('equal', $tag.text());
+      cy.get(qsActivePaneUid).invoke('text').should('equal', $tag.text());
     });
   });
 
@@ -231,13 +231,14 @@ describe('Pane functionality', function() {
   it('not saving a form and then clicking the back button does not reload the previous pane', function() {
     cy.visit('/accounts');
     cy.contains('View Account').click();
-    cy.contains('Modify Account').click();
 
-    cy.get(qsPaneTag).then(($tag) => {
+    cy.get(qsActivePaneUid).then(($tag) => {
+      cy.contains('Modify Account').click();
+
       cy.get('input[type=text]').clear().type('Shane');
       cy.get(qsPaneCloseBtn).click();
 
-      cy.get(qsPaneTag).invoke('text').should('equal', $tag.text());
+      cy.get(qsActivePaneUid).invoke('text').should('equal', $tag.text());
     });
   });
 
@@ -246,12 +247,12 @@ describe('Pane functionality', function() {
     cy.contains('View Account').click();
     cy.contains('Modify Account').click();
 
-    cy.get(qsPaneTag).then(($tag) => {
+    cy.get(qsActivePaneUid).then(($tag) => {
       cy.get('input[type=text]').clear().type('Shane');
       cy.get('form').submit();
       cy.get(qsPaneCloseBtn).click();
 
-      cy.get(qsPaneTag).invoke('text').should('not.equal', $tag.text());
+      cy.get(qsActivePaneUid).invoke('text').should('not.equal', $tag.text());
     });
   });
 
