@@ -2,7 +2,7 @@ const {
   qsPane,
   qsPaneContent,
   qsPaneCloseBtn,
-  qsPaneTag
+  qsTag
 } = require('../support/selectors');
 
 
@@ -66,32 +66,40 @@ describe('History', function() {
 });
 
 describe('Cache expiration', function() {
+  before(function() {
+    Cypress.config('baseUrl', 'http://127.0.0.1:8888/');
+  });
+
   it('reloads the page before it expires', function() {
     cy.visit('/');
 
-    cy.get(qsPaneTag).then(($tag) => {
+    cy.get(qsTag).then(($tag) => {
       cy.contains('About Link').click();
       cy.wait(300);
       cy.go('back');
 
-      cy.get(qsPaneTag).invoke('text').should('equal', $tag.text());
+      cy.get(qsTag).invoke('text').should('equal', $tag.text());
     });
   });
 
   it('reloads the page after it expires', function() {
     cy.visit('/');
 
-    cy.get(qsPaneTag).then(($tag) => {
+    cy.get(qsTag).then(($tag) => {
       cy.contains('About Link').click();
       cy.wait(600);
       cy.go('back');
 
-      cy.get(qsPaneTag).invoke('text').should('not.equal', $tag.text());
+      cy.get(qsTag).invoke('text').should('not.equal', $tag.text());
     });
   });
 });
 
 describe('Pane History', function() {
+  before(function() {
+    Cypress.config('baseUrl', 'http://127.0.0.1:8888/');
+  });
+  
   it('goes backward in history on a pane', function(done) {
     cy.visit('/accounts');
     cy.contains('View Account').click();
