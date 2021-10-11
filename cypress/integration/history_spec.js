@@ -2,7 +2,7 @@ const {
   qsPane,
   qsPaneContent,
   qsPaneCloseBtn,
-  qsTag
+  qsPageUid
 } = require('../support/selectors');
 
 
@@ -73,24 +73,24 @@ describe('Cache expiration', function() {
   it('reloads the page before it expires', function() {
     cy.visit('/');
 
-    cy.get(qsTag).then(($tag) => {
+    cy.get(qsPageUid).then(($tag) => {
       cy.contains('About Link').click();
       cy.wait(300);
       cy.go('back');
 
-      cy.get(qsTag).invoke('text').should('equal', $tag.text());
+      cy.get(qsPageUid).invoke('text').should('equal', $tag.text());
     });
   });
 
   it('reloads the page after it expires', function() {
     cy.visit('/');
 
-    cy.get(qsTag).then(($tag) => {
+    cy.get(qsPageUid).then(($tag) => {
       cy.contains('About Link').click();
       cy.wait(600);
       cy.go('back');
 
-      cy.get(qsTag).invoke('text').should('not.equal', $tag.text());
+      cy.get(qsPageUid).invoke('text').should('not.equal', $tag.text());
     });
   });
 });

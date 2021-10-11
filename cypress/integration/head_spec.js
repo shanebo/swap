@@ -1,4 +1,4 @@
-const { qsTag } = require('../support/selectors');
+const { qsPageUid } = require('../support/selectors');
 
 describe('Head', function() {
   before(function() {
@@ -73,10 +73,10 @@ describe('Head', function() {
   it('does a hard reload if asset hashes changes', function() {
     cy.visit('/asset');
 
-    cy.get(qsTag).then(($tag) => {
+    cy.get(qsPageUid).then(($tag) => {
       cy.contains('Change Asset').click(); // link should only swap title, not tag value
 
-      cy.get(qsTag).invoke('text').should('not.equal', $tag.text());
+      cy.get(qsPageUid).invoke('text').should('not.equal', $tag.text());
     });
   });
 });
