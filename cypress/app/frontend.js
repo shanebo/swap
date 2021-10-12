@@ -4,7 +4,7 @@ window.globalSwapInstance = swap;
 
 swap.config({
   paneDuration: 300,
-  sessionExpiration: 500
+  expires: 500
 });
 
 swap.on('.arrive', (e) => {
