@@ -1,7 +1,5 @@
 import swap from '../../lib/swap.js';
 
-window.globalSwapInstance = swap;
-
 swap.config({
   paneDuration: 300,
   maxAge: .5
