@@ -20,10 +20,4 @@ describe('Forms', function() {
 
     cy.get('body').should('contain', '{"name":"thacker","email":""}');
   });
-
-  it('resets directiveUrl finishing a request', function() {
-    cy.visit('/add-relationship');
-    cy.contains('Save and Repeat').click();
-    cy.window().its('globalSwapInstance.directiveUrl').should('equal', false);
-  });
 });

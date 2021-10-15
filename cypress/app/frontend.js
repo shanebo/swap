@@ -1,11 +1,8 @@
 import swap from '../../lib/swap.js';
 
-window.globalSwapInstance = swap;
-
 swap.config({
-  color: '#c6000e',
   paneDuration: 300,
-  sessionExpiration: 500
+  maxAge: .5
 });
 
 swap.on('.arrive', (e) => {

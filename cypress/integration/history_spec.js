@@ -99,7 +99,7 @@ describe('Pane History', function() {
   before(function() {
     Cypress.config('baseUrl', 'http://127.0.0.1:8888/');
   });
-  
+
   it('goes backward in history on a pane', function(done) {
     cy.visit('/accounts');
     cy.contains('View Account').click();
