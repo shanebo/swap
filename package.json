@@ -16,10 +16,10 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@dylan/parser": "~0.2.0",
+    "@dylan/parser": "~0.2.1",
     "@dylan/static": "~0.2.2",
     "cypress": "~6.5.0",
-    "dylan": "~0.2.8",
+    "dylan": "~0.2.9",
     "nodemon": "~2.0.6",
     "parcel-bundler": "1.12.4"
   },
