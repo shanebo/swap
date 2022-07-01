@@ -20,7 +20,7 @@
     "@dylan/static": "~0.2.2",
     "cypress": "~6.5.0",
     "dylan": "^0.2.10",
-    "nodemon": "~2.0.6",
+    "nodemon": "^2.0.18",
     "parcel-bundler": "1.12.4"
   },
   "author": "Shane Thacker <shane@steadymade.com>",
