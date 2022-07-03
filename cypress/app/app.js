@@ -3,7 +3,7 @@ const dylan = require('dylan');
 const static = require('@dylan/static');
 const app = dylan();
 const parser = require('@dylan/parser');
-const files = fs.readdirSync('cypress/app/dist');
+const files = fs.readdirSync('cypress/public/dist');
 const frontendJS = files.find(file => /^frontend\..+\.js$/.test(file));
 const headJS = files.find(file => /^head\..+\.js$/.test(file));
 const mainCSS = files.find(file => /^main\..+\.css$/.test(file));
@@ -51,7 +51,7 @@ const layout = (content) => `
     </div>
   `;
 
-app.use(static('cypress/app/dist'));
+app.use(static('cypress/public/dist'));
 
 app.get('/favicon.ico', (req, res) => res.sendStatus(200));
 

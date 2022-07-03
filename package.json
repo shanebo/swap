@@ -7,12 +7,12 @@
   "scripts": {
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
-    "build": "npm run clean; parcel build cypress/app/parcel.html --no-minify --no-source-maps --out-dir cypress/app/dist --public-url /dist",
+    "build": "npm run clean; npx balm cypress/app",
     "start": "npm run build; node cypress/app/app.js",
     "dev": "nodemon --exec \"npm start\"",
     "test": "npm run build; node cypress/app/app.js & npm run cypress:run; kill $!",
     "test:dev": "npm run dev & npm run cypress:open",
-    "clean": "rm -r cypress/app/dist/*"
+    "clean": "rm -r cypress/public/dist/*"
   },
   "nodemonConfig": {
     "ignore": [

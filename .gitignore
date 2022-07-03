@@ -1,4 +1,3 @@
 node_modules
-.cache
-cypress/app/.cache
-cypress/app/dist/*
+cypress/.balm
+cypress/public/dist/*
