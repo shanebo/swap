@@ -1,27 +1,36 @@
 {
   "name": "swap",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "Server side apps that feel client side.",
   "repository": "git://github.com/shanebo/swap.git",
   "main": "./lib/swap",
   "scripts": {
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
-    "build": "npm run clean; parcel build cypress/app/parcel.html --no-minify --no-source-maps --out-dir cypress/app/dist --public-url /dist",
+    "build": "npm run clean; npx balm cypress/app",
     "start": "npm run build; node cypress/app/app.js",
-    "dev": "nodemon --ignore cypress/app/dist --ignore cypress/integration -e js,html --exec \"npm start\"",
+    "dev": "nodemon --exec \"npm start\"",
     "test": "npm run build; node cypress/app/app.js & npm run cypress:run; kill $!",
     "test:dev": "npm run dev & npm run cypress:open",
-    "clean": "rm -r cypress/app/dist/*"
+    "clean": "rm -r cypress/public/dist/*"
+  },
+  "nodemonConfig": {
+    "ignore": [
+      ".git",
+      ".balm",
+      "cypress/public/dist",
+      "cypress/integration"
+    ],
+    "ext": "js,html"
   },
   "dependencies": {},
   "devDependencies": {
-    "@dylan/parser": "~0.2.1",
+    "@dylan/balm": "^0.4.5",
+    "@dylan/parser": "^0.2.2",
     "@dylan/static": "~0.2.2",
     "cypress": "~6.5.0",
-    "dylan": "~0.2.9",
-    "nodemon": "~2.0.6",
-    "parcel-bundler": "1.12.4"
+    "dylan": "^0.2.10",
+    "nodemon": "^2.0.18"
   },
   "author": "Shane Thacker <shane@steadymade.com>",
   "license": "MIT",
