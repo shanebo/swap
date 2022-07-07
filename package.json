@@ -23,9 +23,8 @@
     ],
     "ext": "js,html"
   },
-  "dependencies": {},
   "devDependencies": {
-    "@dylan/balm": "^0.4.5",
+    "@dylan/balm": "^0.4.6",
     "@dylan/parser": "^0.2.2",
     "@dylan/static": "~0.2.2",
     "cypress": "~6.5.0",
