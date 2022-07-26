@@ -25,7 +25,7 @@
   },
   "devDependencies": {
     "@dylan/balm": "~0.4.8",
-    "@dylan/parser": "~0.2.2",
+    "@dylan/parser": "~0.2.3",
     "@dylan/static": "~0.2.2",
     "cypress": "~6.5.0",
     "dylan": "~0.2.10",
