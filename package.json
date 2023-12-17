@@ -1,6 +1,6 @@
 {
   "name": "swap",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "Server side apps that feel client side.",
   "repository": "git://github.com/shanebo/swap.git",
   "main": "./lib/swap",
@@ -24,12 +24,12 @@
     "ext": "js,html"
   },
   "devDependencies": {
-    "@dylan/balm": "~0.4.9",
-    "@dylan/parser": "~0.2.3",
-    "@dylan/static": "~0.2.2",
-    "cypress": "~6.5.0",
-    "dylan": "~0.2.11",
-    "nodemon": "^2.0.18"
+    "@dylan/balm": "^0.4.11",
+    "@dylan/parser": "^0.2.4",
+    "@dylan/static": "^0.2.2",
+    "cypress": "~6.8.0",
+    "dylan": "^0.2.12",
+    "nodemon": "^3.0.2"
   },
   "author": "Shane Thacker <shane@steadymade.com>",
   "license": "MIT",
