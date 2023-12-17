@@ -1,17 +1,35 @@
 {
   "name": "swap",
-  "version": "0.1.0",
+  "version": "0.3.8",
   "description": "Server side apps that feel client side.",
   "repository": "git://github.com/shanebo/swap.git",
-  "main": "./index",
+  "main": "./lib/swap",
   "scripts": {
-    "test": "mocha -w"
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
+    "build": "npm run clean; npx balm cypress/app",
+    "start": "npm run build; node cypress/app/app.js",
+    "dev": "nodemon --exec \"npm start\"",
+    "test": "npm run build; node cypress/app/app.js & npm run cypress:run; kill $!",
+    "test:dev": "npm run dev & npm run cypress:open",
+    "clean": "rm -r cypress/public/dist/*"
   },
-  "dependencies": {
+  "nodemonConfig": {
+    "ignore": [
+      ".git",
+      ".balm",
+      "cypress/public/dist",
+      "cypress/integration"
+    ],
+    "ext": "js,html"
   },
   "devDependencies": {
-    "mocha": "5.2.0",
-    "chai": "4.2.0"
+    "@dylan/balm": "~0.4.9",
+    "@dylan/parser": "~0.2.3",
+    "@dylan/static": "~0.2.2",
+    "cypress": "~6.5.0",
+    "dylan": "~0.2.11",
+    "nodemon": "^2.0.18"
   },
   "author": "Shane Thacker <shane@steadymade.com>",
   "license": "MIT",

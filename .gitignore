@@ -1,0 +1,3 @@
+node_modules
+cypress/.balm
+cypress/public/dist/*
