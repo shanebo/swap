@@ -27,7 +27,7 @@
     "@dylan/balm": "~0.4.9",
     "@dylan/parser": "~0.2.3",
     "@dylan/static": "~0.2.2",
-    "cypress": "~6.5.0",
+    "cypress": "~13.6.1",
     "dylan": "~0.2.11",
     "nodemon": "^2.0.18"
   },
